@@ -1,0 +1,26 @@
+{
+  "name": "plainletter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An agent that reads official letters for the people who help newcomers understand them",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "gate:ship-artifacts": "node scripts/check-ship-artifacts.mjs",
+    "gate:dup": "jscpd .",
+    "gate:py:lint": "uv run ruff check .",
+    "gate:py:format": "uv run ruff format --check .",
+    "gate:py:security": "uv run bandit -q -r src",
+    "gate:types": "uv run mypy",
+    "gate:precommit": "npm run gate:ship-artifacts && npm run gate:py:lint",
+    "gate": "npm run gate:ship-artifacts && npm run gate:dup && npm run gate:py:lint && npm run gate:py:format && npm run gate:py:security && npm run gate:types",
+    "lint": "npm run gate:py:lint && npm run gate:py:format",
+    "test": "uv run pytest -q",
+    "verify:ship": "node verify-ship.mjs"
+  },
+  "devDependencies": {
+    "jscpd": "^5.0.11"
+  }
+}

@@ -7,6 +7,15 @@ node_modules/
 __pycache__/
 .venv/
 
+# tool caches and reports
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+htmlcov/
+report/
+
 # build output
 dist/
 build/
@@ -15,3 +24,6 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# local planning notes
+.planning/

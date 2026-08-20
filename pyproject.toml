@@ -1,0 +1,72 @@
+[project]
+name = "plainletter"
+version = "0.1.0"
+description = "An agent that reads official letters for the people who help newcomers understand them"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = "Apache-2.0"
+dependencies = [
+  "strands-agents>=1.52.0,<2",
+  "strands-agents-tools>=0.8.6,<1",
+  "bedrock-agentcore>=1.22.0,<2",
+  "boto3>=1.43",
+  "botocore[crt]>=1.43",
+  "pydantic>=2.13",
+  "pydantic-settings>=2.15",
+  "pyyaml>=6",
+  "icalendar>=6",
+  "python-dateutil>=2.9",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "pytest-asyncio>=0.24",
+  "hypothesis>=6",
+  "ruff>=0.12",
+  "mypy>=1.14",
+  "bandit>=1.8",
+  "pip-audit>=2.8",
+  "types-PyYAML",
+  "types-python-dateutil",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/plainletter"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C90", "S", "N", "SIM", "RUF"]
+ignore = ["RUF012"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 25
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["src"]
+
+[[tool.mypy.overrides]]
+module = ["strands.*", "strands_tools.*", "bedrock_agentcore.*", "icalendar.*"]
+ignore_missing_imports = true
+follow_untyped_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv", "web", "node_modules"]

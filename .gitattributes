@@ -1,0 +1,13 @@
+# Normalize text to LF in the repository regardless of the checkout platform, so the gates and
+# generated files are byte-identical on Windows, macOS and CI.
+* text=auto eol=lf
+
+# Binary samples and images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.pdf binary
+*.ico binary
+*.woff binary
+*.woff2 binary
