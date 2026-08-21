@@ -32,7 +32,7 @@ function Note({
 }) {
   return (
     <section className="py-6">
-      <span className="mb-2.5 block text-xs tracking-[0.12em] text-ink-3 uppercase">{tag}</span>
+      <span className="mb-2.5 block text-xs tracking-[0.12em] text-ink-2 uppercase">{tag}</span>
       <h2 className="m-0 mb-2.5 font-brand text-[23px] leading-[1.24] font-bold tracking-[-0.02em]">
         {heading}
       </h2>
@@ -83,7 +83,7 @@ export default function Landing() {
             tag="The amounts"
             heading="Nothing is retyped from memory"
           >
-            <p className="m-0 mb-2.5 text-[15.5px] text-ink-2">
+            <p className="m-0 mb-2.5 text-[16px] text-ink-2">
               Marks <Mark name="line_amount_1" /> <Mark name="line_amount_2" /> and{' '}
               <Mark name="total_amount" /> are read off the page and then checked back against it by
               plain arithmetic rather than by the model that read them. If the two disagree, the
@@ -92,13 +92,13 @@ export default function Landing() {
           </Note>
 
           <Note tag="The deadline" heading="One date decides everything">
-            <p className="m-0 mb-2.5 text-[15.5px] text-ink-2">
+            <p className="m-0 mb-2.5 text-[16px] text-ink-2">
               Mark <Mark name="deadline" /> is the only date the letter gives. The days left are
               worked out on a real calendar, Dutch public holidays included, along with the last day
               a posted objection still arrives in time.
             </p>
             {deadline ? (
-              <p className="m-0 text-[15.5px]">
+              <p className="m-0 text-[16px]">
                 <b>
                   {deadline.on_written}, nog {deadline.days_left} dagen.
                   {deadline.post_by_written ? ` Post uiterlijk ${deadline.post_by_written}.` : ''}
@@ -111,15 +111,15 @@ export default function Landing() {
             tag="Both languages"
             heading="What happens if you do nothing, in a language you read"
           >
-            <p className="m-0 mb-3 text-[15.5px] text-ink-2">
+            <p className="m-0 mb-3 text-[16px] text-ink-2">
               Mark <Mark name="consequence_1" /> is the sentence nobody reads twice. It arrives at
               equal width in both languages, each set in a face drawn for its own script.
             </p>
             <div className="rounded-[10px] border border-rule px-4 py-3.5">
-              <p lang="nl" className="m-0 text-[15px]">
+              <p lang="nl" className="m-0 text-[16px]">
                 {dutch?.if_you_do_nothing}
               </p>
-              <p lang="uk" className="mt-2.5 mb-0 border-t border-rule pt-2.5 font-cyrillic text-[15px]">
+              <p lang="uk" className="mt-2.5 mb-0 border-t border-rule pt-2.5 font-cyrillic text-[16px]">
                 {visitor?.if_you_do_nothing}
               </p>
             </div>
@@ -129,27 +129,27 @@ export default function Landing() {
             tag="The broken key, beside Kenteken"
             heading="When it cannot read something, it says so"
           >
-            <p className="m-0 mb-2.5 text-[15.5px] text-ink-2">
+            <p className="m-0 mb-2.5 text-[16px] text-ink-2">
               The middle character of the number plate is blurred, so there is no mark and no number
               beside that line. What the desk prints instead is the question to ask out loud:
             </p>
-            <p lang="nl" className="m-0 mb-2.5 border-l-2 border-mark pl-3 text-[15.5px]">
+            <p lang="nl" className="m-0 mb-2.5 border-l-2 border-mark pl-3 text-[16px]">
               {gap?.reason} <b className="text-ink">{gap?.ask_the_visitor}</b>
             </p>
-            <p className="m-0 text-[15.5px] text-ink-2">
+            <p className="m-0 text-[16px] text-ink-2">
               This is the part that matters most. A wrong deadline at a help desk is worse than no
               deadline.
             </p>
           </Note>
 
           <Note tag="The route out" heading="Then the way forward, with the address on it">
-            <p className="m-0 mb-2.5 text-[15.5px] text-ink-2">
+            <p className="m-0 mb-2.5 text-[16px] text-ink-2">
               Mark <Mark name="objection_route" /> is the appeal paragraph the letter prints itself.
               Objections,
               payment plans and appeals go to different places with different windows, so each step
               carries the official route it came from and the date that route was checked.
             </p>
-            <p className="m-0 text-[15.5px] text-ink-2">
+            <p className="m-0 text-[16px] text-ink-2">
               Where a sender has not been checked against an official page, the desk says so and
               sends the visitor to Het Juridisch Loket instead of guessing.
             </p>
@@ -158,7 +158,7 @@ export default function Landing() {
       </div>
 
       <section className="mx-auto mt-10 max-w-[1014px] px-7">
-        <span className="mb-2.5 block text-xs tracking-[0.12em] text-ink-3 uppercase">
+        <span className="mb-2.5 block text-xs tracking-[0.12em] text-ink-2 uppercase">
           What happens to the letter
         </span>
         <h2 className="m-0 mb-2.5 font-brand text-[23px] leading-[1.24] font-bold tracking-[-0.02em]">
@@ -171,7 +171,7 @@ export default function Landing() {
                 {['What enters', 'Why', 'Who sees it', 'Gone'].map((head) => (
                   <th
                     key={head}
-                    className="border-b border-rule pt-0 pr-2.5 pb-2 text-left text-[11px] font-bold tracking-[0.1em] text-ink-3 uppercase"
+                    className="border-b border-rule pt-0 pr-2.5 pb-2 text-left text-[11px] font-bold tracking-[0.1em] text-ink-2 uppercase"
                   >
                     {head}
                   </th>
@@ -212,7 +212,7 @@ export default function Landing() {
           />
         </div>
         <div>
-          <span className="block text-xs tracking-[0.12em] text-ink-3 uppercase">
+          <span className="block text-xs tracking-[0.12em] text-ink-2 uppercase">
             The thing that goes home
           </span>
           <h2 className="mt-3 mb-3.5 font-brand text-[clamp(26px,3.2vw,38px)] leading-[1.12] font-bold tracking-[-0.03em]">

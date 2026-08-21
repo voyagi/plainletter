@@ -45,10 +45,10 @@ export function DraftPanel({
   return (
     <div className="mt-6 rounded-[10px] bg-paper px-6 py-5 shadow-sheet">
       <div className="mb-3.5 flex flex-wrap items-baseline justify-between gap-3.5 border-b border-rule pb-3">
-        <span className="text-xs font-bold tracking-[0.12em] text-ink-3 uppercase">
+        <span className="text-xs font-bold tracking-[0.12em] text-ink-2 uppercase">
           {KIND_NL[draft.kind]}
         </span>
-        <span className="text-xs tracking-[0.12em] text-ink-3 uppercase">
+        <span className="text-xs tracking-[0.12em] text-ink-2 uppercase">
           {draft.addressed_to}
           {sendBefore ? ` · post voor ${sendBefore}` : ''}
         </span>

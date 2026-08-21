@@ -60,7 +60,7 @@ export function Intake({
           <select
             value={language}
             onChange={(event) => onLanguage(event.target.value)}
-            className="rounded-md border border-rule bg-paper px-3 py-2 text-sm text-ink"
+            className="min-h-[44px] rounded-md border border-rule bg-paper px-3 text-sm text-ink"
           >
             {VISITOR_LANGUAGES.map((item) => (
               <option key={item.code} value={item.code}>
@@ -87,7 +87,7 @@ export function Intake({
         onChange={(event) => pick(event.target, onFile)}
       />
 
-      <p className="mt-10 text-xs font-bold tracking-[0.12em] text-ink-3 uppercase">
+      <p className="mt-10 text-xs font-bold tracking-[0.12em] text-ink-2 uppercase">
         Of lees een voorbeeldbrief
       </p>
       {/* A ruled list rather than a grid of cards: this is a page of letters waiting on a counter,
@@ -105,7 +105,7 @@ export function Intake({
                 <span className="block text-[15px] font-bold">{sample.sender}</span>
                 <span className="mt-0.5 block text-[13.5px] text-ink-2">{sample.type}</span>
               </span>
-              <span className="text-xs tracking-[0.12em] text-ink-3 uppercase">
+              <span className="text-xs tracking-[0.12em] text-ink-2 uppercase">
                 {languageFor(sample.language).dutch}
               </span>
             </button>

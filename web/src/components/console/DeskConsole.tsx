@@ -134,10 +134,13 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
   const visitor = reading.visitor_language ?? language;
 
   return (
-    <div className="mx-auto max-w-[1300px] px-7 pb-11">
+    /* The chrome of this surface is Dutch: it belongs to the volunteer, not to the site around it.
+       Saying so here rather than on the document keeps the pronunciation right for a screen reader
+       without claiming the landing page is Dutch too. */
+    <div lang="nl" className="mx-auto max-w-[1300px] px-7 pb-11">
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-rule pt-4 pb-3.5">
         <Wordmark />
-        <span className="text-xs tracking-[0.12em] text-ink-3 uppercase">Balie</span>
+        <span className="text-xs tracking-[0.12em] text-ink-2 uppercase">Balie</span>
         <span className="ml-auto flex items-center gap-2.5 text-sm text-ink-2">
           <span lang="nl">Nederlands</span>
           <span aria-hidden>+</span>
@@ -155,7 +158,7 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
           <button
             type="button"
             onClick={clear}
-            className="rounded-md border border-rule px-3 py-1.5 text-sm"
+            className="min-h-[44px] rounded-md border border-rule px-4 text-sm"
           >
             Brief wissen
           </button>
@@ -182,12 +185,12 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
           <div className="mt-6 grid grid-cols-[47fr_53fr] items-start gap-8 max-[1000px]:grid-cols-1">
             <div>
               <div className="mb-2.5 flex items-baseline justify-between">
-                <span className="text-xs tracking-[0.12em] text-ink-3 uppercase">De brief</span>
+                <span className="text-xs tracking-[0.12em] text-ink-2 uppercase">De brief</span>
                 {held.photo ? (
                   <button
                     type="button"
                     onClick={() => setShowPhoto(!showPhoto)}
-                    className="rounded-md border border-rule px-2.5 py-1 text-xs"
+                    className="min-h-[44px] rounded-md border border-rule px-4 text-xs"
                   >
                     {showPhoto ? 'Toon de tekst' : 'Toon de foto'}
                   </button>
@@ -204,7 +207,7 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
               ) : reading.letter ? (
                 <LetterSheet letter={reading.letter} />
               ) : (
-                <div className="min-h-[24rem] rounded-[10px] bg-paper px-6 py-7 text-[13.5px] text-ink-3 shadow-sheet">
+                <div className="min-h-[24rem] rounded-[10px] bg-paper px-6 py-7 text-[13.5px] text-ink-2 shadow-sheet">
                   De brief wordt gelezen.
                 </div>
               )}
@@ -218,10 +221,10 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
 
             <div>
               <div className="mb-2.5 flex items-baseline justify-between">
-                <span className="text-xs tracking-[0.12em] text-ink-3 uppercase">
+                <span className="text-xs tracking-[0.12em] text-ink-2 uppercase">
                   Wat de balie eruit las
                 </span>
-                <span className="text-xs tracking-[0.12em] text-ink-3 uppercase">
+                <span className="text-xs tracking-[0.12em] text-ink-2 uppercase">
                   {counted(reading)}
                 </span>
               </div>

@@ -70,6 +70,8 @@ def desk_card_html(reading: DeskReading, today: date) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="De baliekaart bij deze brief: wat het is, voor wanneer, wat er
+gebeurt als u niets doet, en wat u nu doet, in twee talen op een vel.">
 <title>{escape(reading.sender_name)} - {escape(reading.letter_type)}</title>
 <style>{_CARD_CSS}</style>
 </head>
@@ -77,7 +79,7 @@ def desk_card_html(reading: DeskReading, today: date) -> str:
 <div class="sheet">
   <div class="band">
     <div>
-      <div class="who">{escape(reading.sender_name)}</div>
+      <h1 class="who">{escape(reading.sender_name)}</h1>
       <div class="what">{escape(reading.letter_type)}</div>
     </div>
     <div class="ref">{escape(_reference(reading))}</div>
@@ -232,7 +234,7 @@ body { font-family: "Atkinson Hyperlegible Next", system-ui, sans-serif;
 .sheet { max-width: 190mm; margin: 0 auto; }
 .band { border: 2.5px solid #1a1a1a; padding: 10px 13px; display: flex;
         justify-content: space-between; align-items: baseline; gap: 16px; }
-.who { font-weight: 700; font-size: 19px; }
+.who { font-weight: 700; font-size: 19px; margin: 0; line-height: 1.25; }
 .what { font-size: 12px; }
 .ref { text-align: right; font-size: 12px; font-weight: 700; }
 .deadline { border: 2.5px solid #1a1a1a; border-top: 0; padding: 10px 13px; display: flex;

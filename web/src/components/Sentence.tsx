@@ -13,33 +13,33 @@ export function Sentence({ reading }: { reading: Partial<DeskReading> }) {
 
   if (!dutch) {
     return (
-      <div className="min-h-[7.5rem] pt-8">
-        <p className="m-0 font-brand text-[29px] leading-[1.38] font-semibold tracking-[-0.02em] text-ink-3">
-          De balie leest de brief.
-        </p>
-      </div>
+      <h1
+        lang="nl"
+        className="m-0 min-h-[7.5rem] pt-8 font-brand text-[29px] leading-[1.38] font-semibold tracking-[-0.02em] text-ink-2"
+      >
+        De balie leest de brief.
+      </h1>
     );
   }
 
+  // One heading for the page, said twice. Both languages sit inside it because they are the same
+  // sentence, and a page whose main heading exists in only one of them has picked a side.
   return (
-    <div className="wash-on max-w-[1000px] pt-8">
+    <h1 className="wash-on m-0 max-w-[1000px] pt-8 font-normal">
       {visitor ? (
         <VisitorText language={language}>
-          <p className="m-0 text-[29px] leading-[1.62] font-semibold">
-            <Marked
-              text={visitor.what_is_this}
-              values={markable(reading)}
-            />
-          </p>
+          <span className="block text-[29px] leading-[1.62] font-semibold">
+            <Marked text={visitor.what_is_this} values={markable(reading)} />
+          </span>
         </VisitorText>
       ) : null}
-      <p
+      <span
         lang="nl"
-        className="mt-3 mb-0 font-brand text-[29px] leading-[1.38] font-semibold tracking-[-0.02em]"
+        className="mt-3 block font-brand text-[29px] leading-[1.38] font-semibold tracking-[-0.02em]"
       >
         <Marked text={dutch.what_is_this} values={markable(reading)} />
-      </p>
-    </div>
+      </span>
+    </h1>
   );
 }
 

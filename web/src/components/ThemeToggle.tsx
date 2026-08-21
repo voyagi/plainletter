@@ -28,7 +28,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={() => choose(dark ? 'light' : 'dark')}
-      className="rounded-md border border-rule px-3 py-1.5 text-sm"
+      className="min-h-[44px] rounded-md border border-rule px-4 text-sm"
       aria-pressed={dark}
     >
       {dark ? 'Licht' : 'Donker'}

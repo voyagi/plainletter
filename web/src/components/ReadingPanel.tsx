@@ -27,7 +27,7 @@ function Block({
   const own = headingIn(language, heading);
   return (
     <section className="border-b border-rule py-5 last:border-b-0 last:pb-1">
-      <h2 className="mb-3 text-xs font-bold tracking-[0.1em] text-ink-3 uppercase">
+      <h2 className="mb-3 text-xs font-bold tracking-[0.1em] text-ink-2 uppercase">
         <span lang="nl">{dutchHeading(heading)}</span>
         {own && language !== 'nl' ? (
           <>
@@ -47,7 +47,7 @@ function Pending({ label }: { label: string }) {
   // The row is held at its final height before the words arrive, so nothing on the page reflows
   // under the eye of someone already struggling to read it.
   return (
-    <p className="min-h-[3.1em] text-[15.5px] text-ink-3" aria-live="polite">
+    <p className="min-h-[3.1em] text-[16px] text-ink-2" aria-live="polite">
       {label}
     </p>
   );
@@ -71,8 +71,8 @@ export function ReadingPanel({ reading }: { reading: Partial<DeskReading> }) {
               keyFor(reading.letter, 'letter_type'),
               keyFor(reading.letter, 'sender_name'),
             )}
-            dutch={<p className="m-0 text-[15.5px]">{dutch.what_is_this}</p>}
-            visitor={<p className="m-0 text-[15.5px]">{visitor.what_is_this}</p>}
+            dutch={<p className="m-0 text-[16px]">{dutch.what_is_this}</p>}
+            visitor={<p className="m-0 text-[16px]">{visitor.what_is_this}</p>}
           />
         ) : (
           <Pending label="De balie leest de brief." />
@@ -116,8 +116,8 @@ export function ReadingPanel({ reading }: { reading: Partial<DeskReading> }) {
           <Bilingual
             language={language}
             keys={numbers(keyFor(reading.letter, 'consequence_1'))}
-            dutch={<p className="m-0 text-[15.5px]">{dutch.if_you_do_nothing}</p>}
-            visitor={<p className="m-0 text-[15.5px]">{visitor.if_you_do_nothing}</p>}
+            dutch={<p className="m-0 text-[16px]">{dutch.if_you_do_nothing}</p>}
+            visitor={<p className="m-0 text-[16px]">{visitor.if_you_do_nothing}</p>}
           />
         ) : (
           <Pending label="Nog niet gelezen." />
@@ -159,8 +159,8 @@ export function ReadingPanel({ reading }: { reading: Partial<DeskReading> }) {
                 <p className="m-0 mb-1 text-[15px] font-bold text-mark">
                   {gap.field} staat niet vast
                 </p>
-                <p className="m-0 text-[15.5px]">{gap.reason}</p>
-                <p className="mt-1 mb-0 text-[15.5px] font-bold">{gap.ask_the_visitor}</p>
+                <p className="m-0 text-[16px]">{gap.reason}</p>
+                <p className="mt-1 mb-0 text-[16px] font-bold">{gap.ask_the_visitor}</p>
               </div>
             </div>
           ))
