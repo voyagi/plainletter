@@ -1,0 +1,74 @@
+[
+  {
+    "id": "belastingdienst-aanslag",
+    "sender": "Belastingdienst",
+    "type": "Definitieve aanslag inkomstenbelasting 2025",
+    "language": "uk"
+  },
+  {
+    "id": "cak-bestuursrechtelijke-premie",
+    "sender": "CAK",
+    "type": "Aanmelding bestuursrechtelijke premie",
+    "language": "pl"
+  },
+  {
+    "id": "cjib-verkeersboete",
+    "sender": "Centraal Justitieel Incassobureau",
+    "type": "Beschikking administratieve sanctie (Wet Mulder)",
+    "language": "uk"
+  },
+  {
+    "id": "deurwaarder-aanzegging",
+    "sender": "Deurwaarderskantoor Van Rooij en Partners",
+    "type": "Aanzegging betaling na vonnis",
+    "language": "pl"
+  },
+  {
+    "id": "duo-studieschuld",
+    "sender": "Dienst Uitvoering Onderwijs",
+    "type": "Bericht over de terugbetaling van uw studieschuld",
+    "language": "en"
+  },
+  {
+    "id": "gemeente-parkeerboete",
+    "sender": "Gemeente Rotterdam",
+    "type": "Naheffingsaanslag parkeerbelasting",
+    "language": "tr"
+  },
+  {
+    "id": "ind-verlenging",
+    "sender": "Immigratie- en Naturalisatiedienst",
+    "type": "Uw verblijfsvergunning verloopt",
+    "language": "en"
+  },
+  {
+    "id": "rdw-apk-verlopen",
+    "sender": "Rijksdienst voor het Wegverkeer",
+    "type": "Uw voertuig is niet APK gekeurd",
+    "language": "en"
+  },
+  {
+    "id": "svb-kinderbijslag",
+    "sender": "Sociale Verzekeringsbank",
+    "type": "Beslissing kinderbijslag derde kwartaal",
+    "language": "tr"
+  },
+  {
+    "id": "uwv-terugvordering",
+    "sender": "UWV",
+    "type": "Beslissing terugvordering WW-uitkering",
+    "language": "pl"
+  },
+  {
+    "id": "waterschap-aanslag",
+    "sender": "Waterschap Rivierenland",
+    "type": "Aanslag waterschapsbelastingen",
+    "language": "uk"
+  },
+  {
+    "id": "zorgverzekeraar-premieachterstand",
+    "sender": "Zilverdam Zorgverzekeringen",
+    "type": "Tweede herinnering premieachterstand",
+    "language": "tr"
+  }
+]

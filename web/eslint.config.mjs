@@ -26,6 +26,14 @@ const config = [
       'sonarjs/cognitive-complexity': ['error', 25],
     },
   },
+  // The console shows the volunteer the photograph they just took, from an object URL that exists
+  // only in that tab. Routing it through the image optimiser would upload someone's letter to the
+  // server to be resized, which is the one thing this product promises not to do, so the plain
+  // element is the correct one here.
+  {
+    files: ['src/components/console/DeskConsole.tsx'],
+    rules: { '@next/next/no-img-element': 'off' },
+  },
   // Browser code only. On server modules this rule false-positives on Node-valid syntax, so
   // src/server is excluded rather than the globs widened.
   {

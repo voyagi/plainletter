@@ -1,3 +1,4 @@
+import re
 from datetime import date
 
 from icalendar import Calendar
@@ -9,6 +10,13 @@ from plainletter.render import desk_card_html, is_rtl, reminder_ics
 SAMPLE = "cjib-verkeersboete"
 LETTER = sample_input(SAMPLE)
 TODAY = date(2026, 8, 21)
+
+
+def _channels(colour: str) -> tuple[int, int, int]:
+    bare = colour.lstrip("#")
+    if len(bare) == 3:
+        bare = "".join(char * 2 for char in bare)
+    return int(bare[0:2], 16), int(bare[2:4], 16), int(bare[4:6], 16)
 
 
 def reading(language: str = "uk"):
@@ -44,6 +52,32 @@ def test_a_right_to_left_visitor_language_sets_the_direction() -> None:
 def test_a_left_to_right_visitor_language_does_not() -> None:
     card = desk_card_html(reading("nl"), TODAY)
     assert 'dir="rtl"' not in card
+
+
+def test_the_card_prints_the_same_key_the_screen_showed() -> None:
+    # One numbering across the screen and the paper is the whole mechanism: the volunteer says
+    # "number four" and the visitor finds the same words in a different alphabet.
+    card = desk_card_html(reading(), TODAY)
+    for key in reading().letter.keys:
+        assert f'<span class="n">{key.number}</span>' in card
+    assert "Totaal te betalen: EUR 174,00" in card
+
+
+def test_the_card_shows_the_broken_key_as_an_absence_and_not_as_a_fact() -> None:
+    card = desk_card_html(reading(), TODAY)
+    assert 'class="broken"' in card
+    assert "Vraag de bezoeker het kenteken van de brief voor te lezen." in card
+
+
+def test_nothing_on_the_card_carries_meaning_in_colour() -> None:
+    # It prints on the monochrome printer behind a library counter. A colour that has to survive
+    # greyscale is a colour that decides nothing, so the card carries none at all.
+    card = desk_card_html(reading(), TODAY)
+    colours = re.findall(r"#[0-9a-fA-F]{3,6}", card)
+    assert colours
+    for colour in colours:
+        red, green, blue = _channels(colour)
+        assert red == green == blue, f"{colour} is not a grey"
 
 
 def test_the_reminder_is_a_calendar_a_phone_can_open() -> None:

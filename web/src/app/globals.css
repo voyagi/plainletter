@@ -18,16 +18,35 @@
 
   --font-brand: var(--font-bricolage), sans-serif;
   --font-reading: var(--font-hyperlegible), sans-serif;
-  --font-arabic: var(--font-arabic), sans-serif;
-}
+  --font-cyrillic: var(--font-noto), var(--font-hyperlegible), sans-serif;
+  /* No web font ships for Han. Nothing in the product is written in it today, and a CJK face is
+     several megabytes for nobody. The day a Chinese sample exists, Noto Sans SC goes here. */
+  --font-han: "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
 
-/* Each script gets a face drawn for it, never one that merely covers it: an Arabic reader should
-   not be handed Persian letter shapes by a family that happens to include the alphabet. */
-:lang(ar) {
-  font-family: var(--font-arabic);
+  --shadow-sheet: 0 14px 34px rgb(34 30 28 / 0.1);
 }
 
 @layer theme {
+  /* Three states, and each one is written out. An explicit choice wins in both directions, and the
+     default follows the device. The palette below appears twice on purpose: a colour defined only
+     inside the media query has no value when the toggle asks for dark on a light device, and the
+     alternatives to repeating it (a colour-mix per token off a single flag, or the custom-property
+     space toggle) make every colour in the product harder to read than the duplication does. */
+  /* jscpd:ignore-start */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --color-desk: #191614;
+      --color-paper: #221e1c;
+      --color-ink: #f5f1ed;
+      --color-ink-2: #bdb2ab;
+      --color-ink-3: #8e827a;
+      --color-rule: #3a3330;
+      --color-mark: #ff8fae;
+      --color-wash: #4a1626;
+      --shadow-sheet: 0 14px 34px rgb(0 0 0 / 0.55);
+    }
+  }
+
   :root[data-theme="dark"] {
     --color-desk: #191614;
     --color-paper: #221e1c;
@@ -37,7 +56,13 @@
     --color-rule: #3a3330;
     --color-mark: #ff8fae;
     --color-wash: #4a1626;
+    --shadow-sheet: 0 14px 34px rgb(0 0 0 / 0.55);
   }
+  /* jscpd:ignore-end */
+}
+
+html {
+  color-scheme: light dark;
 }
 
 body {
@@ -49,15 +74,64 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Each script gets a face drawn for it, never one that merely covers it. The reading face carries
+   no Cyrillic, so a Ukrainian column that did not say so would be set in whatever the device had. */
+:lang(uk),
+:lang(ru),
+:lang(bg) {
+  font-family: var(--font-cyrillic);
+}
+
+:lang(zh) {
+  font-family: var(--font-han);
+}
+
 /* A highlighter stroke has round ends and sits under the words rather than behind a box, which is
-   the whole reason the mark reads as something a person did rather than as a status colour. */
+   the whole reason the mark reads as something a person did rather than as a status colour. It is
+   painted as a background image so the wash can be wiped on in the reading direction. */
 mark {
-  background: var(--color-wash);
+  background-color: transparent;
+  background-image: linear-gradient(var(--color-wash), var(--color-wash));
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: left center;
   color: inherit;
   border-radius: 999px;
   padding: 0.05em 0.36em;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+}
+
+[dir="rtl"] mark {
+  background-position: right center;
+}
+
+/* Marking, not animating: a wash arrives the way a hand draws one, once, in the reading direction,
+   and nothing here loops or fires because something scrolled into view. */
+@keyframes wash-on {
+  from {
+    background-size: 0% 100%;
+  }
+  to {
+    background-size: 100% 100%;
+  }
+}
+
+@keyframes settle-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.wash-on mark {
+  animation: wash-on 220ms ease-out both;
+}
+
+.settle-in {
+  animation: settle-in 140ms ease-out both;
 }
 
 :focus-visible {
@@ -79,5 +153,14 @@ bdi {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* The console is a screen for two people at a counter. What it prints is the desk card, which the
+   agent renders itself, so a browser print of the console page is a mistake rather than a feature
+   and it says so on the paper. */
+@media print {
+  .screen-only {
+    display: none !important;
   }
 }
