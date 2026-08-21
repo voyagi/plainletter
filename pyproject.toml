@@ -16,6 +16,8 @@ dependencies = [
   "pyyaml>=6",
   "icalendar>=6",
   "python-dateutil>=2.9",
+  "pypdfium2>=5",
+  "pillow>=11",
 ]
 
 [dependency-groups]
@@ -29,10 +31,12 @@ dev = [
   "pip-audit>=2.8",
   "types-PyYAML",
   "types-python-dateutil",
+  "httpx>=0.28",
 ]
 
 [project.scripts]
 plainletter = "plainletter.cli:main"
+plainletter-serve = "plainletter.app:serve"
 
 [build-system]
 requires = ["hatchling"]
@@ -66,6 +70,12 @@ files = ["src"]
 module = ["strands.*", "strands_tools.*", "bedrock_agentcore.*", "icalendar.*"]
 ignore_missing_imports = true
 follow_untyped_imports = true
+
+# pypdfium2 ships no py.typed marker, so following it turns every PDFium call into an untyped call
+# in a strict context. Treating the module as opaque keeps the strictness where our own code is.
+[[tool.mypy.overrides]]
+module = ["pypdfium2.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

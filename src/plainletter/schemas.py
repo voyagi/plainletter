@@ -58,6 +58,17 @@ class LetterDate(Frozen):
         return date(self.year, self.month, self.day)
 
 
+class LabelledDate(LetterDate):
+    """A date that is neither the letter's own date nor its deadline, with what the letter calls it.
+
+    An immigration letter says the permit runs out on one date and the application has to be in by
+    another. Both are load bearing, and a schema with room for only one of them forces a reading to
+    drop whichever it thinks matters less.
+    """
+
+    label: str = Field(min_length=1, description="what this date is, in the letter's own words")
+
+
 class Money(Frozen):
     currency: Literal["EUR"] = "EUR"
     cents: int = Field(ge=0)
@@ -78,6 +89,7 @@ class LetterFacts(Frozen):
     reference: NamedValue | None = None
     issued_on: LetterDate | None = None
     deadline: LetterDate | None = None
+    other_dates: tuple[LabelledDate, ...] = ()
     total_amount: Money | None = None
     line_amounts: tuple[Money, ...] = ()
     consequences: tuple[SourceSpan, ...] = Field(

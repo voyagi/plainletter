@@ -1,8 +1,13 @@
 """The Bedrock implementation of the reading model.
 
-Reading and explaining go to a vision-capable Sonnet, the cheaper Haiku handles the shorter
-drafting turn. Both are EU cross-region inference profiles sourced from Frankfurt, because the
-letters carry personal data and processing them outside the EU is not a trade this product makes.
+Transcribing, reading and explaining go to a vision-capable Sonnet, the cheaper Haiku handles the
+shorter drafting turn. Both are EU cross-region inference profiles sourced from Frankfurt, because
+the letters carry personal data and processing them outside the EU is not a trade this product
+makes.
+
+Transcription is a separate agent rather than a second question to the reading one, and the cost of
+that extra turn is the point: two turns that never saw each other's answer have to agree before a
+fact is allowed through.
 
 Every stage after the verifier is constructed with the grounding guard attached, so a date the
 model invents cannot leave through a tool call. The guard is passed in rather than built here: it
@@ -19,8 +24,15 @@ from strands import Agent
 from strands.models import BedrockModel
 
 from .guard import AuditTrail, GroundingGuard
+from .intake import LetterInput
 from .kb import Sender
-from .reading_model import DRAFT_PROMPT, EXPLAIN_PROMPT, PLAN_PROMPT, READING_PROMPT
+from .reading_model import (
+    DRAFT_PROMPT,
+    EXPLAIN_PROMPT,
+    PLAN_PROMPT,
+    READING_PROMPT,
+    TRANSCRIBE_PROMPT,
+)
 from .schemas import ActionStep, DeadlineView, DraftLetter, Explanation, LetterFacts
 
 READING_MODEL_ID = "eu.anthropic.claude-sonnet-4-6"
@@ -51,13 +63,17 @@ class BedrockReadingModel:
     reading_model_id: str = READING_MODEL_ID
     drafting_model_id: str = DRAFTING_MODEL_ID
 
-    def read(self, letter: Any) -> LetterFacts:
+    def transcribe(self, letter: LetterInput) -> str:
+        agent = self._agent(self.reading_model_id, TRANSCRIBE_PROMPT, guard=None)
+        return str(agent(list(letter.blocks)))
+
+    def read(self, letter: LetterInput) -> LetterFacts:
         agent = self._agent(
             self.reading_model_id,
             READING_PROMPT.format(sender_ids=", ".join(self.sender_ids)),
             guard=None,
         )
-        return agent.structured_output(LetterFacts, letter)
+        return agent.structured_output(LetterFacts, list(letter.blocks))
 
     def explain(
         self, facts: LetterFacts, grounded: dict[str, str], languages: tuple[str, ...]

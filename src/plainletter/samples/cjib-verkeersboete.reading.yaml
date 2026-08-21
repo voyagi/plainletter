@@ -1,0 +1,111 @@
+visitor_language: ar
+facts:
+  sender_id: cjib
+  sender_name:
+    value: Centraal Justitieel Incassobureau
+    source:
+      page: 1
+      text: Centraal Justitieel Incassobureau
+  letter_type:
+    value: Beschikking administratieve sanctie (Wet Mulder)
+    source:
+      page: 1
+      text: Beschikking administratieve sanctie (Wet Mulder)
+  reference:
+    value: 8194 5523 7761
+    source:
+      page: 1
+      text: "Beschikkingsnummer: 8194 5523 7761"
+  issued_on:
+    day: 4
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Datum beschikking: 4 augustus 2026"
+  deadline:
+    day: 15
+    month: 9
+    year: 2026
+    source:
+      page: 1
+      text: Betaal voor 15 september 2026.
+  total_amount:
+    cents: 17400
+    label: Totaal te betalen
+    source:
+      page: 1
+      text: "Totaal te betalen: EUR 174,00"
+  line_amounts:
+    - cents: 16500
+      label: Sanctiebedrag
+      source:
+        page: 1
+        text: "Sanctiebedrag: EUR 165,00"
+    - cents: 900
+      label: Administratiekosten
+      source:
+        page: 1
+        text: "Administratiekosten: EUR 9,00"
+  consequences:
+    - page: 1
+      text: >-
+        Betaalt u niet op tijd, dan wordt het bedrag verhoogd met 50 procent. Bij een tweede
+        verhoging komt daar nog eens 100 procent bij.
+  objection_route:
+    page: 1
+    text: >-
+      U kunt binnen zes weken na de datum van deze beschikking beroep instellen bij de officier
+      van justitie.
+  unreadable:
+    - field: kenteken
+      reason: the middle character of the number plate is blurred in the photograph
+      ask_the_visitor: Ask the visitor to read the number plate from the letter.
+explanations:
+  - language: nl
+    what_is_this: >-
+      Een verkeersboete van het CJIB. U reed 14 km/u te hard op de Boezemweg in Rotterdam. U moet
+      EUR 174,00 betalen.
+    by_when: Betaal voor 15 september 2026.
+    if_you_do_nothing: >-
+      Het bedrag wordt verhoogd met 50 procent. Betaalt u daarna nog niet, dan komt er nog 100
+      procent bij.
+  - language: ar
+    what_is_this: >-
+      غرامة مرور من CJIB. تجاوزت السرعة في شارع Boezemweg في روتردام. عليك دفع EUR 174,00.
+    by_when: ادفع قبل 15 september 2026.
+    if_you_do_nothing: >-
+      يزيد المبلغ 50 بالمئة. وإذا لم تدفع بعد ذلك يزيد 100 بالمئة أخرى.
+steps:
+  - order: 1
+    dutch: Betaal EUR 174,00 met beschikkingsnummer 8194 5523 7761.
+    visitor: ادفع EUR 174,00 بالرقم 8194 5523 7761.
+    official_route: https://www.cjib.nl/verkeersboete
+  - order: 2
+    dutch: Kunt u het niet in een keer betalen? Vraag een betalingsregeling aan.
+    visitor: لا تستطيع الدفع دفعة واحدة؟ اطلب خطة تقسيط.
+    official_route: https://www.cjib.nl/betalingsregeling
+  - order: 3
+    dutch: >-
+      Bent u het er niet mee eens? Stel beroep in bij de officier van justitie, binnen zes weken na
+      de datum van de beschikking.
+    visitor: غير موافق؟ قدّم اعتراضاً إلى المدعي العام خلال ستة أسابيع من تاريخ القرار.
+    official_route: https://www.om.nl/onderwerpen/verkeer
+draft:
+  kind: objection
+  addressed_to: Officier van justitie
+  send_before: null
+  dutch: |-
+    Geachte officier van justitie,
+
+    Ik maak bezwaar tegen beschikking 8194 5523 7761. Mijn auto stond die dag niet op de Boezemweg.
+    Ik verzoek u de sanctie in te trekken.
+
+    Met vriendelijke groet,
+  visitor: |-
+    حضرة المدعي العام،
+
+    أعترض على القرار رقم 8194 5523 7761. لم تكن سيارتي في شارع Boezemweg في ذلك اليوم. أرجو إلغاء
+    الغرامة.
+
+    مع خالص التقدير،

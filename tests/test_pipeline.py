@@ -2,20 +2,23 @@ from datetime import date
 
 import pytest
 
-from plainletter.demo import ScriptedReadingModel, cjib_model, sample_text
+from plainletter.demo import ScriptedReadingModel, sample_input, sample_text, scripted_model
 from plainletter.kb import load_senders
 from plainletter.pipeline import Pipeline, UngroundedOutputError, handoff_for
 from plainletter.schemas import Urgency, VerificationResult
 from plainletter.verify import verify
 
-LETTER = sample_text("cjib-verkeersboete")
+SAMPLE = "cjib-verkeersboete"
+LETTER = sample_input(SAMPLE)
 TODAY = date(2026, 8, 21)
 
 
+def cjib_model() -> ScriptedReadingModel:
+    return scripted_model(SAMPLE)
+
+
 def run(model: ScriptedReadingModel = None) -> object:  # type: ignore[assignment]
-    return Pipeline(model=model or cjib_model()).run(
-        LETTER, LETTER, visitor_language="ar", today=TODAY
-    )
+    return Pipeline(model=model or cjib_model()).run(LETTER, visitor_language="ar", today=TODAY)
 
 
 def test_a_sample_letter_goes_through_end_to_end() -> None:
@@ -106,13 +109,13 @@ def test_a_deadline_that_did_not_check_out_never_reaches_the_desk() -> None:
         steps=(),
         draft_letter=None,
     )
-    reading = Pipeline(model=quiet).run(LETTER, LETTER, visitor_language="ar", today=TODAY)
+    reading = Pipeline(model=quiet).run(LETTER, visitor_language="ar", today=TODAY)
     assert reading.deadline is None
     assert reading.handoff.required
 
 
 def test_an_unverified_sender_is_handed_to_a_person() -> None:
-    result = verify(cjib_model().facts, LETTER)
+    result = verify(cjib_model().facts, sample_text(SAMPLE))
     handoff = handoff_for(result, load_senders()["ind"])
     assert handoff.required
     assert "lawyer" in handoff.reason or "VluchtelingenWerk" in handoff.reason

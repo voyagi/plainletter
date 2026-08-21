@@ -46,6 +46,8 @@ def verify(facts: LetterFacts, letter_text: str) -> VerificationResult:
 
     for name, value in (("issued_on", facts.issued_on), ("deadline", facts.deadline)):
         _check_date(name, value, letter_text, grounded, issues)
+    for index, dated in enumerate(facts.other_dates, start=1):
+        _check_date(f"other_date_{index}", dated, letter_text, grounded, issues)
 
     _check_money("total_amount", facts.total_amount, letter_text, grounded, issues)
     for index, amount in enumerate(facts.line_amounts, start=1):

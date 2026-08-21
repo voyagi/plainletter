@@ -5,6 +5,10 @@ whole trust claim is that verification happens before anything is explained, pla
 printed, and a sequence written in Python is a guarantee where a sequence a model chooses is a
 preference.
 
+What the facts are checked against comes from the file wherever the file can give it: a text upload
+or a born-digital PDF carries the letter's own words. Only pages that arrive as pictures are
+transcribed, and then by a separate turn from the one that extracts the facts.
+
 Two independent things enforce grounding, because one of them is a model behaviour and the other is
 not. The guard denies a tool call carrying an ungrounded number. This function then re-reads
 everything the model produced and refuses the whole reading if a stray date or amount survived. A
@@ -17,6 +21,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from . import urgency
+from .intake import LetterInput
 from .kb import Sender, get_sender, known_sender_ids
 from .reading_model import ReadingModel
 from .schemas import (
@@ -54,12 +59,12 @@ class Pipeline:
 
     def run(
         self,
-        letter: object,
-        letter_text: str,
+        letter: LetterInput,
         *,
         visitor_language: str,
         today: date,
     ) -> DeskReading:
+        letter_text = letter.text if letter.text is not None else self.model.transcribe(letter)
         facts = self.model.read(letter)
         result = verify(facts, letter_text)
         grounded = {fact.name: fact.display for fact in result.grounded}
@@ -71,9 +76,13 @@ class Pipeline:
 
         explanations = self.model.explain(facts, grounded, languages)
         steps = self.model.plan(facts, grounded, sender, deadline, visitor_language)
+        # Whether a letter needs writing back to is the drafter's call, not a property of the
+        # letter carrying an objection paragraph: an insurer's arrears notice has no appeal route
+        # printed on it and a request for a payment plan is exactly the right reply. What is not
+        # the drafter's call is writing one for a reading that did not check out.
         draft = (
             self.model.draft(facts, grounded, sender, visitor_language)
-            if result.is_grounded and facts.objection_route is not None
+            if result.is_grounded
             else None
         )
 

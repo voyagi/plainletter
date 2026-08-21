@@ -1,9 +1,9 @@
 """The command line the desk runs before there is a console in front of it.
 
 `demo` runs the whole pipeline on a sample letter with a scripted reading, so the deterministic
-half can be shown working with no cloud account. `read` runs the same pipeline against Bedrock on a
-real file. Both end the same way: a printable card, a calendar reminder, and a short summary of
-what was checked.
+half can be shown working with no cloud account. `read` takes a photograph, a PDF or a text file and
+runs the same pipeline against Bedrock. Both end the same way: a printable card, a calendar
+reminder, and a short summary of what was checked.
 """
 
 from __future__ import annotations
@@ -13,15 +13,20 @@ import sys
 from datetime import date
 from pathlib import Path
 
+from . import intake
 from .bedrock import BedrockReadingModel
-from .demo import cjib_model, sample_names, sample_text
+from .demo import sample_input, sample_names, scripted_model, scripted_reading
+from .intake import IntakeError, LetterInput
 from .kb import known_sender_ids
 from .pipeline import Pipeline, UngroundedOutputError
 from .reading_model import ReadingModel
 from .render import desk_card_html, reminder_ics
 from .schemas import DeskReading
 
-DEFAULT_LANGUAGE = "ar"
+DEFAULT_SAMPLE = "cjib-verkeersboete"
+
+REFUSED = 2
+UNREADABLE = 3
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -29,39 +34,47 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     demo = sub.add_parser("demo", help="run the pipeline on a sample letter, no cloud account")
-    demo.add_argument("--sample", default="cjib-verkeersboete", choices=sample_names())
+    demo.add_argument("--sample", default=DEFAULT_SAMPLE, choices=sample_names())
+    demo.add_argument(
+        "--language", default=None, help="visitor's language tag, default the sample's own"
+    )
     _shared_arguments(demo)
 
     read = sub.add_parser("read", help="read a real letter with Bedrock")
-    read.add_argument("path", type=Path, help="a text file holding the letter")
+    read.add_argument("path", type=Path, help="a photograph, a PDF, or a text file")
+    read.add_argument("--language", required=True, help="the visitor's language tag, e.g. ar")
     _shared_arguments(read)
 
     args = parser.parse_args(argv)
     today = date.fromisoformat(args.today) if args.today else date.today()
 
+    model: ReadingModel
     if args.command == "demo":
-        letter_text = sample_text(args.sample)
-        model: ReadingModel = cjib_model()
+        letter = sample_input(args.sample)
+        model = scripted_model(args.sample)
+        language = args.language or scripted_reading(args.sample).visitor_language
     else:
-        letter_text = args.path.read_text(encoding="utf-8")
+        try:
+            letter = intake.from_path(args.path)
+        except IntakeError as problem:
+            print(f"Cannot read that file. {problem}", file=sys.stderr)
+            return UNREADABLE
         model = BedrockReadingModel(sender_ids=known_sender_ids())
+        language = args.language
 
     try:
-        reading = Pipeline(model=model).run(
-            letter_text, letter_text, visitor_language=args.language, today=today
-        )
+        reading = Pipeline(model=model).run(letter, visitor_language=language, today=today)
     except UngroundedOutputError as refusal:
         print(f"Refused: {refusal}", file=sys.stderr)
         print("Nothing was printed. Send this letter to a person.", file=sys.stderr)
-        return 2
+        return REFUSED
 
     _write_outputs(reading, args.out, today)
-    _summarise(reading)
+    _summarise(reading, letter)
     return 0
 
 
 def _shared_arguments(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--language", default=DEFAULT_LANGUAGE, help="the visitor's language tag")
     parser.add_argument("--out", type=Path, default=Path("out"), help="where to write the card")
     parser.add_argument("--today", default=None, help="ISO date to count deadlines from")
 
@@ -82,7 +95,10 @@ def _write_outputs(reading: DeskReading, out: Path, today: date) -> None:
         print(f"reminder {reminder}")
 
 
-def _summarise(reading: DeskReading) -> None:
+def _summarise(reading: DeskReading, letter: LetterInput) -> None:
+    print(f"pages   {letter.pages} ({letter.kind})")
+    if letter.pages_omitted:
+        print(f"note    {letter.pages_omitted} further pages were not sent to the model")
     print(f"sender  {reading.sender_name}")
     print(f"type    {reading.letter_type}")
     if reading.deadline is not None:

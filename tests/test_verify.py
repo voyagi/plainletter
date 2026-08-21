@@ -1,8 +1,13 @@
-from plainletter.demo import cjib_facts, sample_text
+from plainletter.demo import sample_text, scripted_reading
 from plainletter.schemas import LetterDate, Money, SourceSpan
 from plainletter.verify import numeric_claims, ungrounded_claims, verify
 
-LETTER = sample_text("cjib-verkeersboete")
+SAMPLE = "cjib-verkeersboete"
+LETTER = sample_text(SAMPLE)
+
+
+def cjib_facts():
+    return scripted_reading(SAMPLE).facts
 
 
 def test_a_correct_reading_grounds_every_fact() -> None:

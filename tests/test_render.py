@@ -2,16 +2,19 @@ from datetime import date
 
 from icalendar import Calendar
 
-from plainletter.demo import cjib_model, sample_text
+from plainletter.demo import sample_input, scripted_model
 from plainletter.pipeline import Pipeline
 from plainletter.render import desk_card_html, is_rtl, reminder_ics
 
-LETTER = sample_text("cjib-verkeersboete")
+SAMPLE = "cjib-verkeersboete"
+LETTER = sample_input(SAMPLE)
 TODAY = date(2026, 8, 21)
 
 
 def reading(language: str = "ar"):
-    return Pipeline(model=cjib_model()).run(LETTER, LETTER, visitor_language=language, today=TODAY)
+    return Pipeline(model=scripted_model(SAMPLE)).run(
+        LETTER, visitor_language=language, today=TODAY
+    )
 
 
 def test_the_card_carries_the_deadline_the_days_and_the_posting_date() -> None:
