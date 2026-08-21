@@ -36,6 +36,8 @@ jobs:
       # Each gate is a FLOOR: green means no known violation, never "good".
       - run: npm run gate
       # Client-secret gate as its OWN step, after the build, because it needs a built bundle (the
-      # pre-commit chain has none). It activates the moment the web package exists.
+      # pre-commit chain has none). Same reason for the bundle budget.
       - if: hashFiles('web/package.json') != ''
-        run: node scripts/check-client-secrets.mjs web/dist web/.next web/build
+        run: node scripts/check-client-secrets.mjs web/.next
+      - if: hashFiles('web/package.json') != ''
+        run: npm run gate:size --workspace @plainletter/web

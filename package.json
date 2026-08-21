@@ -7,17 +7,25 @@
   "engines": {
     "node": ">=20"
   },
+  "workspaces": [
+    "web"
+  ],
   "scripts": {
+    "build": "npm run build --workspace @plainletter/web",
     "gate:ship-artifacts": "node scripts/check-ship-artifacts.mjs",
     "gate:dup": "jscpd .",
     "gate:py:lint": "uv run ruff check .",
     "gate:py:format": "uv run ruff format --check .",
     "gate:py:security": "uv run bandit -q -r src",
-    "gate:types": "uv run mypy",
-    "gate:precommit": "npm run gate:ship-artifacts && npm run gate:py:lint",
-    "gate": "npm run gate:ship-artifacts && npm run gate:dup && npm run gate:py:lint && npm run gate:py:format && npm run gate:py:security && npm run gate:types",
-    "lint": "npm run gate:py:lint && npm run gate:py:format",
-    "test": "uv run pytest -q",
+    "gate:py:types": "uv run mypy",
+    "gate:web:types": "npm run typecheck --workspace @plainletter/web",
+    "gate:web:lint": "npm run lint --workspace @plainletter/web",
+    "gate:web:deps": "npm run gate:deps --workspace @plainletter/web",
+    "gate:types": "npm run gate:py:types && npm run gate:web:types",
+    "gate:precommit": "npm run gate:ship-artifacts && npm run gate:py:lint && npm run gate:web:lint",
+    "gate": "npm run gate:ship-artifacts && npm run gate:dup && npm run gate:py:lint && npm run gate:py:format && npm run gate:py:security && npm run gate:types && npm run gate:web:lint && npm run gate:web:deps",
+    "lint": "npm run gate:py:lint && npm run gate:py:format && npm run gate:web:lint",
+    "test": "uv run pytest -q && npm run test --workspace @plainletter/web",
     "verify:ship": "node verify-ship.mjs"
   },
   "devDependencies": {

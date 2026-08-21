@@ -19,6 +19,9 @@ report/
 # build output
 dist/
 build/
+.next/
+next-env.d.ts
+*.tsbuildinfo
 *.log
 
 # OS

@@ -7,6 +7,8 @@
     "**/node_modules/**",
     "**/dist/**",
     "**/build/**",
+    "**/.next/**",
+    "**/package-lock.json",
     "**/coverage/**",
     "**/playwright-report/**",
     "**/.wrangler/**",

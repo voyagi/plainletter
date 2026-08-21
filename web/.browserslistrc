@@ -1,0 +1,6 @@
+# The console runs on library laptops and counter tablets, so the target is current evergreen
+# browsers. Keep `not op_mini all`: Opera Mini is inside `defaults` and supports almost no modern
+# web API, which makes the compat gate fire on completely normal code.
+defaults
+not op_mini all
+not dead
