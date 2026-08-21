@@ -1,46 +1,63 @@
 @import "tailwindcss";
 
 /* The locked art direction, as tokens. design/ART-DIRECTION.md is the source; this file is its
-   only implementation, so a colour never gets invented at a call site. */
-@theme {
-  --color-signal: #f5c400;
-  --color-ink: #14213d;
-  --color-paper: #ffffff;
-  --color-field: #eef0f5;
-  --color-bar: #14213d;
-  --color-rule: #14213d;
-  --color-overdue: #c8102e;
-  --color-soon: #b45309;
-  --color-ample: #0b7a4b;
-  --color-route: #1f4fbf;
-  --color-quiet: #4b5670;
+   only implementation, so a colour never gets invented at a call site.
 
-  --font-board: var(--font-overpass), sans-serif;
+   The colour law is what makes this list short: one hue exists, and it may only ever touch words.
+   There is deliberately no token for a coloured surface, bar, badge or button, because painting a
+   region would turn the mark from evidence into decoration. */
+@theme {
+  --color-desk: #efeae6;
+  --color-paper: #ffffff;
+  --color-ink: #221e1c;
+  --color-ink-2: #5c534e;
+  --color-ink-3: #847871;
+  --color-rule: #dcd4ce;
+  --color-mark: #b01e4b;
+  --color-wash: #ffdde7;
+
+  --font-brand: var(--font-bricolage), sans-serif;
   --font-reading: var(--font-hyperlegible), sans-serif;
+  --font-arabic: var(--font-arabic), sans-serif;
 }
 
-/* Bars and chips keep an ink ground in both themes, so white type on them never inverts. */
+/* Each script gets a face drawn for it, never one that merely covers it: an Arabic reader should
+   not be handed Persian letter shapes by a family that happens to include the alphabet. */
+:lang(ar) {
+  font-family: var(--font-arabic);
+}
+
 @layer theme {
   :root[data-theme="dark"] {
-    --color-ink: #f8fafc;
-    --color-paper: #0f172a;
-    --color-field: #1b2540;
-    --color-bar: #060b18;
-    --color-rule: #3b4a6b;
-    --color-overdue: #ff6b7a;
-    --color-soon: #f2a93b;
-    --color-ample: #3dd68c;
-    --color-route: #7fa5ff;
-    --color-quiet: #9fb0cc;
+    --color-desk: #191614;
+    --color-paper: #221e1c;
+    --color-ink: #f5f1ed;
+    --color-ink-2: #bdb2ab;
+    --color-ink-3: #8e827a;
+    --color-rule: #3a3330;
+    --color-mark: #ff8fae;
+    --color-wash: #4a1626;
   }
 }
 
 body {
-  background: var(--color-paper);
+  background: var(--color-desk);
   color: var(--color-ink);
   font-family: var(--font-reading);
-  font-size: 1.0625rem;
+  font-size: 1rem;
   line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A highlighter stroke has round ends and sits under the words rather than behind a box, which is
+   the whole reason the mark reads as something a person did rather than as a status colour. */
+mark {
+  background: var(--color-wash);
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.05em 0.36em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 :focus-visible {

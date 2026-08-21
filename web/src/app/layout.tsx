@@ -1,19 +1,38 @@
 import type { Metadata } from 'next';
-import { Atkinson_Hyperlegible_Next, Overpass } from 'next/font/google';
+import {
+  Atkinson_Hyperlegible_Next,
+  Bricolage_Grotesque,
+  Noto_Sans_Arabic,
+} from 'next/font/google';
 import '@/app/globals.css';
 import '@/env';
 
-const overpass = Overpass({
+// The brand layer only: the wordmark, the one plain sentence and landing headlines. It never
+// reaches a control, a table or the printed card.
+const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
-  weight: ['600', '700', '800'],
-  variable: '--font-overpass',
+  weight: ['400', '600', '700', '800'],
+  variable: '--font-bricolage',
   display: 'swap',
 });
 
+// latin-ext is not optional here. Polish and Turkish are two of the twelve visitor languages, and
+// their letters live in that subset: without it, the l with stroke and the dotless i fall out of
+// the face mid-sentence and land on whatever the device happens to have.
 const hyperlegible = Atkinson_Hyperlegible_Next({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   weight: ['400', '600', '700'],
   variable: '--font-hyperlegible',
+  display: 'swap',
+});
+
+// Arabic gets a face drawn for Arabic rather than one that merely covers it. Vazirmatn, which the
+// Farsi output uses, calls itself a Persian project first, and Persian prefers letter shapes an
+// Arabic reader would not choose. Every script here gets its own designed face for that reason.
+const arabic = Noto_Sans_Arabic({
+  subsets: ['arabic'],
+  weight: ['400', '600', '700'],
+  variable: '--font-arabic',
   display: 'swap',
 });
 
@@ -31,7 +50,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${overpass.variable} ${hyperlegible.variable}`}>
+    <html
+      lang="en"
+      className={`${bricolage.variable} ${hyperlegible.variable} ${arabic.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

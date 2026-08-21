@@ -6,178 +6,269 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Noto+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { --yellow: #F5C400; --ink: #14213D; --paper: #FFFFFF; --field: #EEF0F5; --route: #1F4FBF; --soon: #B45309; --quiet: #4B5670; --rule: #14213D; --bar: #14213D; }
-  /* Bars keep an ink ground in both themes; rules soften so they do not glare on a dark page. */
-  html[data-theme="dark"] { --ink: #F8FAFC; --paper: #0F172A; --field: #1B2540; --route: #7FA5FF; --soon: #F2A93B; --quiet: #9FB0CC; --rule: #3B4A6B; --bar: #060B18; }
+  :root {
+    --desk: #EFEAE6; --paper: #FFFFFF; --ink: #221E1C; --ink2: #5C534E; --ink3: #847871;
+    --rule: #DCD4CE; --mark: #B01E4B; --wash: #FFDDE7; --shadow: rgba(34, 30, 28, 0.10);
+  }
+  html[data-theme="dark"] {
+    --desk: #191614; --paper: #221E1C; --ink: #F5F1ED; --ink2: #BDB2AB; --ink3: #8E827A;
+    --rule: #3A3330; --mark: #FF8FAE; --wash: #4A1626; --shadow: rgba(0, 0, 0, 0.55);
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Atkinson Hyperlegible Next", sans-serif; font-size: 18px; line-height: 1.55; }
-  a { color: var(--route); }
-  bdi { unicode-bidi: isolate; }
+  body { margin: 0; background: var(--desk); color: var(--ink);
+         font-family: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+         font-size: 16px; line-height: 1.55; font-variant-numeric: tabular-nums; }
+  .ar { font-family: "Noto Sans Arabic", "Atkinson Hyperlegible Next", sans-serif; line-height: 1.7; }
+  .bric { font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.02em; }
+  mark { background: var(--wash); color: inherit; border-radius: 999px; padding: 0.05em 0.36em;
+         box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .num { display: inline-block; width: 20px; height: 20px; border: 1px solid var(--mark);
+         color: var(--mark); border-radius: 4px; font-size: 11px; font-weight: 700;
+         line-height: 18px; text-align: center; }
+  .gap { display: block; width: 20px; border-top: 1px dashed var(--ink3); margin-top: 10px; }
 
-  /* One yellow spine runs the height of the page and carries the section names. */
-  .page { display: grid; grid-template-columns: 96px 1fr; }
-  .spine { background: var(--yellow); border-inline-end: 3px solid var(--rule); }
-  .spine .stack { position: sticky; top: 0; padding: 22px 0; display: grid; gap: 30px; justify-items: center; }
-  .spine .n { font-family: Overpass, sans-serif; font-weight: 800; font-size: 15px; color: var(--ink); writing-mode: vertical-rl; letter-spacing: 0.22em; text-transform: uppercase; }
-  .spine .n.on { background: var(--bar); color: var(--yellow); padding: 12px 5px; }
+  /* The page IS the letter: one unbroken sheet, and its margin runs down the side. The numeral
+     is what ties a note to its passage, so the two need not line up pixel by pixel. */
+  .doc { display: grid; grid-template-columns: minmax(0, 545px) minmax(0, 410px);
+         gap: 0 56px; justify-content: center; padding: 40px 28px 0; align-items: start; }
+  .margin { grid-column: 2; }
+  .ledgerband { max-width: 1014px; margin: 40px auto 0; padding: 0 28px; }
+  .sheet { grid-column: 1; position: sticky; top: 26px; align-self: start;
+           background: var(--paper); border-radius: 12px; padding: 34px 30px 30px 22px;
+           font-size: 14.5px; line-height: 1.66; box-shadow: 0 18px 40px var(--shadow); }
+  .note { padding: 26px 0; }
+  .note h2 { font-family: "Bricolage Grotesque", sans-serif; font-size: 23px; font-weight: 700;
+             letter-spacing: -0.02em; line-height: 1.24; margin: 0 0 9px; }
+  .note p { margin: 0 0 10px; color: var(--ink2); font-size: 15.5px; }
+  .note p:last-child { margin-bottom: 0; }
+  .note .tag { font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+               color: var(--ink3); display: block; margin-bottom: 10px; }
 
-  .band { border-bottom: 3px solid var(--rule); padding: 44px 56px 50px; }
-  .kicker { font-family: Overpass, sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; }
-  h1 { font-family: Overpass, sans-serif; font-weight: 800; font-size: 58px; line-height: 1.02; margin: 12px 0 18px; max-width: 15ch; letter-spacing: -0.01em; }
-  .lede { font-size: 22px; max-width: 46ch; margin: 0 0 26px; }
+  .line { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start;
+          margin-bottom: 10px; }
+  .line.tight { margin-bottom: 2px; }
+  .row { display: grid; grid-template-columns: 150px 1fr; gap: 8px; }
+  .row > span:first-child { color: var(--ink2); }
+  .fine { color: var(--ink2); font-size: 12px; margin: 14px 0 0; }
 
-  /* Opening frame: the printed card on the counter. The built page uses a photograph here. */
-  .counter { background: #C9BFA8; border: 3px solid var(--rule); padding: 30px 34px; display: grid; grid-template-columns: 1fr auto; gap: 34px; align-items: center; }
-  .counter .say { max-width: 32ch; font-size: 20px; }
-  /* A printed card is paper in either theme, so it pins its own ink rather than inheriting one. */
-  .card-shot { background: #fff; color: #14213D; border: 2px solid #14213D; width: 340px; transform: rotate(-2deg); box-shadow: 9px 11px 0 rgba(20, 33, 61, 0.28); }
-  .card-shot .hdr { background: var(--yellow); border-bottom: 2px solid #14213D; padding: 9px 13px; font-family: Overpass, sans-serif; font-weight: 800; font-size: 14px; }
-  .card-shot .dl { background-color: #FFE9A8; background-image: repeating-linear-gradient(-45deg, rgba(180, 83, 9, 0.6) 0 6px, transparent 6px 14px); border-bottom: 2px solid #14213D; padding: 7px 13px; font-family: Overpass, sans-serif; font-weight: 800; font-size: 13px; }
-  .card-shot .body { padding: 11px 13px 15px; font-size: 12.5px; }
-  .card-shot .q { font-family: Overpass, sans-serif; font-weight: 800; font-size: 12px; margin-top: 8px; }
-  .card-shot .ar { font-family: Vazirmatn, sans-serif; }
+  /* The masthead sits in the letter's own top margin, not in a separate band. */
+  .masthead { padding: 0 0 8px; }
+  .masthead .wm { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800;
+                  font-size: 22px; letter-spacing: -0.02em; }
+  .masthead h1 { font-family: "Bricolage Grotesque", sans-serif; font-size: clamp(30px, 3.1vw, 42px);
+                 font-weight: 700; letter-spacing: -0.03em; line-height: 1.06; margin: 22px 0 14px; }
+  .masthead p { font-size: 17px; color: var(--ink2); margin: 0 0 10px; max-width: 30em; }
 
-  .frames { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 3px solid var(--rule); }
-  .frame { border-inline-end: 2px solid var(--rule); padding: 20px 22px 26px; }
-  .frame:last-child { border-inline-end: 0; }
-  .frame .step { font-family: Overpass, sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 10px; }
-  .frame .pic { height: 168px; border: 2px solid var(--rule); background: var(--field); display: grid; place-items: center; font-size: 13px; color: var(--quiet); text-align: center; padding: 12px; }
-  .frame p { font-size: 16px; margin: 12px 0 0; }
+  .pairbox { border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; margin-top: 12px; }
+  .pairbox .nl { font-size: 15px; }
+  .pairbox .vis { text-align: right; margin-top: 9px; padding-top: 9px;
+                  border-top: 1px solid var(--rule); font-size: 15px; }
 
-  .who { display: grid; grid-template-columns: 1.1fr 1fr; gap: 44px; }
-  h2 { font-family: Overpass, sans-serif; font-weight: 800; font-size: 34px; margin: 0 0 14px; }
-  blockquote { margin: 20px 0 0; border-inline-start: 6px solid var(--yellow); padding-inline-start: 16px; font-size: 20px; }
-  blockquote cite { display: block; font-size: 15px; font-style: normal; margin-top: 8px; color: var(--quiet); }
-  .langs { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 16px; }
-  .langs span { border: 2px solid var(--rule); padding: 5px 11px; font-size: 16px; }
-  .langs .ar { font-family: Vazirmatn, sans-serif; }
+  .ledger { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+  .ledger th { text-align: left; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+               color: var(--ink3); font-weight: 700; padding: 0 10px 7px 0;
+               border-bottom: 1px solid var(--rule); }
+  .ledger td { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--rule); color: var(--ink2);
+               vertical-align: top; }
+  .ledger td:last-child { color: var(--ink); font-weight: 700; padding-right: 0; }
 
-  /* Privacy is a retention ledger: what enters, why, who sees it, when it is gone. */
-  .ledger-box { border: 5px solid var(--yellow); padding: 24px 28px 28px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 16px; }
-  th { text-align: start; font-family: Overpass, sans-serif; font-weight: 800; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; padding: 8px 14px 8px 0; border-bottom: 3px solid var(--rule); }
-  td { padding: 11px 14px 11px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
-  td.gone { font-family: Overpass, sans-serif; font-weight: 700; white-space: nowrap; }
+  /* The card, flat, at real proportions, in the monochrome it actually prints in. */
+  .cardzone { max-width: 1014px; margin: 68px auto 0; padding: 0 28px;
+              display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 54px;
+              align-items: center; }
+  .a4 { aspect-ratio: 1 / 1.414; background: #fff; color: #1a1a1a; border-radius: 4px;
+        box-shadow: 0 22px 44px var(--shadow); padding: 22px 20px; font-size: 9.5px;
+        line-height: 1.45; filter: grayscale(1); }
+  .a4 .band { border: 2px solid #1a1a1a; padding: 7px 9px; display: flex;
+              justify-content: space-between; align-items: baseline; }
+  .a4 .band b { font-size: 12px; }
+  .a4 .dl { border: 2px solid #1a1a1a; border-top: 0; padding: 7px 9px; display: flex;
+            justify-content: space-between; align-items: center;
+            background-image: repeating-linear-gradient(-45deg, #ddd 0 5px, transparent 5px 12px); }
+  .a4 .dl b { font-size: 12px; }
+  .a4 .qa { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; padding: 8px 0;
+            border-bottom: 1px solid #bbb; }
+  .a4 .qa .q { grid-column: 1 / -1; font-weight: 700; font-size: 8.5px;
+               text-transform: uppercase; letter-spacing: .08em; color: #555; }
+  .a4 .qa .r { text-align: right; }
+  .a4 ol { margin: 8px 0 0; padding-left: 14px; }
+  .a4 li { margin-bottom: 4px; }
+  .a4 .keys { margin-top: 10px; border-top: 2px solid #1a1a1a; padding-top: 7px; font-size: 8.5px;
+              color: #444; }
+  .a4 .notes { margin-top: 8px; border: 1px dashed #999; height: 46px; }
 
-  .try { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-  .cta { font-family: Overpass, sans-serif; font-weight: 800; font-size: 17px; letter-spacing: 0.08em; text-transform: uppercase; background: var(--bar); color: #fff; border: 0; padding: 17px 26px; cursor: pointer; }
-  .cta.alt { background: var(--yellow); color: var(--ink); }
-  footer { padding: 26px 56px 40px; font-size: 15px; color: var(--quiet); }
+  .ask { max-width: 1014px; margin: 78px auto 0; padding: 0 28px 20px; }
+  .ask h2 { font-family: "Bricolage Grotesque", sans-serif; font-size: clamp(28px, 3.4vw, 40px);
+            font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; margin: 0 0 14px;
+            max-width: 16em; }
+  .ask p { color: var(--ink2); max-width: 44em; margin: 0 0 22px; font-size: 17px; }
+  .btn { font-family: inherit; font-size: 16px; font-weight: 700; border-radius: 8px;
+         padding: 13px 22px; cursor: pointer; border: 1px solid var(--ink);
+         background: var(--ink); color: var(--paper); text-decoration: none;
+         display: inline-block; }
+  .btn.sec { background: none; color: var(--ink); }
+  footer { max-width: 1014px; margin: 54px auto 0; padding: 22px 28px 46px;
+           border-top: 1px solid var(--rule); color: var(--ink2); font-size: 14px; }
 
-  @media (max-width: 900px) {
-    .page { grid-template-columns: 1fr; }
-    .spine { display: none; }
-    .band { padding: 30px 22px 34px; }
-    h1 { font-size: 38px; }
-    .counter { grid-template-columns: 1fr; }
-    .card-shot { width: 100%; }
-    .frames { grid-template-columns: 1fr; }
-    .frame { border-inline-end: 0; border-bottom: 2px solid var(--rule); }
-    .who { grid-template-columns: 1fr; gap: 24px; }
-    table, tbody, tr, td { display: block; }
-    thead { display: none; }
-    td { border: 0; padding: 2px 0; }
-    tr { display: block; border-bottom: 1px solid var(--rule); padding: 10px 0; }
-    td.gone { margin-top: 4px; }
+  @media (max-width: 980px) {
+    .doc { grid-template-columns: 1fr; gap: 0; padding-top: 24px; }
+    .sheet { position: static; }
+    .margin { grid-column: 1; }
+    .masthead, .note { padding-left: 4px; padding-right: 4px; }
+    .note { padding-top: 20px; padding-bottom: 8px; }
+    .cardzone { grid-template-columns: 1fr; gap: 30px; }
   }
 </style>
 </head>
 <body>
-<div class="page">
-  <aside class="spine"><div class="stack">
-    <span class="n on">The card</span><span class="n">One session</span><span class="n">Who for</span><span class="n">Privacy</span><span class="n">Try it</span>
-  </div></aside>
 
-  <main>
-    <section class="band">
-      <div class="kicker">Plainletter</div>
-      <h1>The letter goes home explained.</h1>
-      <p class="lede">A visitor brings a letter they cannot read to a library help desk. Ten minutes later they leave with this card: what it is, by when, what happens if they do nothing, and what to do, in Dutch and in their own language.</p>
-      <div class="counter">
-        <p class="say">Every date and every amount on the card is taken from the letter itself and checked before it is printed. Nothing is guessed.</p>
-        <div class="card-shot">
-          <div class="hdr">CJIB &middot; Verkeersboete &middot; EUR 174,00</div>
-          <div class="dl">Betaal of maak bezwaar voor 15 september 2026 &middot; nog 25 dagen</div>
-          <div class="body">
-            <div class="q">Wat gebeurt er als u niets doet?</div>
-            <div>Na 15 september komt er 50 procent bij.</div>
-            <div class="q ar" dir="rtl" lang="ar">ماذا يحدث إذا لم تدفع؟</div>
-            <div class="ar" dir="rtl" lang="ar">بعد 15 سبتمبر يزيد المبلغ 50 بالمئة.</div>
-          </div>
-        </div>
-      </div>
-    </section>
+<div class="doc">
+  <div class="sheet">
+    <div class="line"><span></span><div><b>Centraal Justitieel Incassobureau</b><br>Postbus 1794, 8901 CB Leeuwarden</div></div>
+    <div class="line"><span></span><div>Mevrouw A. Haddad<br>Sportlaan 214<br>3054 NH Rotterdam</div></div>
+    <div class="line"><span class="num">1</span><div><b><mark>Beschikking administratieve sanctie (Wet Mulder)</mark></b></div></div>
+    <div class="line tight"><span class="num">2</span><div class="row"><span>Beschikkingsnummer</span><span><mark>8194 5523 7761</mark></span></div></div>
+    <div class="line tight"><span class="num">3</span><div class="row"><span>Datum beschikking</span><span><mark>4 augustus 2026</mark></span></div></div>
+    <div class="line tight"><span></span><div class="row"><span>Feitcode</span><span>R402</span></div></div>
+    <div class="line tight"><span></span><div class="row"><span>Overtreding</span><span>snelheid 14 km/u te hard, bebouwde kom</span></div></div>
+    <div class="line tight"><span></span><div class="row"><span>Pleegdatum</span><span>21 juli 2026, 14:12 uur</span></div></div>
+    <div class="line tight"><span></span><div class="row"><span>Locatie</span><span>Rotterdam, Boezemweg</span></div></div>
+    <div class="line"><span class="gap"></span><div class="row"><span>Kenteken</span><span>12&#8209;A?C&#8209;3</span></div></div>
+    <div class="line tight"><span class="num">4</span><div class="row"><span>Sanctiebedrag</span><span><mark>EUR 165,00</mark></span></div></div>
+    <div class="line tight"><span class="num">5</span><div class="row"><span>Administratiekosten</span><span><mark>EUR 9,00</mark></span></div></div>
+    <div class="line"><span class="num">6</span><div class="row"><span>Totaal te betalen</span><span><mark>EUR 174,00</mark></span></div></div>
+    <div class="line"><span class="num">7</span><div><mark>Betaal voor 15 september 2026.</mark></div></div>
+    <div class="line"><span class="num">8</span><div><mark>Betaalt u niet op tijd, dan wordt het bedrag verhoogd met 50 procent. Bij een tweede verhoging komt daar nog eens 100 procent bij.</mark></div></div>
+    <div class="line"><span class="num">9</span><div>Bent u het niet eens met deze beschikking? <mark>U kunt binnen zes weken na de datum van deze beschikking beroep instellen bij de officier van justitie.</mark></div></div>
+    <p class="fine">Dit is een verzonnen voorbeeldbrief. Naam, adres, kenteken en nummers bestaan niet.</p>
+  </div>
+  <div class="margin">
 
-    <section class="frames">
-      <div class="frame">
-        <div class="step">1 &middot; The letter</div>
-        <div class="pic">Photograph: the visitor's letter on the counter, phone held above it</div>
-        <p>The volunteer photographs the letter. Nothing is uploaded to a company; the reading runs in Europe and the image is dropped after.</p>
-      </div>
-      <div class="frame">
-        <div class="step">2 &middot; The board</div>
-        <div class="pic">Frame: the yellow board filling in, sender, amount, deadline, days left</div>
-        <p>Sender, amount, deadline and days left appear one by one, each tied to the line in the letter it came from.</p>
-      </div>
-      <div class="frame">
-        <div class="step">3 &middot; The route</div>
-        <div class="pic">Frame: the two language columns side by side with numbered steps</div>
-        <p>The same four questions in Dutch and in the visitor's language, then the steps with the official phone number or website for each one.</p>
-      </div>
-      <div class="frame">
-        <div class="step">4 &middot; The card</div>
-        <div class="pic">Photograph: hands taking the printed card off the counter</div>
-        <p>One A4 sheet, printed at the desk, readable in black and white, with a calendar reminder for the deadline.</p>
-      </div>
-    </section>
+    <div class="masthead">
+      <span class="wm">Plainletter</span>
+      <h1>Put the letter down. Leave knowing what to do.</h1>
+      <p>A free help desk in a Dutch public library. Someone photographs the letter they cannot
+        read, and the desk reads it back in Dutch and in their own language, with every date and
+        amount marked on the paper it came from.</p>
+      <p>This page is one of those letters. Everything down this margin is what the desk would say
+        about it.</p>
+    </div>
 
-    <section class="band who">
-      <div>
-        <h2>Built for the desk, not for the app store</h2>
-        <p>The Netherlands runs 861 free help desks in public libraries, the Informatiepunt Digitale Overheid. The people at them are volunteers, not lawyers, and the person across the table is often frightened. Plainletter is made for the two of them together: the volunteer reads the Dutch column, the visitor reads their own.</p>
-        <blockquote>
-          The hardest minute is the first one. They put the envelope down and ask me if it is bad.
-          <cite>Volunteer, library help desk, Rotterdam</cite>
-        </blockquote>
-      </div>
-      <div>
-        <h2>Languages</h2>
-        <p>Output in the visitor's language, right-to-left scripts included, on screen and on paper.</p>
-        <div class="langs">
-          <span>Nederlands</span><span>English</span><span class="ar" dir="rtl" lang="ar">العربية</span>
-          <span>Türkçe</span><span>Українська</span><span>Polski</span>
-          <span class="ar" dir="rtl" lang="fa">فارسی</span><span>Español</span><span>Português</span>
-          <span>中文</span><span>Русский</span><span dir="rtl" lang="he">עברית</span>
-        </div>
-      </div>
-    </section>
+    <div class="note">
+      <span class="tag">Marks 4 to 6</span>
+      <h2>Nothing is retyped from memory</h2>
+      <p>Every amount is read off the page, then checked back against it by plain arithmetic rather
+        than by the model that read it. If the two disagree, the whole reading is refused.</p>
+    </div>
 
-    <section class="band">
-      <div class="ledger-box">
-        <h2>What happens to the letter</h2>
-        <p>The reading runs on Amazon Bedrock in Frankfurt. The letter stays inside the European Union, and unless the visitor asks for a case, nothing at all is written down.</p>
-        <table>
-          <thead><tr><th>What enters</th><th>Why</th><th>Who sees it</th><th>Gone</th></tr></thead>
-          <tbody>
-            <tr><td>The photo of the letter</td><td>To read it once</td><td>The model in Frankfurt</td><td class="gone">End of request</td></tr>
-            <tr><td>The text on it</td><td>To check every date and amount against the paper</td><td>Nobody, held in memory</td><td class="gone">End of request</td></tr>
-            <tr><td>Dates, amounts, sender</td><td>Only if the visitor starts a case, so a return visit does not begin again</td><td>The desk, on return</td><td class="gone">30 days</td></tr>
-            <tr><td>Citizen service number, IBAN</td><td>Never needed</td><td>Masked before display</td><td class="gone">Never stored</td></tr>
-          </tbody>
-        </table>
+    <div class="note">
+      <span class="tag">Mark 7</span>
+      <h2>One date decides everything</h2>
+      <p>The days left are worked out on a real calendar, Dutch public holidays included, along with
+        the last day a posted objection still arrives in time.</p>
+      <p><b>15 september 2026, nog 25 dagen. Post uiterlijk 8 september.</b></p>
+    </div>
+
+    <div class="note">
+      <span class="tag">Mark 8</span>
+      <h2>What happens if you do nothing, in a language you read</h2>
+      <div class="pairbox">
+        <div class="nl">Het bedrag gaat met 50 procent omhoog. Betaalt u daarna nog niet, dan komt er
+          nog 100 procent bij.</div>
+        <div class="vis ar" dir="rtl">&#1610;&#1586;&#1610;&#1583; &#1575;&#1604;&#1605;&#1576;&#1604;&#1594; <bdi>50</bdi> &#1576;&#1575;&#1604;&#1605;&#1574;&#1577;. &#1608;&#1573;&#1584;&#1575; &#1604;&#1605; &#1578;&#1583;&#1601;&#1593; &#1576;&#1593;&#1583; &#1584;&#1604;&#1603; &#1610;&#1586;&#1610;&#1583; <bdi>100</bdi> &#1576;&#1575;&#1604;&#1605;&#1574;&#1577; &#1571;&#1582;&#1585;&#1609;.</div>
       </div>
-    </section>
+    </div>
 
-    <section class="band try">
-      <button class="cta alt" type="button">Open the desk console</button>
-      <button class="cta" type="button">Read a sample letter</button>
-      <span>Sample letters are made up, with invented names and numbers. Real ones never enter this demo.</span>
-    </section>
+    <div class="note">
+      <span class="tag">The broken key, beside Kenteken</span>
+      <h2>When it cannot read something, it says so</h2>
+      <p>The middle character of the number plate is blurred. There is no mark and no number there,
+        and the desk prints <b>ask the visitor to read the number plate</b> rather than a plausible
+        guess.</p>
+      <p>This is the part that matters most. A wrong deadline at a help desk is worse than no
+        deadline.</p>
+    </div>
 
-    <footer>Plainletter is open source, Apache-2.0. Built with the Strands Agents SDK on Amazon Bedrock, EU region, for the 861 Informatiepunt Digitale Overheid desks in Dutch public libraries.</footer>
-  </main>
+    <div class="note">
+      <span class="tag">Mark 9</span>
+      <h2>Then the route out, with the address on it</h2>
+      <p>Objections, payment plans and appeals go to different places with different windows, so each
+        step carries the official route it came from and the date that route was checked.</p>
+      <p>Where a sender has not been checked against an official page, the desk says so and sends the
+        visitor to Het Juridisch Loket instead of guessing.</p>
+    </div>
+
+    <div class="note">
+      <span class="tag">Twelve languages</span>
+      <h2>Both people read the same thing at the same time</h2>
+      <p>Dutch and the visitor language sit at equal width and equal weight, each running in its own
+        direction. Arabic, Farsi and Hebrew are laid out right to left on screen and on the printed
+        sheet, and never mirrored into nonsense.</p>
+    </div>
+
+  </div>
 </div>
+
+<div class="ledgerband">
+  <div class="note">
+    <span class="tag">What happens to the letter</span>
+    <h2>A promise nobody can check is worth less than a table anybody can</h2>
+    <table class="ledger">
+      <tr><th>What enters</th><th>Why</th><th>Who sees it</th><th>Gone</th></tr>
+      <tr><td>The photo of the letter</td><td>To read it once</td><td>The model in Frankfurt</td><td>End of request</td></tr>
+      <tr><td>The text on it</td><td>To check every date and amount against the paper</td><td>Nobody, held in memory</td><td>End of request</td></tr>
+      <tr><td>Dates, amounts, sender</td><td>Only if the visitor starts a case, so a return visit does not begin again</td><td>The desk, on return</td><td>30 days</td></tr>
+      <tr><td>Citizen service number, IBAN</td><td>Never needed</td><td>Masked before display</td><td>Never stored</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="cardzone">
+
+  <div class="a4">
+    <div class="band"><div><b>CJIB</b><br>Verkeersboete (Wet Mulder)</div><div style="text-align:right">Kenmerk<br><b>8194 5523 7761</b></div></div>
+    <div class="dl"><div>Uiterste dag<br><b>15 september 2026</b><br>Nog 25 dagen. Post uiterlijk 8 september.</div><div><b>NOG TIJD</b></div></div>
+    <div class="qa"><span class="q">Wat is dit &#183; &#1605;&#1575; &#1607;&#1584;&#1607; &#1575;&#1604;&#1585;&#1587;&#1575;&#1604;&#1577;</span>
+      <span>Een verkeersboete van het CJIB.</span><span class="r ar">&#1594;&#1585;&#1575;&#1605;&#1577; &#1605;&#1585;&#1608;&#1585; &#1605;&#1606; CJIB.</span></div>
+    <div class="qa"><span class="q">Als u niets doet &#183; &#1573;&#1584;&#1575; &#1604;&#1605; &#1578;&#1583;&#1601;&#1593;</span>
+      <span>Het bedrag gaat met 50 procent omhoog.</span><span class="r ar">&#1610;&#1586;&#1610;&#1583; &#1575;&#1604;&#1605;&#1576;&#1604;&#1594; 50 &#1576;&#1575;&#1604;&#1605;&#1574;&#1577;.</span></div>
+    <div class="qa"><span class="q">Voor wanneer &#183; &#1602;&#1576;&#1604; &#1605;&#1578;&#1609;</span>
+      <span>Betaal voor 15 september 2026.</span><span class="r ar">&#1575;&#1583;&#1601;&#1593; &#1602;&#1576;&#1604; 15 september 2026.</span></div>
+    <ol>
+      <li>Betaal EUR 174,00 met 8194 5523 7761 &#183; cjib.nl/verkeersboete</li>
+      <li>Niet in een keer? Vraag een betalingsregeling.</li>
+      <li>Oneens? Beroep bij de officier van justitie binnen zes weken.</li>
+    </ol>
+    <div class="keys"><b>1</b> Beschikking administratieve sanctie &#183; <b>6</b> Totaal te betalen: EUR 174,00 &#183; <b>7</b> Betaal voor 15 september 2026 &#183; <b>&#8212;</b> Kenteken onleesbaar, vraag de bezoeker</div>
+    <div class="notes"></div>
+  </div>
+  <div>
+    <span class="tag" style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)">The thing that goes home</span>
+    <h2 class="bric" style="font-size:clamp(26px,3.2vw,38px);font-weight:700;line-height:1.12;margin:12px 0 14px">One sheet, both languages, and a black and white printer</h2>
+    <p style="color:var(--ink2);font-size:17px;max-width:34em;margin:0 0 12px">Library printers are
+      monochrome, so nothing on the card carries meaning in colour. Urgency is a word and a
+      treatment, the hatch survives greyscale, and the marks are numbered at the foot against the
+      passages they came from.</p>
+    <p style="color:var(--ink2);font-size:17px;max-width:34em;margin:0">A calendar reminder for the
+      deadline goes home with it.</p>
+  </div>
+</div>
+
+<div class="ask">
+  <h2>Bring Plainletter to your library</h2>
+  <p>There are 861 Informatiepunt Digitale Overheid desks in Dutch public libraries. This is built
+    for the volunteers at them and for the people sitting across the table. It is open source, it
+    runs in the EU, and it needs no account to try.</p>
+  <a class="btn" href="#">Read a sample letter</a>
+  <a class="btn sec" href="#">See how privacy works</a>
+</div>
+
+<footer>
+  Plainletter is open source under Apache-2.0. Built with the Strands Agents SDK on Amazon Bedrock,
+  EU region. Sample letters are invented: the names, addresses and numbers in them belong to nobody.
+</footer>
+
 </body>
 </html>
