@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Noto+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --desk: #EFEAE6;
@@ -36,7 +36,8 @@
     font-family: "Atkinson Hyperlegible Next", system-ui, sans-serif;
     font-size: 16px; line-height: 1.55; font-variant-numeric: tabular-nums;
   }
-  .ar { font-family: "Noto Sans Arabic", "Atkinson Hyperlegible Next", sans-serif; line-height: 1.7; }
+  /* The reading face carries no Cyrillic, so the visitor column gets a face that does. */
+  .uk { font-family: "Noto Sans", "Atkinson Hyperlegible Next", sans-serif; }
   .shell { max-width: 1300px; margin: 0 auto; padding: 0 28px 44px; }
 
   .util { display: flex; align-items: center; gap: 24px; padding: 16px 0 14px;
@@ -54,7 +55,7 @@
 
   /* 2. The sentence. Only the two facts are marked, so the marks stay meaningful. */
   .sentence { padding: 32px 0 0; max-width: 1000px; }
-  .lead-ar { font-size: 29px; font-weight: 600; line-height: 1.62; margin: 0; }
+  .lead-vis { font-size: 29px; font-weight: 600; line-height: 1.62; margin: 0; }
   .lead-nl { font-family: "Bricolage Grotesque", sans-serif; font-size: 29px; font-weight: 600;
              line-height: 1.38; letter-spacing: -0.02em; margin: 12px 0 0; }
   mark { background: var(--wash); color: inherit; border-radius: 999px; padding: 0.05em 0.36em;
@@ -104,7 +105,9 @@
   .key { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 1px; }
   .nl p, .vis p { margin: 0 0 8px; font-size: 15.5px; }
   .nl p:last-child, .vis p:last-child { margin-bottom: 0; }
-  .vis { text-align: right; }
+  /* A right-to-left column aligns to its own reading edge. A left-to-right one does not, so
+     the alignment follows the direction rather than the column. */
+  .vis[dir="rtl"] { text-align: right; }
   .amounts { width: 100%; border-collapse: collapse; font-size: 15px; }
   .amounts td { padding: 6px 0; border-bottom: 1px solid var(--rule); }
   .amounts tr:last-child td { border-bottom: 0; font-weight: 700; }
@@ -171,13 +174,13 @@
     <span class="wordmark">Plainletter</span>
     <span class="cap">Bibliotheek Rotterdam Centrum</span>
     <span class="sp"></span>
-    <span class="pair">Nederlands <button class="swap" title="Wissel de kanten">&#8646;</button> <span class="ar">العربية</span></span>
+    <span class="pair">Nederlands <button class="swap" title="Wissel de kanten">&#8646;</button> <span class="uk">Українська</span></span>
     <span class="timer">In het geheugen, nog 11:42</span>
     <button class="ghost">Brief wissen</button>
   </div>
 
   <div class="sentence">
-    <p class="ar lead-ar" dir="rtl">هذه غرامة مرور من <bdi>CJIB</bdi>. عليك دفع <mark><bdi>EUR 174,00</bdi></mark> قبل <mark><bdi>15 september 2026</bdi></mark></p>
+    <p class="uk lead-vis">Це штраф за перевищення швидкості від <bdi>CJIB</bdi>. Потрібно сплатити <mark><bdi>EUR 174,00</bdi></mark> до <mark><bdi>15 september 2026</bdi></mark></p>
     <p class="lead-nl">Dit is een verkeersboete van het CJIB. U betaalt <mark>EUR 174,00</mark> voor <mark>15 september 2026</mark></p>
   </div>
 
@@ -221,11 +224,11 @@
 Ik maak bezwaar tegen beschikking 8194 5523 7761. Mijn auto stond die dag niet op de Boezemweg. Ik verzoek u de sanctie in te trekken.
 
 Met vriendelijke groet,</div>
-        <div class="body ar" dir="rtl">حضرة المدعي العام،
+        <div class="body uk">Шановний пане прокуроре,
 
-أعترض على القرار رقم <bdi>8194 5523 7761</bdi>. لم تكن سيارتي في شارع <bdi>Boezemweg</bdi> في ذلك اليوم. أرجو إلغاء الغرامة.
+Подаю заперечення проти рішення <bdi>8194 5523 7761</bdi>. Мого автомобіля того дня не було на вулиці <bdi>Boezemweg</bdi>. Прошу скасувати штраф.
 
-مع خالص التقدير،</div>
+З повагою,</div>
       </div>
     </div>
 
@@ -233,16 +236,16 @@ Met vriendelijke groet,</div>
       <div class="colhead"><span class="cap">Wat de balie eruit las</span><span class="cap">9 gecontroleerd &#183; 1 niet</span></div>
       <div class="reading">
         <div class="block">
-          <h2>Wat is dit &#183; <span class="ar">ما هذه الرسالة</span></h2>
+          <h2>Wat is dit &#183; <span class="uk">Що це за лист</span></h2>
           <div class="grid3">
             <div class="nl"><p>Een verkeersboete van het CJIB. U reed 14 km/u te hard op de Boezemweg in Rotterdam.</p></div>
             <div class="key"><span class="num">1</span></div>
-            <div class="vis ar" dir="rtl"><p>غرامة مرور من <bdi>CJIB</bdi>. تجاوزت السرعة بمقدار <bdi>14 km/u</bdi> في شارع <bdi>Boezemweg</bdi> في روتردام.</p></div>
+            <div class="vis uk"><p>Штраф від <bdi>CJIB</bdi>. Ви їхали на <bdi>14 km/u</bdi> швидше за дозволене на вулиці <bdi>Boezemweg</bdi> у Роттердамі.</p></div>
           </div>
         </div>
 
         <div class="block">
-          <h2>Bedragen &#183; <span class="ar">المبالغ</span></h2>
+          <h2>Bedragen &#183; <span class="uk">Суми</span></h2>
           <table class="amounts">
             <tr><td>Sanctiebedrag</td><td class="k"><span class="num">4</span></td><td>EUR 165,00</td></tr>
             <tr><td>Administratiekosten</td><td class="k"><span class="num">5</span></td><td>EUR 9,00</td></tr>
@@ -252,46 +255,46 @@ Met vriendelijke groet,</div>
         </div>
 
         <div class="block">
-          <h2>Als u niets doet &#183; <span class="ar">إذا لم تدفع</span></h2>
+          <h2>Als u niets doet &#183; <span class="uk">Якщо нічого не робити</span></h2>
           <div class="grid3">
             <div class="nl"><p>Het bedrag gaat met 50 procent omhoog. Betaalt u daarna nog niet, dan komt er nog 100 procent bij.</p></div>
             <div class="key"><span class="num">8</span></div>
-            <div class="vis ar" dir="rtl"><p>يزيد المبلغ <bdi>50</bdi> بالمئة. وإذا لم تدفع بعد ذلك يزيد <bdi>100</bdi> بالمئة أخرى.</p></div>
+            <div class="vis uk"><p>Сума зросте на <bdi>50</bdi> відсотків. Якщо ви не сплатите й після цього, додасться ще <bdi>100</bdi> відсотків.</p></div>
           </div>
         </div>
 
         <div class="block">
-          <h2>Wat u nu doet &#183; <span class="ar">ماذا تفعل الآن</span></h2>
+          <h2>Wat u nu doet &#183; <span class="uk">Що робити зараз</span></h2>
           <ol class="steps">
             <li>
               <div class="nl"><div class="act"><span class="stepno">1</span><div>Betaal <bdi>EUR 174,00</bdi> met beschikkingsnummer <bdi>8194 5523 7761</bdi>.<a class="route" href="#">cjib.nl/verkeersboete</a></div></div></div>
               <div class="key"><span class="num">6</span><span class="num">2</span></div>
-              <div class="vis ar" dir="rtl"><div class="act rtl"><div>ادفع <bdi>EUR 174,00</bdi> بالرقم <bdi>8194 5523 7761</bdi>.<a class="route" href="#">cjib.nl/verkeersboete</a></div><span class="stepno">1</span></div></div>
+              <div class="vis uk"><div class="act"><span class="stepno">1</span><div>Сплатіть <bdi>EUR 174,00</bdi>, вказавши номер <bdi>8194 5523 7761</bdi>.<a class="route" href="#">cjib.nl/verkeersboete</a></div></div></div>
             </li>
             <li>
               <div class="nl"><div class="act"><span class="stepno">2</span><div>Kunt u het niet in een keer betalen? Vraag een betalingsregeling aan.<a class="route" href="#">cjib.nl/betalingsregeling</a></div></div></div>
               <div class="key"></div>
-              <div class="vis ar" dir="rtl"><div class="act rtl"><div>لا تستطيع الدفع دفعة واحدة؟ اطلب خطة تقسيط.<a class="route" href="#">cjib.nl/betalingsregeling</a></div><span class="stepno">2</span></div></div>
+              <div class="vis uk"><div class="act"><span class="stepno">2</span><div>Не можете сплатити одразу? Попросіть про розстрочку.<a class="route" href="#">cjib.nl/betalingsregeling</a></div></div></div>
             </li>
             <li>
               <div class="nl"><div class="act"><span class="stepno">3</span><div>Bent u het er niet mee eens? Stel beroep in bij de officier van justitie, binnen zes weken na de datum van de beschikking.<a class="route" href="#">om.nl/onderwerpen/verkeer</a></div></div></div>
               <div class="key"><span class="num">9</span><span class="num">3</span></div>
-              <div class="vis ar" dir="rtl"><div class="act rtl"><div>غير موافق؟ قدّم اعتراضاً إلى المدعي العام خلال ستة أسابيع من تاريخ القرار.<a class="route" href="#">om.nl/onderwerpen/verkeer</a></div><span class="stepno">3</span></div></div>
+              <div class="vis uk"><div class="act"><span class="stepno">3</span><div>Не згодні? Подайте заперечення прокурору протягом шести тижнів від дати рішення.<a class="route" href="#">om.nl/onderwerpen/verkeer</a></div></div></div>
             </li>
           </ol>
         </div>
 
         <div class="block miss">
-          <h2>Niet gecontroleerd &#183; <span class="ar">لم يتم التحقق</span></h2>
+          <h2>Niet gecontroleerd &#183; <span class="uk">Не перевірено</span></h2>
           <div class="grid3">
             <div class="nl">
               <p class="label">Het kenteken staat niet vast</p>
               <p>Het middelste teken is onscherp op de foto. Vraag de bezoeker het kenteken voor te lezen.</p>
             </div>
             <div class="key"><span class="gap"></span></div>
-            <div class="vis ar" dir="rtl">
-              <p class="label">رقم اللوحة غير مؤكد</p>
-              <p>الحرف الأوسط غير واضح في الصورة. اطلب من الزائر قراءة رقم اللوحة.</p>
+            <div class="vis uk">
+              <p class="label">Номер знака не підтверджено</p>
+              <p>Середній символ нечіткий на фото. Попросіть відвідувача прочитати номер знака.</p>
             </div>
           </div>
         </div>

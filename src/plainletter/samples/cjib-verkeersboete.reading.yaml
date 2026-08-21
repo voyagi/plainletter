@@ -1,4 +1,4 @@
-visitor_language: ar
+visitor_language: uk
 facts:
   sender_id: cjib
   sender_name:
@@ -70,26 +70,28 @@ explanations:
     if_you_do_nothing: >-
       Het bedrag wordt verhoogd met 50 procent. Betaalt u daarna nog niet, dan komt er nog 100
       procent bij.
-  - language: ar
+  - language: uk
     what_is_this: >-
-      غرامة مرور من CJIB. تجاوزت السرعة في شارع Boezemweg في روتردام. عليك دفع EUR 174,00.
-    by_when: ادفع قبل 15 september 2026.
+      Штраф за перевищення швидкості від CJIB. Ви їхали на 14 km/u швидше за дозволене на вулиці
+      Boezemweg у Роттердамі. Потрібно сплатити EUR 174,00.
+    by_when: Сплатіть до 15 september 2026.
     if_you_do_nothing: >-
-      يزيد المبلغ 50 بالمئة. وإذا لم تدفع بعد ذلك يزيد 100 بالمئة أخرى.
+      Сума зросте на 50 відсотків. Якщо ви не сплатите й після цього, додасться ще 100 відсотків.
 steps:
   - order: 1
     dutch: Betaal EUR 174,00 met beschikkingsnummer 8194 5523 7761.
-    visitor: ادفع EUR 174,00 بالرقم 8194 5523 7761.
+    visitor: Сплатіть EUR 174,00, вказавши номер 8194 5523 7761.
     official_route: https://www.cjib.nl/verkeersboete
   - order: 2
     dutch: Kunt u het niet in een keer betalen? Vraag een betalingsregeling aan.
-    visitor: لا تستطيع الدفع دفعة واحدة؟ اطلب خطة تقسيط.
+    visitor: Не можете сплатити одразу? Попросіть про розстрочку.
     official_route: https://www.cjib.nl/betalingsregeling
   - order: 3
     dutch: >-
       Bent u het er niet mee eens? Stel beroep in bij de officier van justitie, binnen zes weken na
       de datum van de beschikking.
-    visitor: غير موافق؟ قدّم اعتراضاً إلى المدعي العام خلال ستة أسابيع من تاريخ القرار.
+    visitor: >-
+      Не згодні? Подайте заперечення прокурору протягом шести тижнів від дати рішення.
     official_route: https://www.om.nl/onderwerpen/verkeer
 draft:
   kind: objection
@@ -103,9 +105,9 @@ draft:
 
     Met vriendelijke groet,
   visitor: |-
-    حضرة المدعي العام،
+    Шановний пане прокуроре,
 
-    أعترض على القرار رقم 8194 5523 7761. لم تكن سيارتي في شارع Boezemweg في ذلك اليوم. أرجو إلغاء
-    الغرامة.
+    Подаю заперечення проти рішення 8194 5523 7761. Мого автомобіля того дня не було на вулиці
+    Boezemweg. Прошу скасувати штраф.
 
-    مع خالص التقدير،
+    З повагою,

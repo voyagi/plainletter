@@ -197,7 +197,7 @@ def test_a_letter_that_arrived_as_a_picture_still_reaches_the_desk() -> None:
     # another, and checked against the transcript before anything is printed.
     letter = intake.from_bytes(scanned_pdf(1), filename="scan.pdf")
     reading = Pipeline(model=scripted_model(SAMPLE)).run(
-        letter, visitor_language="ar", today=date(2026, 8, 21)
+        letter, visitor_language="uk", today=date(2026, 8, 21)
     )
     assert letter.text is None
     assert reading.deadline is not None

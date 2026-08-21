@@ -1,4 +1,4 @@
-visitor_language: fa
+visitor_language: tr
 facts:
   sender_id: svb
   sender_name:
@@ -66,38 +66,39 @@ explanations:
     if_you_do_nothing: >-
       Het geld komt gewoon binnen. Verandert er iets in uw gezin en zegt u het te laat, dan vraagt
       de SVB het te veel betaalde terug en kan er een boete bij komen.
-  - language: fa
+  - language: tr
     what_is_this: >-
-      این نامه خبر خوبی در پاکت اداری است. اداره بیمه‌های اجتماعی کمک‌هزینه فرزند می‌پردازد:
-      EUR 299,86 برای این فصل و EUR 74,96 از فصل پیش، جمعاً EUR 374,82. چیزی برای پرداخت ندارید.
+      Resmî bir zarfın içinde iyi haber. Sosyal Sigorta Kurumu çocuk parası ödüyor: bu çeyrek için
+      EUR 299,86 ve geçen çeyrekten kalan EUR 74,96, toplam EUR 374,82. Ödemeniz gereken bir şey
+      yok.
     by_when: >-
-      هر تغییری در خانواده را پیش از 11 september 2026 اطلاع دهید.
+      Ailenizdeki değişiklikleri 11 september 2026 tarihinden önce bildirin.
     if_you_do_nothing: >-
-      پول به حساب شما واریز می‌شود. اگر وضعیت خانواده تغییر کند و دیر اطلاع دهید، مبلغ اضافی
-      بازپس گرفته می‌شود و ممکن است جریمه هم اضافه شود.
+      Para hesabınıza yatar. Ailenizde bir şey değişir ve bunu geç bildirirseniz, fazla ödenen
+      tutar geri istenir ve ceza eklenebilir.
 steps:
   - order: 1
     dutch: >-
       Controleer of het bedrag EUR 374,82 op uw rekening komt. Komt het niet, bel dan de SVB met
       klantnummer 6512 3387.
     visitor: >-
-      بررسی کنید که مبلغ EUR 374,82 به حسابتان واریز شود. اگر نیامد، با شماره مشتری 6512 3387 با
-      اداره تماس بگیرید.
+      EUR 374,82 tutarının hesabınıza geçtiğini kontrol edin. Gelmezse 6512 3387 müşteri numarası
+      ile kurumu arayın.
     official_route: https://www.svb.nl/nl/
   - order: 2
     dutch: >-
       Is uw kind gaan werken, verhuisd, of het huis uit? Geef dat door voor 11 september 2026.
     visitor: >-
-      آیا فرزندتان کار پیدا کرده، نقل مکان کرده یا از خانه رفته است؟ پیش از 11 september 2026
-      اطلاع دهید.
+      Çocuğunuz çalışmaya mı başladı, taşındı mı, ya da evden mi ayrıldı? Bunu 11 september 2026
+      tarihinden önce bildirin.
     official_route: https://www.svb.nl/nl/
   - order: 3
     dutch: >-
       Klopt het bedrag volgens u niet? U kunt binnen zes weken bezwaar maken. Het Juridisch Loket
       helpt daar gratis bij.
     visitor: >-
-      اگر فکر می‌کنید مبلغ درست نیست، تا شش هفته می‌توانید اعتراض کنید. Het Juridisch Loket رایگان
-      کمک می‌کند.
+      Tutarın doğru olmadığını düşünüyorsanız altı hafta içinde itiraz edebilirsiniz. Het
+      Juridisch Loket bu konuda ücretsiz yardım eder.
     official_route: https://www.juridischloket.nl/
 draft:
   kind: reply
@@ -111,9 +112,9 @@ draft:
 
     Met vriendelijke groet,
   visitor: |-
-    با سلام و احترام،
+    Sayın yetkili,
 
-    تغییری را برای شماره مشتری 6512 3387 اعلام می‌کنم. فرزند بزرگم در کنار مدرسه شروع به کار کرده
-    است. لطفاً بفرمایید آیا این موضوع بر کمک‌هزینه فرزند اثر می‌گذارد.
+    6512 3387 müşteri numarası için bir değişiklik bildiriyorum. En büyük çocuğum okulun yanında
+    çalışmaya başladı. Bunun çocuk parasını etkileyip etkilemediğini öğrenmek istiyorum.
 
-    با احترام،
+    Saygılarımla,
