@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+/* The locked art direction, as tokens. design/ART-DIRECTION.md is the source; this file is its
+   only implementation, so a colour never gets invented at a call site. */
+@theme {
+  --color-signal: #f5c400;
+  --color-ink: #14213d;
+  --color-paper: #ffffff;
+  --color-field: #eef0f5;
+  --color-bar: #14213d;
+  --color-rule: #14213d;
+  --color-overdue: #c8102e;
+  --color-soon: #b45309;
+  --color-ample: #0b7a4b;
+  --color-route: #1f4fbf;
+  --color-quiet: #4b5670;
+
+  --font-board: var(--font-overpass), sans-serif;
+  --font-reading: var(--font-hyperlegible), sans-serif;
+}
+
+/* Bars and chips keep an ink ground in both themes, so white type on them never inverts. */
+@layer theme {
+  :root[data-theme="dark"] {
+    --color-ink: #f8fafc;
+    --color-paper: #0f172a;
+    --color-field: #1b2540;
+    --color-bar: #060b18;
+    --color-rule: #3b4a6b;
+    --color-overdue: #ff6b7a;
+    --color-soon: #f2a93b;
+    --color-ample: #3dd68c;
+    --color-route: #7fa5ff;
+    --color-quiet: #9fb0cc;
+  }
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-reading);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+/* Numbers, dates and references inside right-to-left text must not be reordered by the
+   bidirectional algorithm. An amount that reads back wrong is the failure this product exists to
+   prevent, so the isolation is global rather than per component. */
+bdi {
+  unicode-bidi: isolate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

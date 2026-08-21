@@ -1,0 +1,101 @@
+visitor_language: en
+facts:
+  sender_id: rdw
+  sender_name:
+    value: Rijksdienst voor het Wegverkeer
+    source:
+      page: 1
+      text: Rijksdienst voor het Wegverkeer
+  letter_type:
+    value: Uw voertuig is niet APK gekeurd
+    source:
+      page: 1
+      text: Uw voertuig is niet APK gekeurd
+  reference:
+    value: 88-KLR-4
+    source:
+      page: 1
+      text: "Kenteken: 88-KLR-4"
+  issued_on:
+    day: 19
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Datum: 19 augustus 2026"
+  deadline:
+    day: 2
+    month: 10
+    year: 2026
+    source:
+      page: 1
+      text: Laat het voertuig keuren voor 2 oktober 2026.
+  other_dates:
+    - day: 2
+      month: 8
+      year: 2026
+      label: dag waarop de APK-keuring verliep
+      source:
+        page: 1
+        text: "APK-vervaldatum: 2 augustus 2026"
+  consequences:
+    - page: 1
+      text: >-
+        Is het voertuig dan nog niet gekeurd, dan legt het CJIB een boete op. Die boete wordt
+        herhaald zolang het voertuig niet gekeurd is. Rijden zonder geldige APK is strafbaar en bij
+        schade kan uw verzekeraar weigeren te betalen.
+    - page: 1
+      text: >-
+        Gebruikt u het voertuig niet? Dan kunt u het schorsen. Zolang de schorsing loopt hoeft u
+        het niet te laten keuren en betaalt u geen motorrijtuigenbelasting.
+explanations:
+  - language: nl
+    what_is_this: >-
+      De RDW ziet dat de APK van uw auto is verlopen op 2 augustus 2026. Dit is nog geen boete.
+      Het is de brief die daaraan voorafgaat.
+    by_when: Laat de auto keuren voor 2 oktober 2026.
+    if_you_do_nothing: >-
+      Het CJIB legt een boete op en herhaalt die zolang de auto niet gekeurd is. Rijden mag niet
+      meer, en bij schade kan de verzekeraar weigeren te betalen.
+  - language: en
+    what_is_this: >-
+      The RDW sees that your car's roadworthiness test ran out on 2 augustus 2026. This is not a
+      fine yet. It is the letter that comes before one.
+    by_when: Have the car tested before 2 oktober 2026.
+    if_you_do_nothing: >-
+      The CJIB issues a fine and keeps repeating it while the car stays untested. Driving it is an
+      offence, and after an accident your insurer can refuse to pay.
+steps:
+  - order: 1
+    dutch: >-
+      Maak een afspraak bij een garage met een APK-erkenning en laat de auto keuren voor
+      2 oktober 2026. De garage meldt de keuring zelf bij de RDW.
+    visitor: >-
+      Book an appointment at a garage licensed for the test and have the car checked before
+      2 oktober 2026. The garage reports the result to the RDW itself.
+    official_route: null
+  - order: 2
+    dutch: >-
+      Rijdt u niet meer in de auto? Schors het kenteken, dan vervalt de keuringsplicht zolang de
+      schorsing loopt. Dat kan aan de balie van een postkantoor of online met DigiD.
+    visitor: >-
+      Not using the car any more? Suspend the registration, and the test requirement stops while
+      the suspension runs. It can be done at a post office counter or online with DigiD.
+    official_route: null
+  - order: 3
+    dutch: >-
+      Heeft u de auto verkocht? Controleer of de overschrijving is verwerkt. Staat het kenteken
+      nog op uw naam, dan blijven de boetes bij u komen.
+    visitor: >-
+      Sold the car? Check that the transfer went through. While the registration stays in your
+      name, the fines keep arriving at your address.
+    official_route: https://www.rijksoverheid.nl/onderwerpen/bezwaar-en-beroep
+  - order: 4
+    dutch: >-
+      Klopt er iets niet, bijvoorbeeld omdat de auto al verkocht is? Ga met deze brief naar Het
+      Juridisch Loket voordat de boetes beginnen.
+    visitor: >-
+      If something is wrong, for instance because the car was already sold, take this letter to
+      Het Juridisch Loket before the fines start.
+    official_route: https://www.juridischloket.nl/
+draft: null

@@ -1,0 +1,109 @@
+visitor_language: tr
+facts:
+  sender_id: gemeente
+  sender_name:
+    value: Gemeente Rotterdam
+    source:
+      page: 1
+      text: Gemeente Rotterdam
+  letter_type:
+    value: Naheffingsaanslag parkeerbelasting
+    source:
+      page: 1
+      text: Naheffingsaanslag parkeerbelasting
+  reference:
+    value: NP 4471 2208
+    source:
+      page: 1
+      text: "Aanslagnummer: NP 4471 2208"
+  issued_on:
+    day: 12
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Dagtekening: 12 augustus 2026"
+  deadline:
+    day: 4
+    month: 9
+    year: 2026
+    source:
+      page: 1
+      text: Betaal voor 4 september 2026.
+  total_amount:
+    cents: 8300
+    label: Totaal te betalen
+    source:
+      page: 1
+      text: "Totaal te betalen: EUR 83,00"
+  line_amounts:
+    - cents: 450
+      label: Parkeerbelasting
+      source:
+        page: 1
+        text: "Parkeerbelasting: EUR 4,50"
+    - cents: 7850
+      label: Kosten naheffingsaanslag
+      source:
+        page: 1
+        text: "Kosten naheffingsaanslag: EUR 78,50"
+  consequences:
+    - page: 1
+      text: >-
+        Betaalt u niet op tijd, dan verhogen wij het bedrag met aanmaningskosten en kan de
+        invordering uit handen worden gegeven aan een deurwaarder.
+  objection_route:
+    page: 1
+    text: >-
+      U kunt binnen zes weken na de dagtekening bezwaar maken bij de heffingsambtenaar van de
+      gemeente.
+explanations:
+  - language: nl
+    what_is_this: >-
+      Een parkeerboete van de gemeente Rotterdam. Op de Nieuwe Binnenweg is geen parkeergeld
+      betaald. De parkeerbelasting was EUR 4,50 en de kosten zijn EUR 78,50, samen EUR 83,00.
+    by_when: Betaal voor 4 september 2026.
+    if_you_do_nothing: >-
+      Er komen aanmaningskosten bij en de gemeente kan de rekening aan een deurwaarder geven.
+  - language: tr
+    what_is_this: >-
+      Rotterdam belediyesinden gelen bir park cezası. Nieuwe Binnenweg caddesinde park ücreti
+      ödenmemiş. Park vergisi EUR 4,50, masraflar EUR 78,50, toplam EUR 83,00.
+    by_when: 4 september 2026 tarihinden önce ödeyin.
+    if_you_do_nothing: >-
+      Hatırlatma masrafları eklenir ve belediye alacağı bir icra memuruna devredebilir.
+steps:
+  - order: 1
+    dutch: Betaal EUR 83,00 met aanslagnummer NP 4471 2208.
+    visitor: NP 4471 2208 numarası ile EUR 83,00 ödeyin.
+    official_route: https://www.informatiepuntdigitaleoverheid.nl/
+  - order: 2
+    dutch: >-
+      Stond de auto er niet, of had u wel betaald? Maak binnen zes weken na 12 augustus 2026
+      bezwaar bij de heffingsambtenaar en stuur uw parkeerbewijs mee.
+    visitor: >-
+      Araba orada değil miydi, ya da ödeme yaptınız mı? 12 augustus 2026 tarihinden itibaren altı
+      hafta içinde belediyeye itiraz edin ve park biletinizi ekleyin.
+    official_route: https://www.rijksoverheid.nl/onderwerpen/bezwaar-en-beroep
+  - order: 3
+    dutch: Lukt betalen niet in een keer? Vraag de gemeente om een betalingsregeling.
+    visitor: Tek seferde ödeyemiyor musunuz? Belediyeden taksitlendirme isteyin.
+    official_route: https://www.juridischloket.nl/
+draft:
+  kind: objection
+  addressed_to: Heffingsambtenaar gemeente Rotterdam
+  send_before: null
+  dutch: |-
+    Geachte heffingsambtenaar,
+
+    Ik maak bezwaar tegen naheffingsaanslag NP 4471 2208. Ik had die dag wel parkeergeld betaald
+    en stuur het betaalbewijs mee. Ik verzoek u de naheffingsaanslag in te trekken.
+
+    Met vriendelijke groet,
+  visitor: |-
+    Sayın yetkili,
+
+    NP 4471 2208 numaralı ek vergi kararına itiraz ediyorum. O gün park ücretini ödemiştim ve
+    ödeme belgesini ekte gönderiyorum. Kararın iptalini rica ediyorum.
+
+    Saygılarımla,

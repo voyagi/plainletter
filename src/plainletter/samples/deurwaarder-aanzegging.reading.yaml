@@ -1,0 +1,104 @@
+visitor_language: pl
+facts:
+  sender_id: deurwaarder
+  sender_name:
+    value: Deurwaarderskantoor Van Rooij en Partners
+    source:
+      page: 1
+      text: Deurwaarderskantoor Van Rooij en Partners
+  letter_type:
+    value: Aanzegging betaling na vonnis
+    source:
+      page: 1
+      text: Aanzegging betaling na vonnis
+  reference:
+    value: 26 44 7180
+    source:
+      page: 1
+      text: "Dossiernummer: 26 44 7180"
+  issued_on:
+    day: 4
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Datum: 4 augustus 2026"
+  deadline:
+    day: 14
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: Betaal voor 14 augustus 2026.
+  total_amount:
+    cents: 80135
+    label: Totaal verschuldigd
+    source:
+      page: 1
+      text: "Totaal verschuldigd: EUR 801,35"
+  line_amounts:
+    - cents: 61240
+      label: Hoofdsom
+      source:
+        page: 1
+        text: "Hoofdsom: EUR 612,40"
+    - cents: 18895
+      label: Rente en kosten
+      source:
+        page: 1
+        text: "Rente en kosten: EUR 188,95"
+  consequences:
+    - page: 1
+      text: >-
+        Betaalt u niet, dan gaan wij over tot beslag op uw loon, uw uitkering of uw bankrekening.
+        De kosten van het beslag komen bovenop het bedrag hierboven.
+    - page: 1
+      text: >-
+        Tegen het vonnis zelf kunt u bij ons geen bezwaar maken. Wilt u het vonnis aanvechten, ga
+        dan meteen naar een jurist of advocaat.
+explanations:
+  - language: nl
+    what_is_this: >-
+      Een deurwaarder int een bedrag waarover de rechter al heeft beslist: EUR 612,40 plus
+      EUR 188,95 aan rente en kosten, samen EUR 801,35. Dit is geen eerste rekening, dit is het
+      einde van een zaak die al gelopen heeft.
+    by_when: >-
+      De datum in de brief was 14 augustus 2026 en die is voorbij. Bel vandaag nog.
+    if_you_do_nothing: >-
+      De deurwaarder legt beslag op uw loon, uw uitkering of uw bankrekening, en de kosten daarvan
+      komen er bovenop.
+  - language: pl
+    what_is_this: >-
+      Komornik ściąga kwotę, o której sąd już zdecydował: EUR 612,40 plus EUR 188,95 odsetek i
+      kosztów, razem EUR 801,35. To nie jest pierwszy rachunek, to koniec sprawy, która już się
+      toczyła.
+    by_when: >-
+      Termin w liście to 14 augustus 2026 i już minął. Zadzwoń jeszcze dzisiaj.
+    if_you_do_nothing: >-
+      Komornik zajmie wynagrodzenie, zasiłek albo konto bankowe, a koszty zajęcia dojdą do kwoty.
+steps:
+  - order: 1
+    dutch: >-
+      Bel vandaag het kantoor met dossiernummer 26 44 7180 en zeg dat u een regeling wilt. Zolang
+      er nog geen beslag ligt, kan dat volgens deze brief.
+    visitor: >-
+      Zadzwoń dzisiaj do kancelarii, podaj numer sprawy 26 44 7180 i poproś o rozłożenie na raty.
+      Dopóki nie ma zajęcia, list mówi, że to możliwe.
+    official_route: https://www.juridischloket.nl/
+  - order: 2
+    dutch: >-
+      Ga vandaag of morgen naar Het Juridisch Loket, 0800 8020, en neem deze brief mee. Bij een
+      deurwaarder tellen dagen.
+    visitor: >-
+      Idź dziś albo jutro do Het Juridisch Loket, 0800 8020, i weź ten list ze sobą. Przy
+      komorniku liczą się dni.
+    official_route: https://www.juridischloket.nl/
+  - order: 3
+    dutch: >-
+      Meld u bij de schuldhulpverlening van uw gemeente. Dat is gratis en het kan een beslag nog
+      afwenden.
+    visitor: >-
+      Zgłoś się do gminnego doradcy do spraw długów. To bezpłatne i może jeszcze zatrzymać
+      zajęcie.
+    official_route: https://www.juridischloket.nl/
+draft: null

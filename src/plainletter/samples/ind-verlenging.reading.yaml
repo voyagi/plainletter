@@ -1,0 +1,127 @@
+visitor_language: en
+facts:
+  sender_id: ind
+  sender_name:
+    value: Immigratie- en Naturalisatiedienst
+    source:
+      page: 1
+      text: Immigratie- en Naturalisatiedienst
+  letter_type:
+    value: Uw verblijfsvergunning verloopt
+    source:
+      page: 1
+      text: Uw verblijfsvergunning verloopt
+  reference:
+    value: 2731 6640 88
+    source:
+      page: 1
+      text: "V-nummer: 2731 6640 88"
+  issued_on:
+    day: 17
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Datum: 17 augustus 2026"
+  deadline:
+    day: 1
+    month: 11
+    year: 2026
+    source:
+      page: 1
+      text: Vraag de verlenging aan voor 1 november 2026.
+  other_dates:
+    - day: 1
+      month: 12
+      year: 2026
+      label: laatste dag dat de verblijfsvergunning geldig is
+      source:
+        page: 1
+        text: Uw verblijfsvergunning is geldig tot 1 december 2026.
+  total_amount:
+    cents: 24900
+    label: Leges voor de verlenging
+    source:
+      page: 1
+      text: "Leges voor de verlenging: EUR 249,00"
+  consequences:
+    - page: 1
+      text: >-
+        Vraagt u te laat aan, dan kan uw verblijf onderbroken raken. Zonder geldige vergunning mag
+        u niet werken en kan uw zorgverzekering stoppen.
+  objection_route:
+    page: 1
+    text: >-
+      U kunt binnen vier weken na de beslissing bezwaar maken.
+explanations:
+  - language: nl
+    what_is_this: >-
+      Uw verblijfsvergunning voor werk loopt af op 1 december 2026. De IND vraagt u de verlenging
+      aan te vragen. De aanvraag kost EUR 249,00.
+    by_when: >-
+      Vraag de verlenging aan voor 1 november 2026, dus een maand voordat de vergunning afloopt.
+    if_you_do_nothing: >-
+      Uw verblijf kan onderbroken raken. Zonder geldige vergunning mag u niet werken en kan uw
+      zorgverzekering stoppen.
+  - language: en
+    what_is_this: >-
+      Your residence permit for work runs out on 1 december 2026. The IND is asking you to apply
+      for an extension. The application costs EUR 249,00.
+    by_when: >-
+      Apply before 1 november 2026, a month before the permit runs out.
+    if_you_do_nothing: >-
+      Your legal stay can break. Without a valid permit you may not work, and your health
+      insurance can end.
+steps:
+  - order: 1
+    dutch: >-
+      Vraag de verlenging aan voor 1 november 2026 met V-nummer 2731 6640 88. U heeft DigiD
+      nodig.
+    visitor: >-
+      Apply for the extension before 1 november 2026, quoting V number 2731 6640 88. You need
+      DigiD to do it.
+    official_route: https://ind.nl/nl
+  - order: 2
+    dutch: >-
+      Zorg dat er EUR 249,00 op de rekening staat waarvan de IND mag afschrijven, anders wordt de
+      aanvraag niet in behandeling genomen.
+    visitor: >-
+      Make sure EUR 249,00 is available on the account the IND may charge, otherwise the
+      application is not taken into treatment.
+    official_route: https://ind.nl/nl
+  - order: 3
+    dutch: >-
+      Werkt u nog bij dezelfde werkgever? Vraag een recente werkgeversverklaring en drie
+      loonstroken, die horen bij de aanvraag.
+    visitor: >-
+      Still with the same employer? Ask for a current employer statement and three payslips, which
+      belong with the application.
+    official_route: https://ind.nl/nl
+  - order: 4
+    dutch: >-
+      Twijfelt u over uw situatie of is er al iets misgegaan? Ga naar Het Juridisch Loket voordat u
+      iets indient. Verblijfsrecht is te ingewikkeld voor een balie alleen.
+    visitor: >-
+      Unsure about your situation, or has something already gone wrong? Go to Het Juridisch Loket
+      before you submit anything. Residence law is too complicated for a help desk alone.
+    official_route: https://www.juridischloket.nl/
+draft:
+  kind: reply
+  addressed_to: Immigratie- en Naturalisatiedienst
+  send_before: null
+  dutch: |-
+    Geachte heer, mevrouw,
+
+    Ik wil mijn verblijfsvergunning voor arbeid in loondienst verlengen, V-nummer 2731 6640 88. Ik
+    werk nog bij dezelfde werkgever en stuur een werkgeversverklaring en drie loonstroken mee. Ik
+    hoor graag of de aanvraag compleet is.
+
+    Met vriendelijke groet,
+  visitor: |-
+    Dear Sir or Madam,
+
+    I would like to extend my residence permit for paid employment, V number 2731 6640 88. I am
+    still with the same employer and enclose an employer statement and three payslips. Please let
+    me know whether the application is complete.
+
+    Yours faithfully,

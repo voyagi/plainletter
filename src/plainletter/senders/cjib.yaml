@@ -1,0 +1,47 @@
+id: cjib
+name_nl: Centraal Justitieel Incassobureau
+short_name: CJIB
+verified: true
+checked_on: "2026-08-21"
+what_they_do_en: >-
+  The collection agency of the Ministry of Justice. It sends traffic fines, criminal fines and
+  court-ordered payments, and it is the body that raises the amount when one goes unpaid.
+letter_types:
+  - verkeersboete
+  - beschikking administratieve sanctie
+  - aanmaning
+  - dwangbevel
+consequences:
+  - text_nl: >-
+      Betaalt u een verkeersboete niet op tijd, dan verhoogt het CJIB het bedrag. Bij een tweede
+      aanmaning komt daar nog een verhoging bij, en daarna kan het CJIB het bedrag laten innen.
+    text_en: >-
+      An unpaid traffic fine is raised by the CJIB, raised again after a second reminder, and can
+      then be collected by force, which may include a bailiff or a stopped payment.
+    source: https://www.cjib.nl/verkeersboete
+    checked_on: "2026-08-21"
+objection:
+  window_days: 42
+  counted_from: issued_on
+  body_nl: officier van justitie
+  postal_address: null
+  online_route: https://www.om.nl/onderwerpen/verkeer
+  source: https://www.om.nl/onderwerpen/verkeer
+  checked_on: "2026-08-21"
+payment:
+  website: https://www.cjib.nl/verkeersboete
+  phone: null
+  payment_plan: true
+  source: https://www.cjib.nl/betalingsregeling
+  checked_on: "2026-08-21"
+referrals:
+  - name: Het Juridisch Loket
+    phone: "0800 8020"
+    website: https://www.juridischloket.nl/
+    when_nl: Als u het niet eens bent met de boete of als er al een deurwaarder bij betrokken is.
+    when_en: When the fine is disputed, or a bailiff is already involved.
+  - name: Schuldhulpverlening van de gemeente
+    phone: null
+    website: https://www.rijksoverheid.nl/onderwerpen/schulden
+    when_nl: Als u meerdere schulden heeft en niet weet waar u moet beginnen.
+    when_en: When there are several debts at once and no clear place to start.

@@ -1,0 +1,119 @@
+visitor_language: fa
+facts:
+  sender_id: svb
+  sender_name:
+    value: Sociale Verzekeringsbank
+    source:
+      page: 1
+      text: Sociale Verzekeringsbank
+  letter_type:
+    value: Beslissing kinderbijslag derde kwartaal
+    source:
+      page: 1
+      text: Beslissing kinderbijslag derde kwartaal
+  reference:
+    value: 6512 3387
+    source:
+      page: 1
+      text: "Klantnummer: 6512 3387"
+  issued_on:
+    day: 13
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Datum: 13 augustus 2026"
+  deadline:
+    day: 11
+    month: 9
+    year: 2026
+    source:
+      page: 1
+      text: Geef wijzigingen in uw gezin door voor 11 september 2026.
+  total_amount:
+    cents: 37482
+    label: Totaal dat u ontvangt
+    source:
+      page: 1
+      text: "Totaal dat u ontvangt: EUR 374,82"
+  line_amounts:
+    - cents: 29986
+      label: Kinderbijslag per kwartaal
+      source:
+        page: 1
+        text: "Kinderbijslag per kwartaal: EUR 299,86"
+    - cents: 7496
+      label: Nabetaling over het vorige kwartaal
+      source:
+        page: 1
+        text: "Nabetaling over het vorige kwartaal: EUR 74,96"
+  consequences:
+    - page: 1
+      text: >-
+        Geeft u een wijziging te laat door, dan vorderen wij te veel betaalde kinderbijslag terug
+        en kan er een boete bij komen.
+  objection_route:
+    page: 1
+    text: >-
+      U kunt binnen zes weken na de datum van deze brief bezwaar maken.
+explanations:
+  - language: nl
+    what_is_this: >-
+      Goed nieuws in een officiele envelop. De SVB betaalt kinderbijslag: EUR 299,86 voor dit
+      kwartaal en EUR 74,96 die nog openstond, samen EUR 374,82. U hoeft niets te betalen.
+    by_when: >-
+      Geef veranderingen in uw gezin door voor 11 september 2026.
+    if_you_do_nothing: >-
+      Het geld komt gewoon binnen. Verandert er iets in uw gezin en zegt u het te laat, dan vraagt
+      de SVB het te veel betaalde terug en kan er een boete bij komen.
+  - language: fa
+    what_is_this: >-
+      این نامه خبر خوبی در پاکت اداری است. اداره بیمه‌های اجتماعی کمک‌هزینه فرزند می‌پردازد:
+      EUR 299,86 برای این فصل و EUR 74,96 از فصل پیش، جمعاً EUR 374,82. چیزی برای پرداخت ندارید.
+    by_when: >-
+      هر تغییری در خانواده را پیش از 11 september 2026 اطلاع دهید.
+    if_you_do_nothing: >-
+      پول به حساب شما واریز می‌شود. اگر وضعیت خانواده تغییر کند و دیر اطلاع دهید، مبلغ اضافی
+      بازپس گرفته می‌شود و ممکن است جریمه هم اضافه شود.
+steps:
+  - order: 1
+    dutch: >-
+      Controleer of het bedrag EUR 374,82 op uw rekening komt. Komt het niet, bel dan de SVB met
+      klantnummer 6512 3387.
+    visitor: >-
+      بررسی کنید که مبلغ EUR 374,82 به حسابتان واریز شود. اگر نیامد، با شماره مشتری 6512 3387 با
+      اداره تماس بگیرید.
+    official_route: https://www.svb.nl/nl/
+  - order: 2
+    dutch: >-
+      Is uw kind gaan werken, verhuisd, of het huis uit? Geef dat door voor 11 september 2026.
+    visitor: >-
+      آیا فرزندتان کار پیدا کرده، نقل مکان کرده یا از خانه رفته است؟ پیش از 11 september 2026
+      اطلاع دهید.
+    official_route: https://www.svb.nl/nl/
+  - order: 3
+    dutch: >-
+      Klopt het bedrag volgens u niet? U kunt binnen zes weken bezwaar maken. Het Juridisch Loket
+      helpt daar gratis bij.
+    visitor: >-
+      اگر فکر می‌کنید مبلغ درست نیست، تا شش هفته می‌توانید اعتراض کنید. Het Juridisch Loket رایگان
+      کمک می‌کند.
+    official_route: https://www.juridischloket.nl/
+draft:
+  kind: reply
+  addressed_to: Sociale Verzekeringsbank
+  send_before: null
+  dutch: |-
+    Geachte heer, mevrouw,
+
+    Ik geef een wijziging door bij klantnummer 6512 3387. Mijn oudste kind is gaan werken naast de
+    school. Ik hoor graag of dit gevolgen heeft voor de kinderbijslag.
+
+    Met vriendelijke groet,
+  visitor: |-
+    با سلام و احترام،
+
+    تغییری را برای شماره مشتری 6512 3387 اعلام می‌کنم. فرزند بزرگم در کنار مدرسه شروع به کار کرده
+    است. لطفاً بفرمایید آیا این موضوع بر کمک‌هزینه فرزند اثر می‌گذارد.
+
+    با احترام،

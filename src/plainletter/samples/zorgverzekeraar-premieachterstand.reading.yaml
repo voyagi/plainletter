@@ -1,0 +1,123 @@
+visitor_language: tr
+facts:
+  sender_id: zorgverzekeraar
+  sender_name:
+    value: Zilverdam Zorgverzekeringen
+    source:
+      page: 1
+      text: Zilverdam Zorgverzekeringen
+  letter_type:
+    value: Tweede herinnering premieachterstand
+    source:
+      page: 1
+      text: Tweede herinnering premieachterstand
+  reference:
+    value: ZD 55 20 4471
+    source:
+      page: 1
+      text: "Polisnummer: ZD 55 20 4471"
+  issued_on:
+    day: 11
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Datum: 11 augustus 2026"
+  deadline:
+    day: 3
+    month: 9
+    year: 2026
+    source:
+      page: 1
+      text: Betaal voor 3 september 2026.
+  total_amount:
+    cents: 29870
+    label: Totaal openstaand
+    source:
+      page: 1
+      text: "Totaal openstaand: EUR 298,70"
+  line_amounts:
+    - cents: 14935
+      label: Premie over de maand juni
+      source:
+        page: 1
+        text: "Premie over de maand juni: EUR 149,35"
+    - cents: 14935
+      label: Premie over de maand juli
+      source:
+        page: 1
+        text: "Premie over de maand juli: EUR 149,35"
+  consequences:
+    - page: 1
+      text: >-
+        Betaalt u niet en belt u ons niet, dan bieden wij u een betalingsregeling aan. Loopt de
+        achterstand verder op, dan melden wij u aan bij het CAK. U betaalt dan een hogere premie
+        die van uw loon of uitkering wordt ingehouden, en u blijft daarnaast de achterstand
+        schuldig.
+    - page: 1
+      text: >-
+        Uw zorgverzekering stopt niet: de basisverzekering blijft doorlopen en u blijft verzekerd
+        voor zorg.
+explanations:
+  - language: nl
+    what_is_this: >-
+      Uw zorgverzekeraar mist twee maanden premie, EUR 149,35 per maand, samen EUR 298,70. Dit is
+      een herinnering van het bedrijf zelf, geen boete van de overheid.
+    by_when: Betaal of bel voor 3 september 2026.
+    if_you_do_nothing: >-
+      De verzekeraar biedt eerst een regeling aan. Loopt de achterstand op, dan meldt hij u volgens
+      deze brief aan bij het CAK, en dan wordt een hogere premie van uw loon of uitkering
+      ingehouden. Uw verzekering zelf blijft doorlopen, dus u blijft verzekerd voor zorg.
+  - language: tr
+    what_is_this: >-
+      Sağlık sigortanız iki aylık prim alamamış, ayda EUR 149,35, toplam EUR 298,70. Bu, devletin
+      cezası değil, şirketin kendi hatırlatması.
+    by_when: 3 september 2026 tarihinden önce ödeyin ya da telefon edin.
+    if_you_do_nothing: >-
+      Sigorta önce taksit teklif eder. Borç büyümeye devam ederse, bu mektuba göre sizi CAK
+      kurumuna bildirir ve daha yüksek bir prim maaşınızdan veya yardımınızdan kesilir. Sigortanız
+      devam eder, yani tedavi hakkınız sürer.
+steps:
+  - order: 1
+    dutch: >-
+      Bel de verzekeraar voor 3 september 2026, ook als u niet kunt betalen. Vraag om een
+      betalingsregeling en noem polisnummer ZD 55 20 4471.
+    visitor: >-
+      3 september 2026 tarihinden önce sigortayı arayın, ödeyemeyecek olsanız bile. ZD 55 20 4471
+      poliçe numarasını söyleyin ve taksit isteyin.
+    official_route: https://www.rijksoverheid.nl/onderwerpen/schulden
+  - order: 2
+    dutch: >-
+      Ga naar het gemeenteloket voor schuldhulpverlening als er meer rekeningen open staan. Dat is
+      gratis en het is beter voordat het CAK erbij komt.
+    visitor: >-
+      Ödenmemiş başka faturalar da varsa belediyenin borç danışmanlığına gidin. Ücretsizdir ve CAK
+      devreye girmeden önce yapmak daha iyidir.
+    official_route: https://www.rijksoverheid.nl/onderwerpen/schulden
+  - order: 3
+    dutch: >-
+      Klopt de achterstand volgens u niet? Vraag een overzicht van de betalingen op en leg het
+      voor aan Het Juridisch Loket.
+    visitor: >-
+      Borcun doğru olmadığını düşünüyorsanız ödeme dökümü isteyin ve Het Juridisch Loket'e
+      gösterin.
+    official_route: https://www.juridischloket.nl/
+draft:
+  kind: payment_plan
+  addressed_to: Zilverdam Zorgverzekeringen
+  send_before: null
+  dutch: |-
+    Geachte heer, mevrouw,
+
+    Ik heb uw herinnering over polisnummer ZD 55 20 4471 ontvangen. Ik kan het openstaande bedrag
+    niet in een keer betalen en vraag een betalingsregeling in maandelijkse termijnen. Ik betaal
+    de lopende premie gewoon door.
+
+    Met vriendelijke groet,
+  visitor: |-
+    Sayın yetkili,
+
+    ZD 55 20 4471 poliçe numarasına ilişkin hatırlatmanızı aldım. Borcun tamamını tek seferde
+    ödeyemiyorum ve aylık taksit talep ediyorum. Devam eden primi düzenli ödemeyi sürdüreceğim.
+
+    Saygılarımla,

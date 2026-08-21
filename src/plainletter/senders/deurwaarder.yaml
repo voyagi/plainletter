@@ -1,0 +1,30 @@
+id: deurwaarder
+name_nl: Gerechtsdeurwaarder
+short_name: Deurwaarder
+verified: false
+checked_on: "2026-08-21"
+what_they_do_en: >-
+  A court bailiff. Once one is involved, a claim has usually already been decided and the
+  letter is about enforcement rather than about the original decision.
+letter_types:
+  - dagvaarding
+  - exploot
+  - beslag
+  - aanzegging
+consequences: []
+objection: null
+payment: null
+handoff_reason_en: >-
+  A bailiff letter means enforcement is already running and periods are measured in days. This
+  always goes to Het Juridisch Loket or a lawyer the same day.
+referrals:
+  - name: Het Juridisch Loket
+    phone: "0800 8020"
+    website: https://www.juridischloket.nl/
+    when_nl: Voor gratis juridische hulp bij deze brief.
+    when_en: For free legal help with this letter.
+  - name: Gerechtsdeurwaarder
+    phone: null
+    website: https://www.juridischloket.nl/
+    when_nl: Voor de officiele route van deze afzender.
+    when_en: For this sender's own official route.

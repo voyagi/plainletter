@@ -1,0 +1,43 @@
+# CI floor for the repository gates. Runs the SAME `npm run gate` chain as the local pre-commit
+# hook, so there is one source of truth and no drift. Lean on purpose: pull requests and
+# default-branch pushes only, no schedule.
+name: gates
+on:
+  pull_request:
+  push:
+    branches: [main]
+# Least privilege: `npm ci` and `uv sync` execute third-party install scripts, so the job's
+# GITHUB_TOKEN must not carry write scopes. Nothing in this workflow writes to the repo.
+permissions:
+  contents: read
+# One run per ref: rapid PR pushes cancel their stale runs; default-branch runs are never
+# cancelled so main always gets a complete verdict.
+concurrency:
+  group: gates-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      # SHA-pinned: a tag is mutable, a commit SHA is not. The trailing comment names the tag the
+      # SHA was verified against so bumps stay reviewable.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # uv manages the Python toolchain and the locked dependency set (uv.lock).
+      - run: pipx install uv
+      - run: uv sync --group dev --frozen
+      # Build first so a bundle exists for the size and client-secret gates. `--if-present` makes
+      # this a no-op until a build script exists.
+      - run: npm run build --if-present
+      # Each gate is a FLOOR: green means no known violation, never "good".
+      - run: npm run gate
+      # Client-secret gate as its OWN step, after the build, because it needs a built bundle (the
+      # pre-commit chain has none). Same reason for the bundle budget.
+      - if: hashFiles('web/package.json') != ''
+        run: node scripts/check-client-secrets.mjs web/.next
+      - if: hashFiles('web/package.json') != ''
+        run: npm run gate:size --workspace @plainletter/web

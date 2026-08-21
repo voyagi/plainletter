@@ -1,0 +1,31 @@
+id: ind
+name_nl: Immigratie- en Naturalisatiedienst
+short_name: IND
+verified: false
+checked_on: "2026-08-21"
+what_they_do_en: >-
+  The immigration service. It decides on residence permits, asylum applications, naturalisation
+  and family reunification.
+letter_types:
+  - beschikking
+  - voornemen
+  - afwijzing
+  - verblijfsvergunning
+consequences: []
+objection: null
+payment: null
+handoff_reason_en: >-
+  An immigration decision can end a residence right, its periods are short and different from
+  the ordinary ones, and a mistake is not recoverable. This sender always goes to a lawyer or
+  to VluchtelingenWerk, never to a desk explanation alone.
+referrals:
+  - name: Het Juridisch Loket
+    phone: "0800 8020"
+    website: https://www.juridischloket.nl/
+    when_nl: Voor gratis juridische hulp bij deze brief.
+    when_en: For free legal help with this letter.
+  - name: Immigratie- en Naturalisatiedienst
+    phone: null
+    website: https://ind.nl/nl
+    when_nl: Voor de officiele route van deze afzender.
+    when_en: For this sender's own official route.

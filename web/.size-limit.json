@@ -1,0 +1,7 @@
+[
+  {
+    "name": "console client bundle",
+    "path": ".next/static/chunks/**/*.js",
+    "limit": "260 kB"
+  }
+]

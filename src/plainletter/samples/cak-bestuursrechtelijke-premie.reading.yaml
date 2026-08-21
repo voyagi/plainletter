@@ -1,0 +1,120 @@
+visitor_language: ar
+facts:
+  sender_id: cak
+  sender_name:
+    value: CAK
+    source:
+      page: 1
+      text: CAK
+  letter_type:
+    value: Aanmelding bestuursrechtelijke premie
+    source:
+      page: 1
+      text: Aanmelding bestuursrechtelijke premie
+  reference:
+    value: CAK 3390 7742
+    source:
+      page: 1
+      text: "Zaaknummer: CAK 3390 7742"
+  issued_on:
+    day: 6
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Datum: 6 augustus 2026"
+  deadline:
+    day: 17
+    month: 9
+    year: 2026
+    source:
+      page: 1
+      text: Reageer voor 17 september 2026 als u denkt dat deze aanmelding niet klopt.
+  total_amount:
+    cents: 18750
+    label: Bestuursrechtelijke premie per maand
+    source:
+      page: 1
+      text: "Bestuursrechtelijke premie per maand: EUR 187,50"
+  line_amounts:
+    - cents: 14935
+      label: Gewone premie per maand
+      source:
+        page: 1
+        text: "Gewone premie per maand: EUR 149,35"
+  consequences:
+    - page: 1
+      text: >-
+        Doet u niets, dan houdt uw werkgever of uw uitkeringsinstantie de premie in op uw inkomen.
+        De achterstand bij uw zorgverzekeraar blijft daarnaast openstaan en wordt hierdoor niet
+        kleiner.
+    - page: 1
+      text: >-
+        Heeft u een betalingsregeling met uw zorgverzekeraar afgesproken en houdt u zich daaraan?
+        Meld dat bij ons, dan stopt de aanmelding.
+  objection_route:
+    page: 1
+    text: >-
+      U kunt binnen zes weken na de datum van deze brief bezwaar maken.
+explanations:
+  - language: nl
+    what_is_this: >-
+      Uw zorgverzekeraar heeft de onbetaalde premie doorgegeven aan het CAK. Vanaf nu wordt
+      EUR 187,50 per maand van uw inkomen ingehouden in plaats van de gewone EUR 149,35. Dit is
+      geen boete en geen schuld die hiermee wordt afbetaald.
+    by_when: Reageer voor 17 september 2026.
+    if_you_do_nothing: >-
+      Uw werkgever of uitkeringsinstantie houdt het hogere bedrag in op uw inkomen. De oude
+      achterstand bij de verzekeraar blijft er los van staan en wordt hier niet kleiner van.
+  - language: ar
+    what_is_this: >-
+      شركة التأمين الصحي أبلغت CAK بعدم دفع الأقساط. من الآن يُقتطع EUR 187,50 شهرياً من دخلك بدل
+      القسط العادي EUR 149,35. هذه ليست غرامة، ولا تُسدَّد بها الديون القديمة.
+    by_when: ردّ قبل 17 september 2026.
+    if_you_do_nothing: >-
+      سيقتطع صاحب العمل أو جهة الإعانة المبلغ الأعلى من دخلك. ويبقى الدين القديم لدى شركة التأمين
+      قائماً ولا ينقص بهذا الاقتطاع.
+steps:
+  - order: 1
+    dutch: >-
+      Heeft u al een betalingsregeling met uw zorgverzekeraar? Meld dat bij het CAK met
+      zaaknummer CAK 3390 7742, dan stopt de aanmelding volgens deze brief.
+    visitor: >-
+      هل لديك اتفاق تقسيط مع شركة التأمين؟ أبلغ CAK بالرقم CAK 3390 7742، فتتوقف الإحالة بحسب هذه
+      الرسالة.
+    official_route: https://www.rijksoverheid.nl/onderwerpen/schulden
+  - order: 2
+    dutch: >-
+      Heeft u die regeling nog niet? Bel dan eerst uw zorgverzekeraar en maak er een, en ga
+      daarna naar de schuldhulpverlening van uw gemeente.
+    visitor: >-
+      إن لم يكن لديك اتفاق بعد، اتصل أولاً بشركة التأمين واتفق على تقسيط، ثم توجه إلى دائرة
+      مساعدة المدينين في بلديتك.
+    official_route: https://www.rijksoverheid.nl/onderwerpen/schulden
+  - order: 3
+    dutch: >-
+      Ga met deze brief naar Het Juridisch Loket voor 17 september 2026. Een aanmelding kan
+      worden aangevochten en dat is te ingewikkeld om alleen te doen.
+    visitor: >-
+      خذ هذه الرسالة إلى Het Juridisch Loket قبل 17 september 2026. يمكن الاعتراض على الإحالة،
+      وهذا أمر معقد لا يُنجَز وحدك.
+    official_route: https://www.juridischloket.nl/
+draft:
+  kind: reply
+  addressed_to: CAK
+  send_before: null
+  dutch: |-
+    Geachte heer, mevrouw,
+
+    Ik reageer op de aanmelding met zaaknummer CAK 3390 7742. Ik heb met mijn zorgverzekeraar een
+    betalingsregeling afgesproken en houd mij daaraan. Ik verzoek u de aanmelding te beeindigen en
+    stuur het bewijs van de regeling mee.
+
+    Met vriendelijke groet,
+  visitor: |-
+    حضرة المسؤول،
+
+    أردّ على الإحالة رقم CAK 3390 7742. اتفقت مع شركة التأمين على تقسيط وألتزم به. أرجو إنهاء
+    الإحالة، وأرفق إثبات الاتفاق.
+
+    مع خالص التقدير،
