@@ -92,12 +92,25 @@ Figtree, JetBrains Mono or Overpass, all of which are spent on sibling products.
 | --- | --- | --- |
 | Working surface: body, findings, controls, the printed card | **Atkinson Hyperlegible Next** (OFL), `wght 200..800` | Drawn by the Braille Institute so that letterforms which normally collapse into each other stay distinct: `I` against `l` against `1`, `O` against `0`. The reader here may have low vision, may be reading a second alphabet, and is looking at a reference number they must copy exactly. No other free face is designed for that job |
 | Brand layer only: the wordmark, the one big sentence, landing headlines | **Bricolage Grotesque** (OFL), `opsz 12..96`, `wdth 75..100`, `wght 200..800` | One warm, contemporary voice so the page is not faceless. It is drawn in 2023 and reads as made this year, which is the point after a direction that read as a museum |
-| Arabic and Farsi | **Vazirmatn** (OFL) | A modern Arabic face with a real weight range, not a Latin fallback |
+| Arabic | **Noto Sans Arabic** (OFL) | Drawn for Arabic. See the rule under this table |
+| Farsi | **Vazirmatn** (OFL) | Its own project calls it "a Persian/Arabic font project", Persian first, which is exactly right here and exactly wrong for Arabic |
 | Hebrew | **Noto Sans Hebrew** | |
 | Cyrillic, Chinese | **Noto Sans**, **Noto Sans SC** | |
 
-Both Latin families were confirmed resolving from the Google Fonts `css2` endpoint on 2026-08-21
-before being written here.
+**Every script gets a face designed for that script, never one that merely covers it.** Persian and
+Arabic share an alphabet but not the letter shapes their readers expect, so a Persian-first family
+set in Arabic reads subtly foreign to the one person in the room who most needs it to read right.
+The same rule forbids solving Hebrew or Cyrillic with a Latin family that happens to include the
+glyphs.
+
+The Latin face must be loaded with **`latin-ext` as well as `latin`**. Polish and Turkish are two of
+the twelve visitor languages and their letters live in the extended subset. Loading `latin` alone
+drops the l with stroke and the dotless i out of the face mid-sentence, which is the same class of
+failure as a mistranslated amount: the visitor sees something that is not their language.
+
+Every family named here was confirmed resolving from the Google Fonts `css2` endpoint on
+2026-08-21, and each was checked for the subset it actually serves rather than the one it is
+assumed to serve.
 
 **The brand layer never touches the working surface.** Bricolage appears on the wordmark, on the one
 plain sentence that opens a reading, and on landing headlines. It never appears on a control, in a

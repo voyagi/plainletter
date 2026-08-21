@@ -18,6 +18,13 @@
 
   --font-brand: var(--font-bricolage), sans-serif;
   --font-reading: var(--font-hyperlegible), sans-serif;
+  --font-arabic: var(--font-arabic), sans-serif;
+}
+
+/* Each script gets a face drawn for it, never one that merely covers it: an Arabic reader should
+   not be handed Persian letter shapes by a family that happens to include the alphabet. */
+:lang(ar) {
+  font-family: var(--font-arabic);
 }
 
 @layer theme {
