@@ -1,0 +1,121 @@
+visitor_language: en
+facts:
+  sender_id: duo
+  sender_name:
+    value: Dienst Uitvoering Onderwijs
+    source:
+      page: 1
+      text: Dienst Uitvoering Onderwijs
+  letter_type:
+    value: Bericht over de terugbetaling van uw studieschuld
+    source:
+      page: 1
+      text: Bericht over de terugbetaling van uw studieschuld
+  reference:
+    value: 4820 7715
+    source:
+      page: 1
+      text: "Klantnummer: 4820 7715"
+  issued_on:
+    day: 14
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Datum: 14 augustus 2026"
+  deadline:
+    day: 1
+    month: 10
+    year: 2026
+    source:
+      page: 1
+      text: >-
+        Reageer voor 1 oktober 2026 als uw inkomen lager is dan waarmee wij hebben gerekend.
+  total_amount:
+    cents: 2148000
+    label: Openstaande studieschuld
+    source:
+      page: 1
+      text: "Openstaande studieschuld: EUR 21.480,00"
+  line_amounts:
+    - cents: 6210
+      label: Huidig maandbedrag
+      source:
+        page: 1
+        text: "Huidig maandbedrag: EUR 62,10"
+    - cents: 9640
+      label: Nieuw maandbedrag
+      source:
+        page: 1
+        text: "Nieuw maandbedrag: EUR 96,40"
+  consequences:
+    - page: 1
+      text: >-
+        Doet u niets, dan schrijven wij het nieuwe maandbedrag automatisch af. Een termijn die niet
+        wordt betaald, wordt verhoogd met kosten en kan worden overgedragen aan een deurwaarder.
+  objection_route:
+    page: 1
+    text: >-
+      U kunt binnen zes weken na de datum van deze brief bezwaar maken.
+explanations:
+  - language: nl
+    what_is_this: >-
+      DUO verhoogt wat u elke maand voor uw studieschuld betaalt, van EUR 62,10 naar EUR 96,40.
+      De schuld zelf is EUR 21.480,00. Dit is geen boete en geen aanmaning.
+    by_when: >-
+      Reageer voor 1 oktober 2026 als u minder verdient dan waarmee DUO heeft gerekend.
+    if_you_do_nothing: >-
+      Het nieuwe maandbedrag wordt vanzelf afgeschreven. Een termijn die niet wordt betaald, kost
+      extra en kan naar een deurwaarder gaan.
+  - language: en
+    what_is_this: >-
+      DUO is raising what you pay each month towards your student debt, from EUR 62,10 to
+      EUR 96,40. The debt itself stands at EUR 21.480,00. This is not a fine and not a demand.
+    by_when: >-
+      Reply before 1 oktober 2026 if you earn less than the income DUO used.
+    if_you_do_nothing: >-
+      The new monthly amount will simply be collected. Any instalment left unpaid gains costs and
+      can be passed to a bailiff.
+steps:
+  - order: 1
+    dutch: >-
+      Vergelijk het inkomen in deze brief met wat u nu verdient. Is het lager, geef dat dan door
+      voor 1 oktober 2026, dan gaat het maandbedrag omlaag.
+    visitor: >-
+      Compare the income in this letter with what you earn now. If it is lower, report it before
+      1 oktober 2026 and the monthly amount comes down.
+    official_route: https://duo.nl/particulier/
+  - order: 2
+    dutch: >-
+      Zorg dat er elke maand genoeg op de rekening staat voor EUR 96,40, anders komen er kosten
+      bij.
+    visitor: >-
+      Keep enough in the account each month for EUR 96,40, otherwise costs are added.
+    official_route: https://duo.nl/particulier/
+  - order: 3
+    dutch: >-
+      Klopt het bedrag volgens u niet? Ga binnen zes weken met deze brief naar Het Juridisch
+      Loket.
+    visitor: >-
+      If you think the amount is wrong, take this letter to Het Juridisch Loket within six weeks.
+    official_route: https://www.juridischloket.nl/
+draft:
+  kind: objection
+  addressed_to: Dienst Uitvoering Onderwijs
+  send_before: null
+  dutch: |-
+    Geachte heer, mevrouw,
+
+    Ik maak bezwaar tegen het bericht met klantnummer 4820 7715 over mijn maandbedrag. Mijn
+    inkomen is lager dan het inkomen waarmee is gerekend. Ik verzoek u het maandbedrag opnieuw
+    vast te stellen en stuur mijn recente loonstroken mee.
+
+    Met vriendelijke groet,
+  visitor: |-
+    Dear Sir or Madam,
+
+    I am objecting to the notice under client number 4820 7715 about my monthly repayment. My
+    income is lower than the income the calculation used. Please reassess the monthly amount. My
+    recent payslips are enclosed.
+
+    Yours faithfully,

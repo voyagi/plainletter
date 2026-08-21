@@ -1,0 +1,124 @@
+visitor_language: uk
+facts:
+  sender_id: waterschap
+  sender_name:
+    value: Waterschap Rivierenland
+    source:
+      page: 1
+      text: Waterschap Rivierenland
+  letter_type:
+    value: Aanslag waterschapsbelastingen
+    source:
+      page: 1
+      text: Aanslag waterschapsbelastingen
+  reference:
+    value: WS 2026 04471
+    source:
+      page: 1
+      text: "Aanslagnummer: WS 2026 04471"
+  issued_on:
+    day: 18
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Dagtekening: 18 augustus 2026"
+  deadline:
+    day: 30
+    month: 11
+    year: 2026
+    source:
+      page: 1
+      text: Betaal voor 30 november 2026, of betaal in tien termijnen met automatische incasso.
+  total_amount:
+    cents: 30960
+    label: Totaal te betalen
+    source:
+      page: 1
+      text: "Totaal te betalen: EUR 309,60"
+  line_amounts:
+    - cents: 9120
+      label: Watersysteemheffing ingezetenen
+      source:
+        page: 1
+        text: "Watersysteemheffing ingezetenen: EUR 91,20"
+    - cents: 21840
+      label: Zuiveringsheffing
+      source:
+        page: 1
+        text: "Zuiveringsheffing: EUR 218,40"
+  consequences:
+    - page: 1
+      text: >-
+        Betaalt u niet op tijd, dan volgt een aanmaning met kosten en daarna een dwangbevel. De
+        kosten daarvan betaalt u er bovenop.
+    - page: 1
+      text: >-
+        Heeft u een laag inkomen of een uitkering? Vraag kwijtschelding aan. U betaalt dan minder
+        of niets.
+  objection_route:
+    page: 1
+    text: >-
+      U kunt binnen zes weken na de dagtekening bezwaar maken.
+explanations:
+  - language: nl
+    what_is_this: >-
+      De jaarlijkse waterschapsbelasting: EUR 91,20 voor het watersysteem en EUR 218,40 voor het
+      zuiveren van afvalwater, samen EUR 309,60. Iedereen die hier woont krijgt deze aanslag.
+    by_when: >-
+      Betaal voor 30 november 2026, of spreid het over tien termijnen met automatische incasso.
+    if_you_do_nothing: >-
+      Er volgt een aanmaning met kosten en daarna een dwangbevel, en die kosten komen er bovenop.
+  - language: uk
+    what_is_this: >-
+      Щорічний водний податок: EUR 91,20 за водну систему і EUR 218,40 за очищення стічних вод,
+      разом EUR 309,60. Цей рахунок отримує кожен, хто тут живе.
+    by_when: >-
+      Сплатіть до 30 november 2026 або розділіть суму на десять платежів через автосписання.
+    if_you_do_nothing: >-
+      Надійде нагадування з витратами, а потім наказ про примусове стягнення, і ці витрати
+      додадуться до суми.
+steps:
+  - order: 1
+    dutch: >-
+      Leeft u van een uitkering of een laag inkomen? Vraag eerst kwijtschelding aan, voordat u
+      betaalt. Wordt die toegekend, dan betaalt u minder of niets.
+    visitor: >-
+      Живете на допомогу або маєте низький дохід? Спершу подайте заяву на списання податку, ще до
+      оплати. Якщо її схвалять, ви заплатите менше або нічого.
+    official_route: https://www.rijksoverheid.nl/onderwerpen/bezwaar-en-beroep
+  - order: 2
+    dutch: >-
+      Wordt kwijtschelding afgewezen, betaal dan EUR 309,60 met aanslagnummer WS 2026 04471, of
+      zet automatische incasso in tien termijnen aan.
+    visitor: >-
+      Якщо у списанні відмовлять, сплатіть EUR 309,60 з номером рахунку WS 2026 04471 або
+      увімкніть автосписання десятьма платежами.
+    official_route: https://www.rijksoverheid.nl/onderwerpen/bezwaar-en-beroep
+  - order: 3
+    dutch: >-
+      Klopt de aanslag niet, bijvoorbeeld omdat u pas later op dit adres kwam wonen? Maak binnen
+      zes weken na 18 augustus 2026 bezwaar.
+    visitor: >-
+      Рахунок неправильний, наприклад ви заселилися за цією адресою пізніше? Подайте заперечення
+      протягом шести тижнів від 18 augustus 2026.
+    official_route: https://www.juridischloket.nl/
+draft:
+  kind: reply
+  addressed_to: Waterschap Rivierenland
+  send_before: null
+  dutch: |-
+    Geachte heer, mevrouw,
+
+    Ik vraag kwijtschelding aan voor de aanslag met nummer WS 2026 04471. Mijn inkomen bestaat uit
+    een uitkering en ik heb geen vermogen. Ik stuur een kopie van mijn inkomensgegevens mee en
+    hoor graag welke stukken u nog nodig heeft.
+
+    Met vriendelijke groet,
+  visitor: |-
+    Шановні пані та панове,
+
+    Прошу списати податок за рахунком номер WS 2026 04471. Мій дохід це соціальна допомога, майна
+    я не маю. Додаю копію документів про доходи і прошу повідомити, яких паперів ще бракує.
+
+    З повагою,

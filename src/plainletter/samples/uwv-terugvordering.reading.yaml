@@ -1,0 +1,119 @@
+visitor_language: pl
+facts:
+  sender_id: uwv
+  sender_name:
+    value: UWV
+    source:
+      page: 1
+      text: UWV
+  letter_type:
+    value: Beslissing terugvordering WW-uitkering
+    source:
+      page: 1
+      text: Beslissing terugvordering WW-uitkering
+  reference:
+    value: WW 8830 4471
+    source:
+      page: 1
+      text: "Kenmerk: WW 8830 4471"
+  issued_on:
+    day: 10
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Datum: 10 augustus 2026"
+  deadline:
+    day: 28
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: Betaal het openstaande bedrag voor 28 augustus 2026.
+  total_amount:
+    cents: 160260
+    label: Openstaand bedrag
+    source:
+      page: 1
+      text: "Openstaand bedrag: EUR 1.602,60"
+  line_amounts:
+    - cents: 184260
+      label: Te veel betaalde uitkering
+      source:
+        page: 1
+        text: "Te veel betaalde uitkering: EUR 1.842,60"
+    - cents: 24000
+      label: Al ingehouden
+      source:
+        page: 1
+        text: "Al ingehouden: EUR 240,00"
+  consequences:
+    - page: 1
+      text: >-
+        Betaalt u niet en neemt u geen contact op, dan verrekenen wij het bedrag met een volgende
+        uitkering of geven wij de vordering aan een deurwaarder. Als u wijzigingen te laat heeft
+        doorgegeven, kan er een boete bij komen.
+  objection_route:
+    page: 1
+    text: >-
+      U kunt binnen zes weken na de datum van deze brief bezwaar maken.
+explanations:
+  - language: nl
+    what_is_this: >-
+      UWV vindt dat u te veel WW heeft gekregen en wil dat geld terug. Van EUR 1.842,60 is al
+      EUR 240,00 ingehouden, dus er staat nog EUR 1.602,60 open.
+    by_when: Betaal of bel voor 28 augustus 2026.
+    if_you_do_nothing: >-
+      UWV houdt het bedrag in op een volgende uitkering of geeft de vordering aan een deurwaarder.
+      Er kan ook een boete bij komen.
+  - language: pl
+    what_is_this: >-
+      UWV uważa, że wypłacono Panu za wysoki zasiłek i chce zwrotu. Z kwoty EUR 1.842,60 potrącono
+      już EUR 240,00, więc do zapłaty zostaje EUR 1.602,60.
+    by_when: Zapłać albo zadzwoń przed 28 augustus 2026.
+    if_you_do_nothing: >-
+      UWV potrąci tę kwotę z kolejnego zasiłku albo przekaże sprawę komornikowi. Może dojść też
+      kara pieniężna.
+steps:
+  - order: 1
+    dutch: >-
+      Bel UWV voor 28 augustus 2026 en zeg dat u de brief heeft gekregen, ook als u niet kunt
+      betalen. Een gesprek stopt de verrekening niet, maar het legt uw situatie vast.
+    visitor: >-
+      Zadzwoń do UWV przed 28 augustus 2026 i powiedz, że list dotarł, nawet jeśli nie masz z
+      czego zapłacić. Rozmowa nie wstrzymuje potrącenia, ale zapisuje Twoją sytuację.
+    official_route: https://www.uwv.nl/particulieren/
+  - order: 2
+    dutch: >-
+      Vraag een betalingsregeling aan als EUR 1.602,60 in een keer niet kan.
+    visitor: >-
+      Poproś o rozłożenie na raty, jeśli EUR 1.602,60 naraz jest nie do udźwignięcia.
+    official_route: https://www.uwv.nl/particulieren/
+  - order: 3
+    dutch: >-
+      Ga met deze brief naar Het Juridisch Loket voordat de zes weken voorbij zijn. Een
+      terugvordering kan om redenen worden aangevochten die niet in de brief staan.
+    visitor: >-
+      Zanieś ten list do Het Juridisch Loket, zanim minie sześć tygodni. Żądanie zwrotu można
+      podważyć z powodów, których w liście nie ma.
+    official_route: https://www.juridischloket.nl/
+draft:
+  kind: objection
+  addressed_to: UWV
+  send_before: null
+  dutch: |-
+    Geachte heer, mevrouw,
+
+    Ik maak bezwaar tegen de beslissing met kenmerk WW 8830 4471. Ik heb mijn werk en mijn inkomen
+    steeds doorgegeven en begrijp niet waarop de terugvordering berust. Ik verzoek u de berekening
+    toe te sturen en de beslissing opnieuw te bekijken.
+
+    Met vriendelijke groet,
+  visitor: |-
+    Szanowni Państwo,
+
+    Składam odwołanie od decyzji o numerze WW 8830 4471. Zgłaszałem każdą zmianę pracy i dochodu i
+    nie rozumiem, na czym opiera się żądanie zwrotu. Proszę o przesłanie wyliczenia i o ponowne
+    rozpatrzenie decyzji.
+
+    Z poważaniem,

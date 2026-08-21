@@ -1,0 +1,115 @@
+visitor_language: uk
+facts:
+  sender_id: belastingdienst
+  sender_name:
+    value: Belastingdienst
+    source:
+      page: 1
+      text: Belastingdienst
+  letter_type:
+    value: Definitieve aanslag inkomstenbelasting 2025
+    source:
+      page: 1
+      text: Definitieve aanslag inkomstenbelasting 2025
+  reference:
+    value: 7423 61 902 H 56
+    source:
+      page: 1
+      text: "Aanslagnummer: 7423 61 902 H 56"
+  issued_on:
+    day: 7
+    month: 8
+    year: 2026
+    source:
+      page: 1
+      text: "Dagtekening: 7 augustus 2026"
+  deadline:
+    day: 30
+    month: 9
+    year: 2026
+    source:
+      page: 1
+      text: Betaal het totaalbedrag voor 30 september 2026.
+  total_amount:
+    cents: 131600
+    label: Totaal te betalen
+    source:
+      page: 1
+      text: "Totaal te betalen: EUR 1.316,00"
+  line_amounts:
+    - cents: 128400
+      label: Te betalen belasting
+      source:
+        page: 1
+        text: "Te betalen belasting: EUR 1.284,00"
+    - cents: 3200
+      label: Belastingrente
+      source:
+        page: 1
+        text: "Belastingrente: EUR 32,00"
+  consequences:
+    - page: 1
+      text: >-
+        Betaalt u niet op tijd, dan sturen wij een aanmaning en brengen wij kosten in rekening.
+        Daarna kan de ontvanger het bedrag laten innen bij uw werkgever of uw bank.
+  objection_route:
+    page: 1
+    text: >-
+      U kunt binnen zes weken na de dagtekening bezwaar maken via Mijn Belastingdienst.
+explanations:
+  - language: nl
+    what_is_this: >-
+      De definitieve belastingaanslag over 2025. De Belastingdienst heeft uw aangifte afgerond en
+      berekend dat u nog EUR 1.316,00 moet betalen. Daarin zit EUR 32,00 rente.
+    by_when: Betaal voor 30 september 2026.
+    if_you_do_nothing: >-
+      U krijgt een aanmaning met extra kosten. Daarna mag de ontvanger het bedrag innen bij uw
+      werkgever of uw bank.
+  - language: uk
+    what_is_this: >-
+      Остаточний податковий рахунок за 2025 рік. Податкова служба завершила вашу декларацію: ви
+      маєте доплатити EUR 1.316,00, з яких EUR 32,00 це відсотки.
+    by_when: Сплатіть до 30 september 2026.
+    if_you_do_nothing: >-
+      Вам надішлють нагадування з додатковими витратами. Після цього гроші можуть стягнути з
+      вашої зарплати або з банківського рахунку.
+steps:
+  - order: 1
+    dutch: Betaal EUR 1.316,00 met aanslagnummer 7423 61 902 H 56.
+    visitor: Сплатіть EUR 1.316,00, вказавши номер рахунку 7423 61 902 H 56.
+    official_route: https://www.belastingdienst.nl/wps/wcm/connect/nl/home/home
+  - order: 2
+    dutch: >-
+      Kunt u dit niet in een keer betalen? Vraag een betalingsregeling aan voordat de datum
+      voorbij is.
+    visitor: >-
+      Не можете сплатити одразу? Попросіть про розстрочку до настання цієї дати.
+    official_route: https://www.belastingdienst.nl/wps/wcm/connect/nl/home/home
+  - order: 3
+    dutch: >-
+      Klopt de aanslag niet? Maak binnen zes weken na de dagtekening bezwaar en vraag apart uitstel
+      van betaling, want bezwaar stopt de betaling niet.
+    visitor: >-
+      Рахунок неправильний? Подайте заперечення протягом шести тижнів від дати листа і окремо
+      попросіть відстрочку платежу: заперечення саме собою його не зупиняє.
+    official_route: https://www.juridischloket.nl/
+draft:
+  kind: objection
+  addressed_to: Belastingdienst
+  send_before: null
+  dutch: |-
+    Geachte heer, mevrouw,
+
+    Ik maak bezwaar tegen de definitieve aanslag inkomstenbelasting 2025 met aanslagnummer
+    7423 61 902 H 56. Mijn inkomen over dat jaar was lager dan in de aanslag staat. Ik verzoek u de
+    aanslag opnieuw te bekijken en vraag daarnaast uitstel van betaling.
+
+    Met vriendelijke groet,
+  visitor: |-
+    Шановні пані та панове,
+
+    Я подаю заперечення проти остаточного податкового рахунку за 2025 рік, номер
+    7423 61 902 H 56. Мій дохід за той рік був меншим, ніж зазначено в рахунку. Прошу переглянути
+    рахунок і водночас надати відстрочку платежу.
+
+    З повагою,
