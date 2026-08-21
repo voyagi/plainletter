@@ -1,0 +1,30 @@
+id: uwv
+name_nl: UWV
+short_name: UWV
+verified: false
+checked_on: "2026-08-21"
+what_they_do_en: >-
+  The national body for unemployment, sickness and disability benefits. It sends decisions
+  about whether a benefit starts, changes, stops, or has to be paid back.
+letter_types:
+  - beslissing
+  - terugvordering
+  - herbeoordeling
+  - boete
+consequences: []
+objection: null
+payment: null
+handoff_reason_en: >-
+  Benefit decisions turn on personal circumstances and a repayment demand can be challenged on
+  grounds a letter never states, so this sender always needs a person.
+referrals:
+  - name: Het Juridisch Loket
+    phone: "0800 8020"
+    website: https://www.juridischloket.nl/
+    when_nl: Voor gratis juridische hulp bij deze brief.
+    when_en: For free legal help with this letter.
+  - name: UWV
+    phone: null
+    website: https://www.uwv.nl/particulieren/
+    when_nl: Voor de officiele route van deze afzender.
+    when_en: For this sender's own official route.

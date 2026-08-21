@@ -1,0 +1,30 @@
+id: zorgverzekeraar
+name_nl: Zorgverzekeraar
+short_name: Zorgverzekeraar
+verified: false
+checked_on: "2026-08-21"
+what_they_do_en: >-
+  A health insurer. It sends premium invoices, reminders, and notices about the compulsory
+  excess and about arrears.
+letter_types:
+  - factuur
+  - aanmaning
+  - betalingsregeling
+  - eigen risico
+consequences: []
+objection: null
+payment: null
+handoff_reason_en: >-
+  An insurer is a private company, so its terms are set by contract rather than by the general
+  rules for public bodies.
+referrals:
+  - name: Het Juridisch Loket
+    phone: "0800 8020"
+    website: https://www.juridischloket.nl/
+    when_nl: Voor gratis juridische hulp bij deze brief.
+    when_en: For free legal help with this letter.
+  - name: Zorgverzekeraar
+    phone: null
+    website: https://www.rijksoverheid.nl/onderwerpen/schulden
+    when_nl: Voor de officiele route van deze afzender.
+    when_en: For this sender's own official route.

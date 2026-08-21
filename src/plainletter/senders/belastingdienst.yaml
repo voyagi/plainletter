@@ -1,0 +1,48 @@
+id: belastingdienst
+name_nl: Belastingdienst
+short_name: Belastingdienst
+verified: true
+checked_on: "2026-08-21"
+what_they_do_en: >-
+  The Dutch tax administration. It sends assessments for income tax and other taxes, and decisions
+  about amounts to pay or to receive back.
+letter_types:
+  - aanslag
+  - voorlopige aanslag
+  - navordering
+  - beschikking
+consequences:
+  - text_nl: >-
+      Betaalt u een aanslag niet op tijd, dan volgt een aanmaning en kunnen er invorderingsrente en
+      kosten bij komen. Bezwaar maken schort de betaling niet automatisch op; vraag apart uitstel
+      van betaling aan.
+    text_en: >-
+      An unpaid assessment leads to a reminder, and interest and costs can be added. Objecting does
+      not by itself postpone payment, so a postponement has to be asked for separately.
+    source: https://www.belastingdienst.nl/wps/wcm/connect/nl/home/home
+    checked_on: "2026-08-21"
+objection:
+  window_days: 42
+  counted_from: issued_on
+  body_nl: Belastingdienst
+  postal_address: null
+  online_route: https://www.belastingdienst.nl/wps/wcm/connect/nl/home/home
+  source: https://www.rijksoverheid.nl/onderwerpen/bezwaar-en-beroep
+  checked_on: "2026-08-21"
+payment:
+  website: https://www.belastingdienst.nl/wps/wcm/connect/nl/home/home
+  phone: null
+  payment_plan: true
+  source: https://www.belastingdienst.nl/wps/wcm/connect/nl/home/home
+  checked_on: "2026-08-21"
+referrals:
+  - name: Het Juridisch Loket
+    phone: "0800 8020"
+    website: https://www.juridischloket.nl/
+    when_nl: Als u het niet eens bent met de aanslag en niet weet hoe u bezwaar maakt.
+    when_en: When the assessment is disputed and the objection route is unclear.
+  - name: Informatiepunt Digitale Overheid
+    phone: null
+    website: https://www.informatiepuntdigitaleoverheid.nl/
+    when_nl: Voor hulp met DigiD en met het regelen van zaken online.
+    when_en: For help with the national digital identity and with arranging things online.

@@ -1,0 +1,42 @@
+id: gemeente
+name_nl: Gemeente
+short_name: Gemeente
+verified: true
+checked_on: "2026-08-21"
+what_they_do_en: >-
+  The municipality. It sends decisions about local taxes, waste and water charges, benefits it
+  administers, parking, permits and registration.
+letter_types:
+  - beschikking
+  - aanslag gemeentelijke belastingen
+  - besluit
+  - naheffingsaanslag parkeerbelasting
+consequences:
+  - text_nl: >-
+      Reageert u niet binnen de termijn, dan staat het besluit vast en kunt u er later meestal niet
+      meer tegen op. Bij een onbetaalde aanslag volgen aanmaning en invorderingskosten.
+    text_en: >-
+      Letting the period pass makes the decision final, and it usually cannot be challenged
+      afterwards. An unpaid assessment leads to a reminder and collection costs.
+    source: https://www.rijksoverheid.nl/onderwerpen/bezwaar-en-beroep
+    checked_on: "2026-08-21"
+objection:
+  window_days: 42
+  counted_from: issued_on
+  body_nl: het college van burgemeester en wethouders van uw gemeente
+  postal_address: null
+  online_route: https://www.rijksoverheid.nl/onderwerpen/bezwaar-en-beroep
+  source: https://www.rijksoverheid.nl/onderwerpen/bezwaar-en-beroep
+  checked_on: "2026-08-21"
+payment: null
+referrals:
+  - name: Het Juridisch Loket
+    phone: "0800 8020"
+    website: https://www.juridischloket.nl/
+    when_nl: Als u bezwaar wilt maken tegen een besluit van de gemeente.
+    when_en: When a municipal decision is being challenged.
+  - name: Informatiepunt Digitale Overheid
+    phone: null
+    website: https://www.informatiepuntdigitaleoverheid.nl/
+    when_nl: Voor hulp bij het regelen van gemeentezaken online.
+    when_en: For help arranging municipal matters online.

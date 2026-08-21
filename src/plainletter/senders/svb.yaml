@@ -1,0 +1,29 @@
+id: svb
+name_nl: Sociale Verzekeringsbank
+short_name: SVB
+verified: false
+checked_on: "2026-08-21"
+what_they_do_en: >-
+  The body that pays the state pension, child benefit and several other national schemes, and
+  that reclaims what it decides was overpaid.
+letter_types:
+  - beslissing
+  - terugvordering
+  - herziening
+consequences: []
+objection: null
+payment: null
+handoff_reason_en: >-
+  A change or a reclaim usually depends on household facts the letter does not show, so this
+  sender always needs a person.
+referrals:
+  - name: Het Juridisch Loket
+    phone: "0800 8020"
+    website: https://www.juridischloket.nl/
+    when_nl: Voor gratis juridische hulp bij deze brief.
+    when_en: For free legal help with this letter.
+  - name: Sociale Verzekeringsbank
+    phone: null
+    website: https://www.svb.nl/nl/
+    when_nl: Voor de officiele route van deze afzender.
+    when_en: For this sender's own official route.
