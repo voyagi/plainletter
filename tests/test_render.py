@@ -11,7 +11,7 @@ LETTER = sample_input(SAMPLE)
 TODAY = date(2026, 8, 21)
 
 
-def reading(language: str = "ar"):
+def reading(language: str = "uk"):
     return Pipeline(model=scripted_model(SAMPLE)).run(
         LETTER, visitor_language=language, today=TODAY
     )
@@ -31,11 +31,14 @@ def test_the_urgency_state_is_a_word_and_not_only_a_colour() -> None:
 
 
 def test_a_right_to_left_visitor_language_sets_the_direction() -> None:
-    card = desk_card_html(reading("ar"), TODAY)
+    # No sample letter ships in a right-to-left language, so this drives the renderer directly.
+    # The capability has to keep working: the moment one is added, the card must already be right.
+    card = desk_card_html(reading("he"), TODAY)
     assert 'dir="rtl"' in card
-    assert 'lang="ar"' in card
-    assert is_rtl("ar") and is_rtl("fa") and is_rtl("he")
+    assert 'lang="he"' in card
+    assert is_rtl("he") and is_rtl("ar") and is_rtl("fa")
     assert not is_rtl("nl")
+    assert not is_rtl("uk")
 
 
 def test_a_left_to_right_visitor_language_does_not() -> None:

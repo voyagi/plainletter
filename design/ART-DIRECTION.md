@@ -92,16 +92,15 @@ Figtree, JetBrains Mono or Overpass, all of which are spent on sibling products.
 | --- | --- | --- |
 | Working surface: body, findings, controls, the printed card | **Atkinson Hyperlegible Next** (OFL), `wght 200..800` | Drawn by the Braille Institute so that letterforms which normally collapse into each other stay distinct: `I` against `l` against `1`, `O` against `0`. The reader here may have low vision, may be reading a second alphabet, and is looking at a reference number they must copy exactly. No other free face is designed for that job |
 | Brand layer only: the wordmark, the one big sentence, landing headlines | **Bricolage Grotesque** (OFL), `opsz 12..96`, `wdth 75..100`, `wght 200..800` | One warm, contemporary voice so the page is not faceless. It is drawn in 2023 and reads as made this year, which is the point after a direction that read as a museum |
-| Arabic | **Noto Sans Arabic** (OFL) | Drawn for Arabic. See the rule under this table |
-| Farsi | **Vazirmatn** (OFL) | Its own project calls it "a Persian/Arabic font project", Persian first, which is exactly right here and exactly wrong for Arabic |
-| Hebrew | **Noto Sans Hebrew** | |
-| Cyrillic, Chinese | **Noto Sans**, **Noto Sans SC** | |
+| Cyrillic: Ukrainian, Russian, Bulgarian | **Noto Sans** (OFL) | The reading face carries no Cyrillic at all, so the visitor column takes one that does |
+| Chinese | **Noto Sans SC** (OFL) | |
 
-**Every script gets a face designed for that script, never one that merely covers it.** Persian and
-Arabic share an alphabet but not the letter shapes their readers expect, so a Persian-first family
-set in Arabic reads subtly foreign to the one person in the room who most needs it to read right.
-The same rule forbids solving Hebrew or Cyrillic with a Latin family that happens to include the
-glyphs.
+**Every script gets a face designed for that script, never one that merely covers it.** Two
+families can share an alphabet without sharing the letter shapes their readers expect, so a face
+chosen because it happens to include the glyphs reads subtly foreign to the one person in the room
+who most needs it to read right. Check the subset a family actually serves before writing it in
+here: the reading face covers Latin only, which is why every non-Latin language needs a companion
+named above rather than assumed.
 
 The Latin face must be loaded with **`latin-ext` as well as `latin`**. Polish and Turkish are two of
 the twelve visitor languages and their letters live in the extended subset. Loading `latin` alone
@@ -119,8 +118,9 @@ making this design interesting, the design is not interesting enough yet.
 
 Scale, in px: 12 label, 14 caption, 16 body, 17 reading column, 20 lede, 24 section, 30 sentence,
 clamp(34, 4.4vw, 56) landing headline. Body never drops below 16px, reading columns hold 45 to 75
-characters, line height is 1.55 in Latin and 1.7 in Arabic and Farsi. Uppercase is for short labels
-only and never for anything a visitor reads.
+characters, and line height is 1.55. A script whose companion face sets tighter or looser than the
+reading face is matched optically rather than numerically, so both columns look like one page.
+Uppercase is for short labels only and never for anything a visitor reads.
 
 `font-variant-numeric: tabular-nums` everywhere a number can change. Numbers, dates, currency and
 URLs inside a right-to-left paragraph are wrapped in `<bdi>`, because without it the bidirectional
@@ -179,8 +179,8 @@ letter, and it never becomes a hero followed by feature cards.
 1. **You open inside the letter.** The wordmark and one line, `Put the letter down. Leave knowing
    what to do.`, sit in the letter's own margin rather than in a separate hero band.
 2. **Scrolling walks the marks.** Passage by passage down one real letter, each mark's meaning
-   arriving in the margin beside it, in Dutch and in Arabic. What the product does is stated at the
-   moment it is proved, never as a claim in its own box.
+   arriving in the margin beside it, in Dutch and in the visitor's language. What the product does
+   is stated at the moment it is proved, never as a claim in its own box.
 3. **The refusal gets its own mark.** One passage on that letter could not be grounded, and the page
    shows the broken key and the words the desk would say instead. It is the most important thing
    here and it is shown, not asserted.
@@ -247,8 +247,11 @@ placeholder never occupies the position of the hero.
 - WCAG 2.1 AA on contrast, visible focus, keyboard operation and alt text, in both themes.
 - Focus is a 3px ink outline at a 2px offset, inverting to Paper over dark surfaces.
 - Every urgency state is legible in greyscale and to a colour-blind reader, by word and treatment.
-- Right-to-left is a first-class layout: logical properties throughout, and the printed page is
-  proofed in Arabic and Hebrew, not only the screen.
+- Direction is a property of the column, not of the page: logical properties throughout, and a
+  right-to-left column aligns to its own reading edge without mirroring the amounts, the key
+  numerals or the letter itself. No sample letter ships in a right-to-left language today, so the
+  renderer is proved by test instead, on screen and on the printed page both. The moment one is
+  added it must already be correct.
 - Touch targets are at least 44px, because this runs on a tablet on a counter.
 - Body text never below 16px, and the reading columns are set for a reader who is not fluent.
 

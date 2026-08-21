@@ -1,4 +1,4 @@
-visitor_language: ar
+visitor_language: pl
 facts:
   sender_id: cak
   sender_name:
@@ -66,38 +66,39 @@ explanations:
     if_you_do_nothing: >-
       Uw werkgever of uitkeringsinstantie houdt het hogere bedrag in op uw inkomen. De oude
       achterstand bij de verzekeraar blijft er los van staan en wordt hier niet kleiner van.
-  - language: ar
+  - language: pl
     what_is_this: >-
-      شركة التأمين الصحي أبلغت CAK بعدم دفع الأقساط. من الآن يُقتطع EUR 187,50 شهرياً من دخلك بدل
-      القسط العادي EUR 149,35. هذه ليست غرامة، ولا تُسدَّد بها الديون القديمة.
-    by_when: ردّ قبل 17 september 2026.
+      Ubezpieczyciel zdrowotny zgłosił Pana do CAK, ponieważ składki długo nie były płacone. Od
+      teraz z dochodu potrącane jest EUR 187,50 miesięcznie zamiast zwykłych EUR 149,35. To nie
+      jest kara i stary dług nie zostaje przez to spłacony.
+    by_when: Odpowiedz przed 17 september 2026.
     if_you_do_nothing: >-
-      سيقتطع صاحب العمل أو جهة الإعانة المبلغ الأعلى من دخلك. ويبقى الدين القديم لدى شركة التأمين
-      قائماً ولا ينقص بهذا الاقتطاع.
+      Pracodawca albo instytucja wypłacająca świadczenie potrąci wyższą kwotę z Pana dochodu. Dług
+      u ubezpieczyciela zostaje osobno i przez to nie maleje.
 steps:
   - order: 1
     dutch: >-
       Heeft u al een betalingsregeling met uw zorgverzekeraar? Meld dat bij het CAK met
       zaaknummer CAK 3390 7742, dan stopt de aanmelding volgens deze brief.
     visitor: >-
-      هل لديك اتفاق تقسيط مع شركة التأمين؟ أبلغ CAK بالرقم CAK 3390 7742، فتتوقف الإحالة بحسب هذه
-      الرسالة.
+      Czy ma Pan już rozłożenie długu na raty u ubezpieczyciela? Proszę zgłosić to do CAK, podając
+      numer sprawy CAK 3390 7742. Według tego listu zgłoszenie wtedy się kończy.
     official_route: https://www.rijksoverheid.nl/onderwerpen/schulden
   - order: 2
     dutch: >-
       Heeft u die regeling nog niet? Bel dan eerst uw zorgverzekeraar en maak er een, en ga
       daarna naar de schuldhulpverlening van uw gemeente.
     visitor: >-
-      إن لم يكن لديك اتفاق بعد، اتصل أولاً بشركة التأمين واتفق على تقسيط، ثم توجه إلى دائرة
-      مساعدة المدينين في بلديتك.
+      Jeszcze nie ma Pan takiej umowy? Proszę najpierw zadzwonić do ubezpieczyciela i ją ustalić,
+      a potem pójść do gminnego doradcy do spraw długów.
     official_route: https://www.rijksoverheid.nl/onderwerpen/schulden
   - order: 3
     dutch: >-
       Ga met deze brief naar Het Juridisch Loket voor 17 september 2026. Een aanmelding kan
       worden aangevochten en dat is te ingewikkeld om alleen te doen.
     visitor: >-
-      خذ هذه الرسالة إلى Het Juridisch Loket قبل 17 september 2026. يمكن الاعتراض على الإحالة،
-      وهذا أمر معقد لا يُنجَز وحدك.
+      Proszę zanieść ten list do Het Juridisch Loket przed 17 september 2026. Zgłoszenie można
+      podważyć, a to zbyt skomplikowane, by robić to samemu.
     official_route: https://www.juridischloket.nl/
 draft:
   kind: reply
@@ -112,9 +113,10 @@ draft:
 
     Met vriendelijke groet,
   visitor: |-
-    حضرة المسؤول،
+    Szanowni Państwo,
 
-    أردّ على الإحالة رقم CAK 3390 7742. اتفقت مع شركة التأمين على تقسيط وألتزم به. أرجو إنهاء
-    الإحالة، وأرفق إثبات الاتفاق.
+    Odpowiadam na zgłoszenie o numerze sprawy CAK 3390 7742. Uzgodniłem z moim ubezpieczycielem
+    zdrowotnym spłatę w ratach i wywiązuję się z niej. Proszę o zakończenie zgłoszenia, w
+    załączeniu przesyłam potwierdzenie umowy.
 
-    مع خالص التقدير،
+    Z poważaniem,

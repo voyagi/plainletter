@@ -18,7 +18,7 @@ def cjib_model() -> ScriptedReadingModel:
 
 
 def run(model: ScriptedReadingModel = None) -> object:  # type: ignore[assignment]
-    return Pipeline(model=model or cjib_model()).run(LETTER, visitor_language="ar", today=TODAY)
+    return Pipeline(model=model or cjib_model()).run(LETTER, visitor_language="uk", today=TODAY)
 
 
 def test_a_sample_letter_goes_through_end_to_end() -> None:
@@ -109,7 +109,7 @@ def test_a_deadline_that_did_not_check_out_never_reaches_the_desk() -> None:
         steps=(),
         draft_letter=None,
     )
-    reading = Pipeline(model=quiet).run(LETTER, visitor_language="ar", today=TODAY)
+    reading = Pipeline(model=quiet).run(LETTER, visitor_language="uk", today=TODAY)
     assert reading.deadline is None
     assert reading.handoff.required
 
