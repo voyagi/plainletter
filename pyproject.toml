@@ -80,6 +80,9 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# The repo root, so the build scripts under scripts/ are importable by the tests that guard their
+# output. Without it a run through the console script passes while `python -m pytest` does not.
+pythonpath = ["."]
 
 [tool.bandit]
 exclude_dirs = ["tests", ".venv", "web", "node_modules"]

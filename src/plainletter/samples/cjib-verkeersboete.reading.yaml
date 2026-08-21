@@ -59,8 +59,8 @@ facts:
       van justitie.
   unreadable:
     - field: kenteken
-      reason: the middle character of the number plate is blurred in the photograph
-      ask_the_visitor: Ask the visitor to read the number plate from the letter.
+      reason: Het middelste teken van het kenteken is onscherp op de foto.
+      ask_the_visitor: Vraag de bezoeker het kenteken van de brief voor te lezen.
 explanations:
   - language: nl
     what_is_this: >-

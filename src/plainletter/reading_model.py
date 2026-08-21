@@ -43,7 +43,8 @@ it readable. Never paraphrase a passage and never reconstruct one from memory of
 
 If a value is missing, unreadable, cut off or obscured in the photograph, leave the field empty and
 add an entry to `unreadable` saying which field it is, why, and what the volunteer should ask the
-visitor. An empty field is a correct answer. A plausible guess is not.
+visitor. Write both of those in Dutch: they are printed on the desk card and read out at the
+counter. An empty field is a correct answer. A plausible guess is not.
 
 Dates go in as separate day, month and year numbers. Amounts go in as whole cents, so 174,00 euro
 is 17400. A date that is neither the date of the letter nor the deadline goes in other_dates with

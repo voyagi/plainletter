@@ -1,4 +1,5 @@
 import base64
+import json
 
 import pytest
 from starlette.testclient import TestClient
@@ -7,6 +8,12 @@ from plainletter.app import MAX_UPLOAD_BYTES, LetterUpload, _decode, app, read_l
 from plainletter.demo import sample_text
 
 TODAY = "2026-08-21"
+
+
+def events(payload: dict) -> list[dict]:
+    stream = read_letter({**payload, "stream": True})
+    assert not isinstance(stream, dict)
+    return list(stream)
 
 
 def test_the_runtime_serves_the_letter_over_its_own_http_contract() -> None:
@@ -79,6 +86,54 @@ def test_an_upload_too_large_to_be_a_letter_is_refused_before_it_is_decoded() ->
 )
 def test_a_letter_with_nothing_in_it_is_refused(payload: dict) -> None:
     assert "error" in read_letter(payload)
+
+
+def test_the_stages_arrive_in_the_order_the_desk_needs_them() -> None:
+    # The letter marked up comes before the explanation, because a volunteer with a person in front
+    # of them can start pointing at the page while the rest is still being written.
+    stages = [event["stage"] for event in events({"sample": "cjib-verkeersboete", "today": TODAY})]
+    assert stages == ["facts", "letter", "deadline", "explanations", "steps", "draft", "done"]
+
+
+def test_every_stage_carries_only_what_that_stage_produced() -> None:
+    by_stage = {
+        event["stage"]: event for event in events({"sample": "cjib-verkeersboete", "today": TODAY})
+    }
+    assert set(by_stage["deadline"]) == {"stage", "deadline"}
+    assert by_stage["deadline"]["deadline"]["days_left"] == 25
+    assert by_stage["letter"]["letter"]["keys"][0]["number"] == 1
+    assert by_stage["letter"]["sender_name"] == "Centraal Justitieel Incassobureau"
+    assert {item["language"] for item in by_stage["explanations"]["explanations"]} == {"nl", "uk"}
+
+
+def test_the_streamed_and_the_waited_for_readings_are_the_same_reading() -> None:
+    payload = {"sample": "uwv-terugvordering", "today": TODAY}
+    waited = read_letter(payload)
+    streamed = events(payload)[-1]
+    assert waited == streamed
+
+
+def test_a_citizen_service_number_never_leaves_in_a_stage_either() -> None:
+    stages = events({"sample": "belastingdienst-aanslag", "today": TODAY})
+    assert "1234 56 780" not in json.dumps(stages, ensure_ascii=False)
+
+
+def test_the_runtime_sends_the_stages_as_an_event_stream() -> None:
+    with TestClient(app) as client:
+        answer = client.post(
+            "/invocations",
+            json={"sample": "cjib-verkeersboete", "today": TODAY, "stream": True},
+        )
+
+    assert answer.status_code == 200
+    assert answer.headers["content-type"].startswith("text/event-stream")
+    messages = [
+        json.loads(line.removeprefix("data: "))
+        for line in answer.text.splitlines()
+        if line.startswith("data: ")
+    ]
+    assert [message["stage"] for message in messages][-1] == "done"
+    assert "BEGIN:VCALENDAR" in messages[-1]["reminder_ics"]
 
 
 def test_an_uploaded_letter_arrives_with_its_own_words_intact() -> None:

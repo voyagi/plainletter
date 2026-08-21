@@ -19,7 +19,9 @@ from datetime import date
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
+
+from .dutch import format_date
 
 
 class Frozen(BaseModel):
@@ -36,11 +38,15 @@ class SourceSpan(Frozen):
 
 
 class Unreadable(Frozen):
-    """A field the letter should carry but the photograph does not show clearly enough to use."""
+    """A field the letter should carry but the photograph does not show clearly enough to use.
+
+    Both sentences are written in Dutch. They are printed on the desk card and read aloud across
+    the counter, so the language they are written in is the volunteer's, not the developer's.
+    """
 
     field: str
     reason: str
-    ask_the_visitor: str = Field(description="what the volunteer should ask, in plain English")
+    ask_the_visitor: str = Field(description="what the volunteer should ask, in Dutch")
 
 
 class NamedValue(Frozen):
@@ -129,6 +135,51 @@ class VerificationResult(Frozen):
         return frozenset(fact.display for fact in self.grounded)
 
 
+class LetterRun(Frozen):
+    """A stretch of the letter that is either under a mark or not."""
+
+    text: str
+    mark: int | None = None
+
+
+class LetterLine(Frozen):
+    """One printed line of the letter, plus what the margin beside it carries.
+
+    `mark` is the numeral written in the margin and `gap` is the broken key: the deliberate absence
+    that says the desk could not read something here. A line never carries both.
+    """
+
+    runs: tuple[LetterRun, ...] = ()
+    mark: int | None = None
+    gap: bool = False
+
+
+class MarkKey(Frozen):
+    """One numbered mark, and the passage it was drawn under."""
+
+    number: int
+    text: str
+    facts: tuple[str, ...] = Field(
+        default=(), description="names of the grounded facts that cite this passage"
+    )
+
+
+class MarkedLetter(Frozen):
+    """The letter as the desk shows it: the words, the marks on them, and the numbering.
+
+    One numbering system runs across the screen and the printed card, so a volunteer can say
+    "number four" and the visitor looks at the same words in a different alphabet.
+    """
+
+    lines: tuple[LetterLine, ...] = ()
+    keys: tuple[MarkKey, ...] = ()
+    gaps: tuple[Unreadable, ...] = ()
+    unplaced: tuple[str, ...] = Field(
+        default=(),
+        description="grounded facts whose passage could not be located, which is always a bug",
+    )
+
+
 class Urgency(StrEnum):
     OVERDUE = "overdue"
     DUE_SOON = "due_soon"
@@ -137,7 +188,12 @@ class Urgency(StrEnum):
 
 
 class DeadlineView(Frozen):
-    """The deadline as the desk needs it: the date, the count, and the day to post by."""
+    """The deadline as the desk needs it: the date, the count, and the day to post by.
+
+    The written forms travel with the dates rather than being rebuilt by whoever displays them. The
+    console and the printed card have to agree character for character, and two implementations of
+    "15 september 2026" are two chances to disagree in front of the person the date belongs to.
+    """
 
     on: date
     days_left: int
@@ -146,6 +202,16 @@ class DeadlineView(Frozen):
         default=None,
         description="last working day a posted reply still arrives in time, None when it is moot",
     )
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def on_written(self) -> str:
+        return format_date(self.on)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def post_by_written(self) -> str | None:
+        return format_date(self.post_by) if self.post_by is not None else None
 
 
 class Explanation(Frozen):
@@ -182,11 +248,36 @@ class Handoff(Frozen):
     reason: str
 
 
+class ReadingProgress(Frozen):
+    """What the reading knows so far, sent the moment a stage finishes.
+
+    The fields are the fields of `DeskReading`, all optional, so the console merges each message
+    into one growing object and renders it with the code it uses for a finished reading. Two
+    renderers, one for the live view and one for the final one, would be two chances to disagree
+    about what the letter said.
+    """
+
+    stage: str
+    facts: LetterFacts | None = None
+    verification: VerificationResult | None = None
+    letter: MarkedLetter | None = None
+    deadline: DeadlineView | None = None
+    sender_name: str | None = None
+    letter_type: str | None = None
+    visitor_language: str | None = None
+    explanations: tuple[Explanation, ...] | None = None
+    steps: tuple[ActionStep, ...] | None = None
+    draft: DraftLetter | None = None
+    handoff: Handoff | None = None
+    sources: tuple[str, ...] | None = None
+
+
 class DeskReading(Frozen):
     """Everything the desk shows, prints and saves for one letter."""
 
     facts: LetterFacts
     verification: VerificationResult
+    letter: MarkedLetter
     deadline: DeadlineView | None
     sender_name: str
     letter_type: str

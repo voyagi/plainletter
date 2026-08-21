@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+from collections.abc import Iterator
 from datetime import date
 from typing import Any
 
@@ -33,6 +34,7 @@ from .pipeline import Pipeline, UngroundedOutputError
 from .reading_model import ReadingModel
 from .redact import redact
 from .render import desk_card_html, reminder_ics
+from .schemas import DeskReading, ReadingProgress
 
 # A letter is a page or a handful of pages. Anything past this is a dossier, a video, or a mistake,
 # and it should be refused before it is decoded rather than after.
@@ -60,10 +62,16 @@ class ReadRequest(BaseModel):
     letter: LetterUpload | None = None
     visitor_language: str = Field(default=DEFAULT_LANGUAGE, min_length=2, max_length=12)
     today: date | None = None
+    stream: bool = False
 
 
 @app.entrypoint
-def read_letter(payload: dict[str, Any]) -> dict[str, Any]:
+def read_letter(payload: dict[str, Any]) -> dict[str, Any] | Iterator[dict[str, Any]]:
+    """One letter in, one reading out, streamed to the desk when the caller asks for it.
+
+    Returning a generator is what the runtime turns into an event stream, so the streaming path is
+    the same pipeline in the same order rather than a second implementation with its own bugs.
+    """
     try:
         request = ReadRequest.model_validate(payload)
     except ValidationError as invalid:
@@ -77,10 +85,33 @@ def read_letter(payload: dict[str, Any]) -> dict[str, Any]:
         return _error("payload", str(unusable))
 
     today = request.today or date.today()
+    events = _events(request, letter, model, language, today)
+    if request.stream:
+        return events
+    return _last(events)
+
+
+def _events(
+    request: ReadRequest,
+    letter: LetterInput,
+    model: ReadingModel,
+    language: str,
+    today: date,
+) -> Iterator[dict[str, Any]]:
+    """Every stage as it lands, then one final message carrying the whole reading."""
+    stages = Pipeline(model=model).stages(letter, visitor_language=language, today=today)
     try:
-        reading = Pipeline(model=model).run(letter, visitor_language=language, today=today)
+        while True:
+            try:
+                progress = next(stages)
+            except StopIteration as finished:
+                reading: DeskReading = finished.value
+                yield _completed(request, letter, reading, today)
+                return
+            yield _redacted(_only_what_this_stage_set(progress))
     except UngroundedOutputError as refusal:
-        return {
+        yield {
+            "stage": "refused",
             "refused": True,
             "claims": sorted(refusal.claims),
             "message": (
@@ -89,8 +120,13 @@ def read_letter(payload: dict[str, Any]) -> dict[str, Any]:
             ),
         }
 
+
+def _completed(
+    request: ReadRequest, letter: LetterInput, reading: DeskReading, today: date
+) -> dict[str, Any]:
     reference = reading.facts.reference.value if reading.facts.reference else "plainletter"
     return {
+        "stage": "done",
         "source": "sample" if request.sample else "letter",
         "pages": letter.pages,
         "pages_omitted": letter.pages_omitted,
@@ -102,6 +138,25 @@ def read_letter(payload: dict[str, Any]) -> dict[str, Any]:
             else None
         ),
     }
+
+
+def _only_what_this_stage_set(progress: ReadingProgress) -> dict[str, Any]:
+    """The stage's own fields, whole.
+
+    Pydantic's own `exclude_unset` reaches all the way down, which would hand the console a facts
+    object missing every field the letter happened not to carry. The selection belongs at the top
+    level only: this stage produced these fields, and each of them arrives complete.
+    """
+    dumped = progress.model_dump(mode="json")
+    return {key: value for key, value in dumped.items() if key in progress.model_fields_set}
+
+
+def _last(events: Iterator[dict[str, Any]]) -> dict[str, Any]:
+    """Drain the stages and answer with the terminal message, which is the whole reading."""
+    final: dict[str, Any] = _error("pipeline", "the reading produced nothing")
+    for event in events:
+        final = event
+    return final
 
 
 def serve() -> None:

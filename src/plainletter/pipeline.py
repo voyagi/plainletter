@@ -17,12 +17,14 @@ refused reading at a help desk is recoverable. A confident wrong deadline is not
 
 from __future__ import annotations
 
+from collections.abc import Generator, Iterable
 from dataclasses import dataclass
 from datetime import date
 
 from . import urgency
 from .intake import LetterInput
 from .kb import Sender, get_sender, known_sender_ids
+from .marks import mark_letter
 from .reading_model import ReadingModel
 from .schemas import (
     ActionStep,
@@ -31,6 +33,7 @@ from .schemas import (
     Explanation,
     Handoff,
     LetterFacts,
+    ReadingProgress,
     VerificationResult,
 )
 from .verify import ungrounded_claims, verify
@@ -64,18 +67,63 @@ class Pipeline:
         visitor_language: str,
         today: date,
     ) -> DeskReading:
+        """The whole reading, waited for. The stages below are the only implementation of it."""
+        stages = self.stages(letter, visitor_language=visitor_language, today=today)
+        try:
+            while True:
+                next(stages)
+        except StopIteration as finished:
+            reading: DeskReading = finished.value
+            return reading
+
+    def stages(
+        self,
+        letter: LetterInput,
+        *,
+        visitor_language: str,
+        today: date,
+    ) -> Generator[ReadingProgress, None, DeskReading]:
+        """Announce each stage the moment it finishes, and return the finished reading.
+
+        The desk waits with a person in front of it, so the letter appearing marked up after two
+        seconds beats a blank screen for eight. Nothing is announced early: a stage is sent when it
+        has really happened, and the drafting stage is skipped outright when the check failed.
+        """
         letter_text = letter.text if letter.text is not None else self.model.transcribe(letter)
         facts = self.model.read(letter)
+        yield ReadingProgress(stage="facts", facts=facts)
+
         result = verify(facts, letter_text)
+        marked = mark_letter(letter_text, facts, result)
         grounded = {fact.name: fact.display for fact in result.grounded}
         allowed = frozenset(grounded.values())
 
         sender = get_sender(facts.sender_id)
-        deadline = urgency.view(_grounded_deadline(facts, result), today)
-        languages = (DUTCH, visitor_language) if visitor_language != DUTCH else (DUTCH,)
+        sender_name = _sender_name(facts, sender)
+        letter_type = facts.letter_type.value if facts.letter_type else "Onbekende brief"
+        yield ReadingProgress(
+            stage="letter",
+            verification=result,
+            letter=marked,
+            sender_name=sender_name,
+            letter_type=letter_type,
+            visitor_language=visitor_language,
+            handoff=handoff_for(result, sender),
+            sources=sender.sources() if sender else (),
+        )
 
+        deadline = urgency.view(_grounded_deadline(facts, result), today)
+        yield ReadingProgress(stage="deadline", deadline=deadline)
+
+        languages = (DUTCH, visitor_language) if visitor_language != DUTCH else (DUTCH,)
         explanations = self.model.explain(facts, grounded, languages)
+        _refuse_stray(_explanation_text(explanations), allowed)
+        yield ReadingProgress(stage="explanations", explanations=explanations)
+
         steps = self.model.plan(facts, grounded, sender, deadline, visitor_language)
+        _refuse_stray(_step_text(steps), allowed)
+        yield ReadingProgress(stage="steps", steps=steps)
+
         # Whether a letter needs writing back to is the drafter's call, not a property of the
         # letter carrying an objection paragraph: an insurer's arrears notice has no appeal route
         # printed on it and a request for a payment plan is exactly the right reply. What is not
@@ -85,17 +133,16 @@ class Pipeline:
             if result.is_grounded
             else None
         )
-
-        stray = _stray_claims(explanations, steps, draft, allowed)
-        if stray:
-            raise UngroundedOutputError(stray)
+        _refuse_stray(_draft_text(draft), allowed)
+        yield ReadingProgress(stage="draft", draft=draft)
 
         return DeskReading(
             facts=facts,
             verification=result,
+            letter=marked,
             deadline=deadline,
-            sender_name=_sender_name(facts, sender),
-            letter_type=facts.letter_type.value if facts.letter_type else "Onbekende brief",
+            sender_name=sender_name,
+            letter_type=letter_type,
             visitor_language=visitor_language,
             explanations=explanations,
             steps=steps,
@@ -159,17 +206,31 @@ def _sender_name(facts: LetterFacts, sender: Sender | None) -> str:
     return facts.sender_name.value if facts.sender_name else "Onbekende afzender"
 
 
-def _stray_claims(
-    explanations: tuple[Explanation, ...],
-    steps: tuple[ActionStep, ...],
-    draft: DraftLetter | None,
-    allowed: frozenset[str],
-) -> frozenset[str]:
-    parts: list[str] = []
-    for item in explanations:
-        parts += [item.what_is_this, item.by_when, item.if_you_do_nothing]
-    for step in steps:
-        parts += [step.dutch, step.visitor, step.official_route or ""]
-    if draft is not None:
-        parts += [draft.dutch, draft.visitor]
-    return ungrounded_claims(" ".join(parts), allowed)
+def _refuse_stray(parts: Iterable[str], allowed: frozenset[str]) -> None:
+    """Stop the reading the moment a stage writes a date or amount the check never allowed.
+
+    Checking each stage as it finishes rather than all of them at the end is what makes streaming
+    safe: an explanation is on the volunteer's screen the instant it is sent, so it has to have
+    been checked before it is sent, not after the draft comes back.
+    """
+    stray = ungrounded_claims(" ".join(parts), allowed)
+    if stray:
+        raise UngroundedOutputError(stray)
+
+
+def _explanation_text(explanations: tuple[Explanation, ...]) -> list[str]:
+    return [
+        part
+        for item in explanations
+        for part in (item.what_is_this, item.by_when, item.if_you_do_nothing)
+    ]
+
+
+def _step_text(steps: tuple[ActionStep, ...]) -> list[str]:
+    return [
+        part for step in steps for part in (step.dutch, step.visitor, step.official_route or "")
+    ]
+
+
+def _draft_text(draft: DraftLetter | None) -> list[str]:
+    return [draft.dutch, draft.visitor] if draft is not None else []

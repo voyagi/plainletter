@@ -56,6 +56,49 @@ def test_an_invented_deadline_in_the_explanation_stops_the_whole_reading() -> No
     assert "1 oktober 2026" in refused.value.claims
 
 
+def test_an_invented_deadline_is_refused_before_the_stage_carrying_it_is_sent() -> None:
+    # Streaming puts a stage on the volunteer's screen the instant it is sent, so the check has to
+    # happen before the send. Checking everything at the end would show the invented date and then
+    # take it back.
+    model = cjib_model()
+    nl = model.explanations[0]
+    poisoned = ScriptedReadingModel(
+        facts=model.facts,
+        explanations=(
+            nl.model_copy(update={"by_when": "Betaal voor 1 oktober 2026."}),
+            *model.explanations[1:],
+        ),
+        steps=model.steps,
+        draft_letter=model.draft_letter,
+    )
+    stages = Pipeline(model=poisoned).stages(LETTER, visitor_language="uk", today=TODAY)
+    sent = []
+    with pytest.raises(UngroundedOutputError):
+        for progress in stages:
+            sent.append(progress.stage)
+    assert sent == ["facts", "letter", "deadline"]
+
+
+def test_the_stages_and_the_finished_reading_never_disagree() -> None:
+    merged: dict[str, object] = {}
+    stages = Pipeline(model=cjib_model()).stages(LETTER, visitor_language="uk", today=TODAY)
+    while True:
+        try:
+            progress = next(stages)
+        except StopIteration as finished:
+            reading = finished.value
+            break
+        dumped = progress.model_dump()
+        merged.update(
+            {
+                key: value
+                for key, value in dumped.items()
+                if key in progress.model_fields_set and key != "stage"
+            }
+        )
+    assert merged == reading.model_dump()
+
+
 def test_an_invented_amount_in_a_step_stops_the_whole_reading() -> None:
     model = cjib_model()
     first = model.steps[0]
