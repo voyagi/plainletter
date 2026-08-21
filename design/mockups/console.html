@@ -6,457 +6,306 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --yellow: #F5C400;
-    --ink: #14213D;
+    --desk: #EFEAE6;
     --paper: #FFFFFF;
-    --rule: #14213D;
-    --overdue: #C8102E;
-    --soon: #B45309;
-    --clear: #0B7A4B;
-    --route: #1F4FBF;
-    --wash: rgba(245, 196, 0, 0.38);
-    --field: #EEF0F5;
-    --quiet: #4B5670;
-    /* Bars and chips keep an ink ground in BOTH themes, so white type on them never inverts. */
-    --bar: #14213D;
+    --ink: #221E1C;
+    --ink2: #5C534E;
+    --ink3: #847871;
+    --rule: #DCD4CE;
+    --mark: #B01E4B;
+    --wash: #FFDDE7;
+    --shadow: rgba(34, 30, 28, 0.10);
   }
   html[data-theme="dark"] {
-    --paper: #0F172A;
-    --ink: #F8FAFC;
-    --rule: #3B4A6B;
-    --overdue: #FF6B7A;
-    --soon: #F2A93B;
-    --clear: #3DD68C;
-    --route: #7FA5FF;
-    --field: #1B2540;
-    --quiet: #9FB0CC;
-    --bar: #060B18;
+    --desk: #191614;
+    --paper: #221E1C;
+    --ink: #F5F1ED;
+    --ink2: #BDB2AB;
+    --ink3: #8E827A;
+    --rule: #3A3330;
+    --mark: #FF8FAE;
+    --wash: #4A1626;
+    --shadow: rgba(0, 0, 0, 0.55);
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", sans-serif;
-    font-size: 17px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
+    margin: 0; background: var(--desk); color: var(--ink);
+    font-family: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+    font-size: 16px; line-height: 1.55; font-variant-numeric: tabular-nums;
   }
-  bdi { unicode-bidi: isolate; }
+  .ar { font-family: "Vazirmatn", "Atkinson Hyperlegible Next", sans-serif; line-height: 1.7; }
+  .shell { max-width: 1300px; margin: 0 auto; padding: 0 28px 44px; }
 
-  .counter-bar {
-    display: flex;
-    align-items: baseline;
-    gap: 20px;
-    padding: 10px 24px;
-    background: var(--bar);
-    color: #FFFFFF;
-    font-family: Overpass, sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.11em;
-    text-transform: uppercase;
-    font-size: 13px;
-  }
-  .counter-bar .mark { font-size: 17px; letter-spacing: 0.18em; }
-  .counter-bar .spacer { margin-inline-start: auto; font-weight: 600; letter-spacing: 0.06em; }
+  .util { display: flex; align-items: center; gap: 24px; padding: 16px 0 14px;
+          border-bottom: 1px solid var(--rule); }
+  .wordmark { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 20px;
+              letter-spacing: -0.02em; }
+  .cap { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); }
+  .util .sp { margin-left: auto; }
+  .pair { display: flex; align-items: center; gap: 9px; font-size: 14px; color: var(--ink2); }
+  .swap { border: 1px solid var(--rule); background: none; color: var(--ink); border-radius: 6px;
+          width: 28px; height: 28px; cursor: pointer; font-size: 13px; }
+  .timer { font-size: 13px; color: var(--ink2); }
+  .ghost { border: 1px solid var(--rule); background: none; color: var(--ink); border-radius: 6px;
+           padding: 6px 12px; font-size: 14px; cursor: pointer; font-family: inherit; }
 
-  /* The board is the fixture the desk reads first. Five cells, filled one at a time. */
-  .board {
-    display: grid;
-    grid-template-columns: 2.1fr 1fr 1.6fr 1.3fr 1.2fr;
-    background: var(--yellow);
-    color: #14213D;
-    border-block: 3px solid #14213D;
-  }
-  .cell { padding: 14px 20px 16px; border-inline-start: 2px solid #14213D; }
-  .cell:first-child { border-inline-start: 0; }
-  .cell .label {
-    font-family: Overpass, sans-serif;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.17em;
-    text-transform: uppercase;
-    opacity: 0.72;
-  }
-  .cell .value {
-    font-family: Overpass, sans-serif;
-    font-weight: 800;
-    font-size: 30px;
-    line-height: 1.05;
-    font-variant-numeric: tabular-nums;
-    margin-top: 5px;
-  }
-  .cell .value.small { font-size: 22px; }
-  .cell .sub { font-size: 14px; margin-top: 3px; font-weight: 600; }
-  .cell.urgency { background: #14213D; color: var(--yellow); }
-  .cell.urgency .label { opacity: 0.82; }
-  .cell.status .value { font-size: 21px; }
+  /* 2. The sentence. Only the two facts are marked, so the marks stay meaningful. */
+  .sentence { padding: 32px 0 0; max-width: 1000px; }
+  .lead-ar { font-size: 29px; font-weight: 600; line-height: 1.62; margin: 0; }
+  .lead-nl { font-family: "Bricolage Grotesque", sans-serif; font-size: 29px; font-weight: 600;
+             line-height: 1.38; letter-spacing: -0.02em; margin: 12px 0 0; }
+  mark { background: var(--wash); color: inherit; border-radius: 999px; padding: 0.05em 0.36em;
+         box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 
-  /* Urgency carries a WORD and its own treatment, so colour is never the only signal. */
-  .state {
-    display: inline-block;
-    margin-top: 7px;
-    padding: 4px 10px;
-    font-family: Overpass, sans-serif;
-    font-weight: 800;
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-  .state.soon {
-    color: #14213D;
-    background-color: #FFE9A8;
-    background-image: repeating-linear-gradient(-45deg, rgba(180, 83, 9, 0.75) 0 6px, transparent 6px 14px);
-    border: 2px solid var(--soon);
-  }
-  .state.overdue { color: #FFFFFF; background: var(--overdue); border: 2px solid var(--overdue); }
-  .state.ample { color: var(--clear); background: transparent; border: 2px solid var(--clear); }
+  /* 3. The deadline. One line, mark ink at full strength. */
+  .deadline { margin-top: 22px; padding: 13px 0 15px; border-top: 2px solid var(--mark);
+              border-bottom: 1px solid var(--rule); display: flex; align-items: baseline;
+              gap: 20px; flex-wrap: wrap; }
+  .deadline .big { color: var(--mark); font-size: 23px; font-weight: 700; }
+  .deadline .rest { color: var(--ink2); font-size: 15px; }
+  .state { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+           padding-bottom: 3px; }
+  .state.soon { padding: 3px 9px 4px; border: 1px solid var(--ink);
+    background-image: repeating-linear-gradient(-45deg, var(--rule) 0 4px, transparent 4px 10px); }
 
-  .floor { display: grid; grid-template-columns: 44fr 56fr; min-height: 620px; }
-  .letter-side {
-    border-inline-end: 2px solid var(--rule);
-    padding: 24px 26px 34px;
-    background: var(--field);
-  }
-  .side-head {
-    font-family: Overpass, sans-serif;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.17em;
-    text-transform: uppercase;
-    margin-bottom: 14px;
-    display: flex;
-    justify-content: space-between;
-  }
+  .work { display: grid; grid-template-columns: 47fr 53fr; gap: 32px; margin-top: 26px;
+          align-items: start; }
+  .colhead { display: flex; justify-content: space-between; align-items: baseline;
+             margin-bottom: 11px; }
 
-  /* The scan sits on the counter: real paper, slight skew, hard shadow, marks drawn on. */
-  .scan {
-    position: relative;
-    background: #FDFCF8;
-    color: #1B1B1B;
-    padding: 30px 34px 40px;
-    transform: rotate(-0.7deg);
-    box-shadow: 8px 10px 0 rgba(20, 33, 61, 0.16);
-    font-size: 12.5px;
-    line-height: 1.66;
-    font-family: "Atkinson Hyperlegible Next", sans-serif;
-  }
-  .scan .crest { font-family: Overpass, sans-serif; font-weight: 800; font-size: 15px; }
-  .scan .org { font-size: 11px; margin-bottom: 22px; }
-  .scan .subject { font-weight: 700; margin: 18px 0 14px; font-size: 13.5px; }
-  .scan dl { display: grid; grid-template-columns: 132px 1fr; gap: 4px 10px; margin: 12px 0; }
-  .scan dt { color: #4A4A4A; }
-  .scan dd { margin: 0; }
-  .scan p { margin: 12px 0; }
-  mark {
-    position: relative;
-    background: var(--wash);
-    outline: 1.5px solid #14213D;
-    padding: 0 3px 0 12px;
-  }
-  mark .pin {
-    position: absolute;
-    top: 1px;
-    inset-inline-start: -1px;
-    width: 13px;
-    height: calc(100% - 2px);
-    background: #14213D;
-    color: var(--yellow);
-    font-family: Overpass, sans-serif;
-    font-weight: 800;
-    font-size: 10px;
-    line-height: 1.5;
-    text-align: center;
-  }
-  .unclear { outline: 1.5px dashed #8A8A8A; color: #6C6C6C; padding: 0 3px; }
-  .unclear::after {
-    content: "unclear";
-    font-family: Overpass, sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-inline-start: 5px;
+  /* 4a. The letter. A margin column carries every numeral, the way a hand writes them. */
+  .letter { background: var(--paper); border-radius: 10px; padding: 28px 24px 26px 18px;
+            box-shadow: 0 14px 34px var(--shadow); transform: rotate(-0.35deg);
+            font-size: 13.5px; line-height: 1.62; }
+  .line { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start;
+          margin-bottom: 10px; }
+  .line.tight { margin-bottom: 2px; }
+  .row { display: grid; grid-template-columns: 145px 1fr; gap: 8px; }
+  .row > span:first-child { color: var(--ink2); }
+  .num { display: inline-block; width: 20px; height: 20px; border: 1px solid var(--mark);
+         color: var(--mark); border-radius: 4px; font-size: 11px; font-weight: 700;
+         line-height: 18px; text-align: center; }
+  .gap { display: block; width: 20px; border-top: 1px dashed var(--ink3); margin-top: 10px; }
+  .letter .from { font-weight: 700; }
+  .letter .kind { font-weight: 700; }
+  .letter .fine { color: var(--ink2); font-size: 12px; margin: 16px 0 0; }
+
+  /* 4b. The reading. Fixed order, equal languages, the key between them. */
+  .reading { background: var(--paper); border-radius: 10px; padding: 2px 26px 24px;
+             box-shadow: 0 10px 26px var(--shadow); }
+  .block { padding: 21px 0; border-bottom: 1px solid var(--rule); }
+  .block:last-child { border-bottom: 0; padding-bottom: 4px; }
+  .block h2 { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3);
+              margin: 0 0 12px; font-weight: 700; }
+  .grid3 { display: grid; grid-template-columns: 1fr 30px 1fr; gap: 0 16px; align-items: start; }
+  .key { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 1px; }
+  .nl p, .vis p { margin: 0 0 8px; font-size: 15.5px; }
+  .nl p:last-child, .vis p:last-child { margin-bottom: 0; }
+  .vis { text-align: right; }
+  .amounts { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .amounts td { padding: 6px 0; border-bottom: 1px solid var(--rule); }
+  .amounts tr:last-child td { border-bottom: 0; font-weight: 700; }
+  .amounts td:last-child { text-align: right; }
+  .amounts td.k { width: 30px; text-align: center; }
+  .ref { margin: 11px 0 0; font-size: 14px; color: var(--ink2); }
+  .ref b { color: var(--ink); font-weight: 700; }
+  .ref .num { vertical-align: -4px; margin: 0 2px; }
+
+  ol.steps { margin: 0; padding: 0; list-style: none; }
+  ol.steps > li { padding: 13px 0; border-top: 1px solid var(--rule);
+                  display: grid; grid-template-columns: 1fr 30px 1fr; gap: 0 16px; }
+  ol.steps > li:first-child { border-top: 0; padding-top: 2px; }
+  .act { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; }
+  .act.rtl { grid-template-columns: 1fr 22px; }
+  .stepno { width: 22px; height: 22px; border-radius: 4px; background: var(--ink);
+            color: var(--paper); font-size: 12px; font-weight: 700; line-height: 22px;
+            text-align: center; }
+  .route { display: block; margin-top: 5px; font-size: 13.5px; color: var(--ink2);
+           text-decoration: underline; text-underline-offset: 2px; }
+  .miss .label { color: var(--mark); font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+
+  .draft { margin-top: 26px; background: var(--paper); border-radius: 10px; padding: 20px 24px;
+           box-shadow: 0 10px 26px var(--shadow); }
+  .draft .head { display: flex; justify-content: space-between; align-items: baseline; gap: 14px;
+                 border-bottom: 1px solid var(--rule); padding-bottom: 11px; margin-bottom: 14px; }
+  .draft .body { border: 1px solid var(--rule); border-radius: 8px; padding: 13px 15px;
+                 font-size: 14.5px; white-space: pre-line; }
+  .draft .body + .body { margin-top: 12px; }
+
+  .actions { display: flex; gap: 12px; align-items: center; margin-top: 28px; flex-wrap: wrap; }
+  .btn { font-family: inherit; font-size: 15px; font-weight: 700; border-radius: 8px;
+         padding: 12px 20px; cursor: pointer; border: 1px solid var(--ink);
+         background: var(--ink); color: var(--paper); }
+  .btn.sec { background: none; color: var(--ink); }
+  .actions .note { margin-left: auto; font-size: 13px; color: var(--ink2); max-width: 340px; }
+
+  @media (max-width: 1000px) {
+    .work { grid-template-columns: 1fr; }
+    .letter { transform: none; }
   }
 
-  .route-side { padding: 24px 28px 20px; }
-
-  /* Findings land in rows that already exist, in the order they appear in the letter. */
-  .findings { border-top: 3px solid var(--rule); margin-bottom: 6px; }
-  .finding {
-    display: grid;
-    grid-template-columns: 152px 1fr;
-    gap: 18px;
-    min-height: 42px;
-    align-items: baseline;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--rule);
-  }
-  .finding .k {
-    font-family: Overpass, sans-serif;
-    font-weight: 700;
-    font-size: 11.5px;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    color: var(--quiet);
-  }
-  .finding .v { font-variant-numeric: tabular-nums; }
-  .finding.blank .v { color: var(--quiet); }
-
-  .route-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; margin-top: 20px; }
-  .lang-head {
-    font-family: Overpass, sans-serif;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    border-bottom: 3px solid var(--rule);
-    padding-bottom: 6px;
-    margin-bottom: 14px;
-  }
-  .ar { font-family: Vazirmatn, "Noto Sans Arabic", sans-serif; }
-  .ar .lang-head { letter-spacing: 0; text-transform: none; font-size: 15px; }
-  .q { font-family: Overpass, sans-serif; font-weight: 800; font-size: 15px; margin: 18px 0 5px; }
-  .ar .q { font-family: Vazirmatn, sans-serif; font-weight: 700; font-size: 16px; }
-  .a { margin: 0 0 4px; }
-  .a .fact { font-weight: 700; font-variant-numeric: tabular-nums; }
-  .ref {
-    display: inline-block;
-    min-width: 16px;
-    height: 16px;
-    background: var(--bar);
-    color: var(--yellow);
-    font-family: Overpass, sans-serif;
-    font-weight: 800;
-    font-size: 10px;
-    line-height: 16px;
-    text-align: center;
-    margin-inline-start: 4px;
-    vertical-align: 2px;
-  }
-  ol.steps { margin: 6px 0 0; padding: 0; list-style: none; counter-reset: step; }
-  ol.steps li {
-    counter-increment: step;
-    display: grid;
-    grid-template-columns: 26px 1fr;
-    gap: 10px;
-    padding: 7px 0;
-    border-top: 1px solid var(--rule);
-  }
-  ol.steps li::before {
-    content: counter(step);
-    font-family: Overpass, sans-serif;
-    font-weight: 800;
-    font-size: 15px;
-    background: var(--bar);
-    color: #FFFFFF;
-    text-align: center;
-    height: 22px;
-    line-height: 22px;
-  }
-  .route-link { color: var(--route); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
-  .handoff { margin-top: 18px; border: 3px solid var(--soon); padding: 12px 14px; font-size: 15px; }
-  .handoff strong { font-family: Overpass, sans-serif; letter-spacing: 0.04em; }
-
-  .drawer { border-top: 3px solid var(--rule); padding: 20px 28px 24px; }
-  .drawer-head {
-    display: flex;
-    align-items: baseline;
-    gap: 14px;
-    font-family: Overpass, sans-serif;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.17em;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-  .drawer-head .to { letter-spacing: 0.04em; text-transform: none; font-weight: 600; color: var(--quiet); }
-  .draft-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-  .draft { border: 2px solid var(--rule); padding: 14px 16px; font-size: 14px; line-height: 1.55; background: var(--paper); }
-
-  .footbar { display: flex; border-top: 3px solid var(--rule); background: var(--bar); }
-  .footbar button {
-    font-family: Overpass, sans-serif;
-    font-weight: 800;
-    font-size: 14px;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    padding: 16px 22px;
-    background: transparent;
-    color: #FFFFFF;
-    border: 0;
-    border-inline-end: 1px solid rgba(255, 255, 255, 0.22);
-    cursor: pointer;
-  }
-  .footbar button.primary { background: var(--yellow); color: #14213D; }
-  .footbar .consent {
-    margin-inline-start: auto;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 22px;
-    color: #FFFFFF;
-    font-size: 13px;
-    max-width: 430px;
-  }
-  .switch { width: 42px; height: 22px; border: 2px solid #FFFFFF; flex: none; position: relative; }
-  .switch::after { content: ""; position: absolute; inset: 2px auto 2px 2px; width: 14px; background: #FFFFFF; }
-
-  @media (max-width: 1100px) {
-    .floor { grid-template-columns: 1fr; }
-    .letter-side { border-inline-end: 0; border-bottom: 2px solid var(--rule); }
-    .board { grid-template-columns: 1fr 1fr 1fr; }
-    .cell:nth-child(4), .cell:nth-child(5) { border-top: 2px solid #14213D; }
-    .route-grid, .draft-grid { grid-template-columns: 1fr; }
-    .route-grid .ar { margin-top: 18px; }
+  /* On a phone the two languages interleave, one unit at a time, and neither is hidden behind a
+     control. The visitor's language leads because the phone is usually theirs. */
+  @media (max-width: 620px) {
+    .grid3, ol.steps > li { grid-template-columns: 1fr; gap: 0; }
+    .grid3 > .vis, ol.steps > li > .vis { order: 1; }
+    .grid3 > .nl, ol.steps > li > .nl { order: 2; margin-top: 9px; }
+    .grid3 > .key, ol.steps > li > .key { order: 3; flex-direction: row; justify-content: flex-start;
+      gap: 7px; margin-top: 11px; padding-top: 9px; border-top: 1px dashed var(--rule); }
+    ol.steps > li > .key:empty { display: none; }
+    .lead-ar, .lead-nl { font-size: 24px; }
+    .deadline .big { font-size: 21px; }
+    .shell { padding: 0 18px 36px; }
+    .util { flex-wrap: wrap; gap: 12px 16px; }
+    .row { grid-template-columns: 118px 1fr; }
   }
 </style>
 </head>
 <body>
-  <header class="counter-bar">
-    <span class="mark">PLAINLETTER</span>
-    <span>Desk 3</span>
-    <span>Bibliotheek Rotterdam Centrum</span>
-    <span class="spacer">Volunteer: Ineke</span>
-  </header>
+<div class="shell">
 
-  <section class="board" aria-label="Reading summary">
-    <div class="cell">
-      <div class="label">Letter</div>
-      <div class="value small">CJIB</div>
-      <div class="sub">Verkeersboete (Wet Mulder)</div>
-    </div>
-    <div class="cell">
-      <div class="label">Amount</div>
-      <div class="value">174,00</div>
-      <div class="sub">euro, total</div>
-    </div>
-    <div class="cell">
-      <div class="label">Deadline</div>
-      <div class="value">15 SEP 2026</div>
-      <div class="sub">post the appeal by 8 Sep</div>
-    </div>
-    <div class="cell urgency">
-      <div class="label">Days left</div>
-      <div class="value">25</div>
-      <div><span class="state soon">Due soon</span></div>
-    </div>
-    <div class="cell status">
-      <div class="label">Status</div>
-      <div class="value">Checked</div>
-      <div class="sub">7 facts grounded, 1 unreadable</div>
-    </div>
-  </section>
-
-  <div class="floor">
-    <section class="letter-side">
-      <div class="side-head"><span>The letter</span><span>Page 1 of 2</span></div>
-      <article class="scan">
-        <div class="crest">Centraal Justitieel Incassobureau</div>
-        <div class="org">Postbus 1794, 8901 CB Leeuwarden</div>
-        <div>Mevrouw A. Haddad<br>Sportlaan 214<br>3054 NH Rotterdam</div>
-        <div class="subject">Beschikking administratieve sanctie (Wet Mulder)</div>
-        <dl>
-          <dt>Beschikkingsnummer</dt><dd><mark><span class="pin">1</span>8194 5523 7761</mark></dd>
-          <dt>Datum beschikking</dt><dd><mark><span class="pin">2</span>4 augustus 2026</mark></dd>
-          <dt>Feitcode</dt><dd>R402</dd>
-          <dt>Overtreding</dt><dd><mark><span class="pin">3</span>snelheid 14 km/u te hard, bebouwde kom</mark></dd>
-          <dt>Pleegdatum</dt><dd>21 juli 2026, 14:12 uur</dd>
-          <dt>Locatie</dt><dd>Rotterdam, Boezemweg</dd>
-          <dt>Kenteken</dt><dd><span class="unclear">12-A?C-3</span></dd>
-        </dl>
-        <dl>
-          <dt>Sanctiebedrag</dt><dd>EUR 165,00</dd>
-          <dt>Administratiekosten</dt><dd>EUR 9,00</dd>
-          <dt>Totaal te betalen</dt><dd><mark><span class="pin">4</span>EUR 174,00</mark></dd>
-        </dl>
-        <p><strong>Betaal voor <mark><span class="pin">5</span>15 september 2026</mark>.</strong></p>
-        <p><mark><span class="pin">6</span>Betaalt u niet op tijd, dan wordt het bedrag verhoogd met 50 procent. Bij een tweede verhoging komt daar nog eens 100 procent bij.</mark></p>
-        <p><mark><span class="pin">7</span>Bent u het niet eens met deze beschikking? U kunt binnen zes weken na de datum van deze beschikking beroep instellen bij de officier van justitie.</mark></p>
-      </article>
-    </section>
-
-    <section class="route-side">
-      <div class="side-head"><span>What the desk read, in the order it stands in the letter</span><span>7 checked, 1 unreadable</span></div>
-      <div class="findings">
-        <div class="finding"><span class="k">Sender</span><span class="v">Centraal Justitieel Incassobureau</span></div>
-        <div class="finding"><span class="k">Letter type</span><span class="v">Verkeersboete, Wet Mulder <span class="ref">3</span></span></div>
-        <div class="finding"><span class="k">Reference</span><span class="v">8194 5523 7761 <span class="ref">1</span></span></div>
-        <div class="finding"><span class="k">Amount</span><span class="v">EUR 174,00 <span class="ref">4</span></span></div>
-        <div class="finding"><span class="k">Deadline</span><span class="v">15 September 2026 <span class="ref">5</span></span></div>
-        <div class="finding"><span class="k">Appeal window</span><span class="v">Six weeks from 4 Aug 2026, so 15 Sep 2026 too <span class="ref">7</span></span></div>
-        <div class="finding blank"><span class="k">Number plate</span><span class="v">Not readable in the photo. Ask the visitor.</span></div>
-      </div>
-
-      <div class="route-grid">
-        <div>
-          <div class="lang-head">Nederlands</div>
-          <h3 class="q">Wat is dit?</h3>
-          <p class="a">Een verkeersboete van het CJIB. U reed <span class="fact">14 km/u</span> te hard op de Boezemweg in Rotterdam.<span class="ref">3</span> U moet <span class="fact">EUR 174,00</span> betalen.<span class="ref">4</span></p>
-          <h3 class="q">Voor wanneer?</h3>
-          <p class="a">Betaal voor <span class="fact">15 september 2026</span>.<span class="ref">5</span> Dat is over 25 dagen. Stuur een bezwaar uiterlijk 8 september op de post.</p>
-          <h3 class="q">Wat gebeurt er als u niets doet?</h3>
-          <p class="a">Na 15 september komt er 50 procent bij. Betaalt u daarna nog niet, dan komt er nog 100 procent bij.<span class="ref">6</span> Daarna kan een deurwaarder komen.</p>
-          <h3 class="q">Wat moet u nu doen?</h3>
-          <ol class="steps">
-            <li><span>Betaal EUR 174,00 met nummer 8194 5523 7761 op <a class="route-link" href="#">cjib.nl/verkeersboete</a>.</span></li>
-            <li><span>Kunt u het niet in een keer betalen? Vraag een betalingsregeling: <span class="fact">0800 0388</span>.</span></li>
-            <li><span>Oneens? Stuur voor 15 september beroep naar de officier van justitie.<span class="ref">7</span> De brief hieronder is klaar.</span></li>
-          </ol>
-          <div class="handoff">
-            <strong>Stuur door naar een mens.</strong> Bij schulden of een deurwaarder helpt het Juridisch Loket gratis, 0800 8020. Dit is geen juridisch advies.
-          </div>
-        </div>
-
-        <div class="ar" dir="rtl" lang="ar">
-          <div class="lang-head">العربية</div>
-          <h3 class="q">ما هذه الرسالة؟</h3>
-          <p class="a">غرامة مرور من CJIB. تجاوزت السرعة بمقدار <bdi class="fact">14</bdi> كم/س في شارع Boezemweg في روتردام.<span class="ref">3</span> عليك دفع <bdi class="fact">174,00</bdi> يورو.<span class="ref">4</span></p>
-          <h3 class="q">قبل متى؟</h3>
-          <p class="a">ادفع قبل <bdi class="fact">15 سبتمبر 2026</bdi>.<span class="ref">5</span> أي بعد 25 يوماً. أرسل الاعتراض بالبريد قبل 8 سبتمبر.</p>
-          <h3 class="q">ماذا يحدث إذا لم تدفع؟</h3>
-          <p class="a">بعد 15 سبتمبر يزيد المبلغ 50 بالمئة. وإذا لم تدفع بعدها يزيد 100 بالمئة أخرى.<span class="ref">6</span> ثم قد يأتي المحضر إلى بيتك.</p>
-          <h3 class="q">ماذا تفعل الآن؟</h3>
-          <ol class="steps">
-            <li><span>ادفع <bdi>174,00</bdi> يورو بالرقم <bdi>8194 5523 7761</bdi> على <a class="route-link" href="#">cjib.nl/verkeersboete</a>.</span></li>
-            <li><span>لا تستطيع الدفع دفعة واحدة؟ اطلب خطة تقسيط على الرقم <bdi class="fact">0800 0388</bdi>.</span></li>
-            <li><span>غير موافق؟ أرسل اعتراضاً قبل <bdi>15 سبتمبر</bdi> إلى المدعي العام.<span class="ref">7</span> الرسالة أدناه جاهزة.</span></li>
-          </ol>
-          <div class="handoff">
-            <strong>تحتاج إلى شخص.</strong> عند وجود ديون أو محضر، مكتب Juridisch Loket يساعد مجاناً على <bdi>0800 8020</bdi>. هذه ليست استشارة قانونية.
-          </div>
-        </div>
-      </div>
-    </section>
+  <div class="util">
+    <span class="wordmark">Plainletter</span>
+    <span class="cap">Bibliotheek Rotterdam Centrum</span>
+    <span class="sp"></span>
+    <span class="pair">Nederlands <button class="swap" title="Wissel de kanten">&#8646;</button> <span class="ar">العربية</span></span>
+    <span class="timer">In het geheugen, nog 11:42</span>
+    <button class="ghost">Brief wissen</button>
   </div>
 
-  <section class="drawer">
-    <div class="drawer-head">
-      <span>Draft appeal</span>
-      <span class="to">To: Officier van justitie, Postbus 8267, 3503 RG Utrecht &middot; post before 15 September 2026, keep a copy</span>
-    </div>
-    <div class="draft-grid">
-      <div class="draft">
-        Geachte officier van justitie,<br><br>
-        Ik maak bezwaar tegen beschikking 8194 5523 7761 van 4 augustus 2026. Op 21 juli 2026 stond mijn auto niet op de Boezemweg. Ik was die dag in het ziekenhuis; de afsprakenbrief stuur ik mee.<br><br>
-        Ik verzoek u de sanctie in te trekken.
-      </div>
-      <div class="draft ar" dir="rtl" lang="ar">
-        حضرة المدعي العام،<br><br>
-        أعترض على القرار رقم <bdi>8194 5523 7761</bdi> الصادر في 4 أغسطس 2026. في 21 يوليو 2026 لم تكن سيارتي في شارع Boezemweg. كنت في المستشفى ذلك اليوم، وأرفق رسالة الموعد.<br><br>
-        أرجو إلغاء الغرامة.
-      </div>
-    </div>
-  </section>
+  <div class="sentence">
+    <p class="ar lead-ar" dir="rtl">هذه غرامة مرور من <bdi>CJIB</bdi>. عليك دفع <mark><bdi>EUR 174,00</bdi></mark> قبل <mark><bdi>15 september 2026</bdi></mark></p>
+    <p class="lead-nl">Dit is een verkeersboete van het CJIB. U betaalt <mark>EUR 174,00</mark> voor <mark>15 september 2026</mark></p>
+  </div>
 
-  <nav class="footbar">
-    <button class="primary" type="button">Print desk card</button>
-    <button type="button">Save reminder</button>
-    <button type="button">Edit draft</button>
-    <button type="button">New letter</button>
-    <span class="consent"><span class="switch"></span> Start a case: keep the dates and amounts for 30 days, never the letter itself.</span>
-  </nav>
+  <div class="deadline">
+    <span class="big">15 september 2026</span>
+    <span class="big">nog 25 dagen</span>
+    <span class="rest">Post een bezwaar uiterlijk 8 september, dan is het op tijd binnen.</span>
+    <span class="state soon">Nog tijd</span>
+  </div>
+
+  <div class="work">
+    <div>
+      <div class="colhead"><span class="cap">De brief</span><span class="cap">Pagina 1 van 1</span></div>
+      <div class="letter">
+        <div class="line"><span></span><div class="from">Centraal Justitieel Incassobureau<br>Postbus 1794, 8901 CB Leeuwarden</div></div>
+        <div class="line"><span></span><div>Mevrouw A. Haddad<br>Sportlaan 214<br>3054 NH Rotterdam</div></div>
+        <div class="line"><span class="num">1</span><div class="kind"><mark>Beschikking administratieve sanctie (Wet Mulder)</mark></div></div>
+        <div class="line tight"><span class="num">2</span><div class="row"><span>Beschikkingsnummer</span><span><mark>8194 5523 7761</mark></span></div></div>
+        <div class="line tight"><span class="num">3</span><div class="row"><span>Datum beschikking</span><span><mark>4 augustus 2026</mark></span></div></div>
+        <div class="line tight"><span></span><div class="row"><span>Feitcode</span><span>R402</span></div></div>
+        <div class="line tight"><span></span><div class="row"><span>Overtreding</span><span>snelheid 14 km/u te hard, bebouwde kom</span></div></div>
+        <div class="line tight"><span></span><div class="row"><span>Pleegdatum</span><span>21 juli 2026, 14:12 uur</span></div></div>
+        <div class="line tight"><span></span><div class="row"><span>Locatie</span><span>Rotterdam, Boezemweg</span></div></div>
+        <div class="line"><span class="gap"></span><div class="row"><span>Kenteken</span><span>12&#8209;A?C&#8209;3</span></div></div>
+        <div class="line tight"><span class="num">4</span><div class="row"><span>Sanctiebedrag</span><span><mark>EUR 165,00</mark></span></div></div>
+        <div class="line tight"><span class="num">5</span><div class="row"><span>Administratiekosten</span><span><mark>EUR 9,00</mark></span></div></div>
+        <div class="line"><span class="num">6</span><div class="row"><span>Totaal te betalen</span><span><mark>EUR 174,00</mark></span></div></div>
+        <div class="line"><span class="num">7</span><div><mark>Betaal voor 15 september 2026.</mark></div></div>
+        <div class="line"><span class="num">8</span><div><mark>Betaalt u niet op tijd, dan wordt het bedrag verhoogd met 50 procent. Bij een tweede verhoging komt daar nog eens 100 procent bij.</mark></div></div>
+        <div class="line"><span class="num">9</span><div>Bent u het niet eens met deze beschikking? <mark>U kunt binnen zes weken na de datum van deze beschikking beroep instellen bij de officier van justitie.</mark></div></div>
+        <p class="fine">Dit is een verzonnen voorbeeldbrief. Naam, adres, kenteken en nummers bestaan niet.</p>
+      </div>
+
+      <div class="draft">
+        <div class="head">
+          <span class="cap">Concept bezwaar</span>
+          <span class="cap">Officier van justitie &#183; post voor 8 september</span>
+        </div>
+        <div class="body">Geachte officier van justitie,
+
+Ik maak bezwaar tegen beschikking 8194 5523 7761. Mijn auto stond die dag niet op de Boezemweg. Ik verzoek u de sanctie in te trekken.
+
+Met vriendelijke groet,</div>
+        <div class="body ar" dir="rtl">حضرة المدعي العام،
+
+أعترض على القرار رقم <bdi>8194 5523 7761</bdi>. لم تكن سيارتي في شارع <bdi>Boezemweg</bdi> في ذلك اليوم. أرجو إلغاء الغرامة.
+
+مع خالص التقدير،</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="colhead"><span class="cap">Wat de balie eruit las</span><span class="cap">9 gecontroleerd &#183; 1 niet</span></div>
+      <div class="reading">
+        <div class="block">
+          <h2>Wat is dit &#183; <span class="ar">ما هذه الرسالة</span></h2>
+          <div class="grid3">
+            <div class="nl"><p>Een verkeersboete van het CJIB. U reed 14 km/u te hard op de Boezemweg in Rotterdam.</p></div>
+            <div class="key"><span class="num">1</span></div>
+            <div class="vis ar" dir="rtl"><p>غرامة مرور من <bdi>CJIB</bdi>. تجاوزت السرعة بمقدار <bdi>14 km/u</bdi> في شارع <bdi>Boezemweg</bdi> في روتردام.</p></div>
+          </div>
+        </div>
+
+        <div class="block">
+          <h2>Bedragen &#183; <span class="ar">المبالغ</span></h2>
+          <table class="amounts">
+            <tr><td>Sanctiebedrag</td><td class="k"><span class="num">4</span></td><td>EUR 165,00</td></tr>
+            <tr><td>Administratiekosten</td><td class="k"><span class="num">5</span></td><td>EUR 9,00</td></tr>
+            <tr><td>Totaal te betalen</td><td class="k"><span class="num">6</span></td><td>EUR 174,00</td></tr>
+          </table>
+          <p class="ref">Kenmerk <b>8194 5523 7761</b> <span class="num">2</span><br>Dit nummer noemt u bij elke betaling.</p>
+        </div>
+
+        <div class="block">
+          <h2>Als u niets doet &#183; <span class="ar">إذا لم تدفع</span></h2>
+          <div class="grid3">
+            <div class="nl"><p>Het bedrag gaat met 50 procent omhoog. Betaalt u daarna nog niet, dan komt er nog 100 procent bij.</p></div>
+            <div class="key"><span class="num">8</span></div>
+            <div class="vis ar" dir="rtl"><p>يزيد المبلغ <bdi>50</bdi> بالمئة. وإذا لم تدفع بعد ذلك يزيد <bdi>100</bdi> بالمئة أخرى.</p></div>
+          </div>
+        </div>
+
+        <div class="block">
+          <h2>Wat u nu doet &#183; <span class="ar">ماذا تفعل الآن</span></h2>
+          <ol class="steps">
+            <li>
+              <div class="nl"><div class="act"><span class="stepno">1</span><div>Betaal <bdi>EUR 174,00</bdi> met beschikkingsnummer <bdi>8194 5523 7761</bdi>.<a class="route" href="#">cjib.nl/verkeersboete</a></div></div></div>
+              <div class="key"><span class="num">6</span><span class="num">2</span></div>
+              <div class="vis ar" dir="rtl"><div class="act rtl"><div>ادفع <bdi>EUR 174,00</bdi> بالرقم <bdi>8194 5523 7761</bdi>.<a class="route" href="#">cjib.nl/verkeersboete</a></div><span class="stepno">1</span></div></div>
+            </li>
+            <li>
+              <div class="nl"><div class="act"><span class="stepno">2</span><div>Kunt u het niet in een keer betalen? Vraag een betalingsregeling aan.<a class="route" href="#">cjib.nl/betalingsregeling</a></div></div></div>
+              <div class="key"></div>
+              <div class="vis ar" dir="rtl"><div class="act rtl"><div>لا تستطيع الدفع دفعة واحدة؟ اطلب خطة تقسيط.<a class="route" href="#">cjib.nl/betalingsregeling</a></div><span class="stepno">2</span></div></div>
+            </li>
+            <li>
+              <div class="nl"><div class="act"><span class="stepno">3</span><div>Bent u het er niet mee eens? Stel beroep in bij de officier van justitie, binnen zes weken na de datum van de beschikking.<a class="route" href="#">om.nl/onderwerpen/verkeer</a></div></div></div>
+              <div class="key"><span class="num">9</span><span class="num">3</span></div>
+              <div class="vis ar" dir="rtl"><div class="act rtl"><div>غير موافق؟ قدّم اعتراضاً إلى المدعي العام خلال ستة أسابيع من تاريخ القرار.<a class="route" href="#">om.nl/onderwerpen/verkeer</a></div><span class="stepno">3</span></div></div>
+            </li>
+          </ol>
+        </div>
+
+        <div class="block miss">
+          <h2>Niet gecontroleerd &#183; <span class="ar">لم يتم التحقق</span></h2>
+          <div class="grid3">
+            <div class="nl">
+              <p class="label">Het kenteken staat niet vast</p>
+              <p>Het middelste teken is onscherp op de foto. Vraag de bezoeker het kenteken voor te lezen.</p>
+            </div>
+            <div class="key"><span class="gap"></span></div>
+            <div class="vis ar" dir="rtl">
+              <p class="label">رقم اللوحة غير مؤكد</p>
+              <p>الحرف الأوسط غير واضح في الصورة. اطلب من الزائر قراءة رقم اللوحة.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn">Print de kaart</button>
+    <button class="btn sec">Zet de herinnering klaar</button>
+    <button class="btn sec">Nieuwe brief</button>
+    <span class="note">Niets van deze brief wordt bewaard. Wilt u een volgende keer verder waar u nu stopt, dan vraagt de balie daar eerst toestemming voor.</span>
+  </div>
+
+</div>
 </body>
 </html>

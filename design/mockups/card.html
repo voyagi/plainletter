@@ -2,169 +2,147 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8">
-<title>Plainletter desk card</title>
+<title>Plainletter desk card, A4</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+  /* The card is printed on a monochrome library printer, so nothing here carries meaning in
+     colour. Urgency is a word plus a treatment, and the hatch is what survives greyscale. */
   @page { size: A4; margin: 12mm; }
-  :root { --yellow: #F5C400; --ink: #14213D; --soon: #B45309; --quiet: #4B5670; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: #DDDDE2; font-family: "Atkinson Hyperlegible Next", sans-serif; color: var(--ink); }
-  bdi { unicode-bidi: isolate; }
-  .sheet { width: 794px; min-height: 1123px; margin: 0 auto; background: #fff; padding: 28px 32px 24px; border: 1px solid #BBB; display: flex; flex-direction: column; }
+  body { margin: 0; background: #EFEAE6; padding: 30px;
+         font-family: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+         font-variant-numeric: tabular-nums; color: #1a1a1a; }
+  .ar { font-family: "Vazirmatn", "Atkinson Hyperlegible Next", sans-serif; line-height: 1.7; }
+  .sheet { width: 190mm; min-height: 273mm; margin: 0 auto; background: #fff; padding: 14mm 13mm;
+           box-shadow: 0 24px 50px rgba(34, 30, 28, 0.16); font-size: 11.5px; line-height: 1.5; }
 
-  .band { background: var(--yellow); border: 3px solid var(--ink); padding: 13px 18px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 18px; }
-  .band .who { font-family: Overpass, sans-serif; font-weight: 800; font-size: 26px; line-height: 1.1; }
-  .band .what { font-size: 14px; font-weight: 600; margin-top: 2px; }
-  .band .amount { font-family: Overpass, sans-serif; font-weight: 800; font-size: 33px; font-variant-numeric: tabular-nums; text-align: end; }
-  .band .ref { font-size: 12px; font-variant-numeric: tabular-nums; text-align: end; }
+  .band { border: 2.5px solid #1a1a1a; padding: 10px 13px; display: flex;
+          justify-content: space-between; align-items: baseline; gap: 16px; }
+  .band .who { font-size: 19px; font-weight: 700; }
+  .band .what { font-size: 12px; }
+  .band .ref { text-align: right; font-size: 12px; }
+  .band .ref b { font-size: 14px; }
 
-  /* The deadline line carries the urgency as a word plus a hatch, so it survives a black and white printer. */
-  .deadline {
-    margin-top: 12px;
-    border: 3px solid var(--ink);
-    background-color: #FFE9A8;
-    background-image: repeating-linear-gradient(-45deg, rgba(180, 83, 9, 0.6) 0 7px, transparent 7px 16px);
-    padding: 12px 16px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 20px;
-  }
-  .deadline .lead { font-family: Overpass, sans-serif; font-weight: 800; font-size: 21px; line-height: 1.15; }
-  .deadline .sub { font-size: 13.5px; margin-top: 3px; }
-  .deadline .stamp { font-family: Overpass, sans-serif; font-weight: 800; font-size: 25px; font-variant-numeric: tabular-nums; text-align: end; line-height: 1.1; background: #fff; border: 3px solid var(--soon); color: var(--soon); padding: 6px 12px; }
-  .deadline .stamp small { display: block; font-size: 11px; letter-spacing: 0.16em; }
+  .dl { border: 2.5px solid #1a1a1a; border-top: 0; padding: 10px 13px; display: flex;
+        justify-content: space-between; align-items: center; gap: 16px;
+        background-image: repeating-linear-gradient(-45deg, #d8d8d8 0 6px, transparent 6px 14px); }
+  .dl .lead { font-size: 18px; font-weight: 700; }
+  .dl .sub { font-size: 12px; }
+  .dl .state { border: 2px solid #1a1a1a; padding: 5px 10px; font-weight: 700; font-size: 11px;
+               letter-spacing: .1em; text-transform: uppercase; background: #fff; }
 
-  .idline { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; border-bottom: 3px solid var(--ink); padding: 12px 0 10px; }
-  .idline .k { font-family: Overpass, sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--quiet); }
-  .idline .v { font-size: 15.5px; font-variant-numeric: tabular-nums; }
+  .qa { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 20px; padding: 11px 0;
+        border-bottom: 1px solid #c9c9c9; }
+  .qa .q { grid-column: 1 / -1; font-size: 10px; font-weight: 700; text-transform: uppercase;
+           letter-spacing: .1em; color: #4a4a4a; }
+  .qa .r { text-align: right; }
 
-  /* Both languages on the same line, so the volunteer and the visitor read the same question together. */
-  .rows { flex: 1; }
-  .prow { display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; padding: 12px 0; border-bottom: 1px solid var(--ink); }
-  .prow h2 { font-family: Overpass, sans-serif; font-weight: 800; font-size: 15px; margin: 0 0 4px; }
-  .prow p { margin: 0; font-size: 13.5px; line-height: 1.5; }
-  .ar { font-family: Vazirmatn, sans-serif; }
-  .ar h2 { font-family: Vazirmatn, sans-serif; font-weight: 700; font-size: 15px; }
-  .ar p { line-height: 1.62; }
-
-  .acts { margin-top: 10px; }
-  .acts h2 { font-family: Overpass, sans-serif; font-weight: 800; font-size: 16px; margin: 0 0 6px; }
-  ol { margin: 0; padding: 0; list-style: none; counter-reset: s; }
-  ol li { counter-increment: s; display: grid; grid-template-columns: 22px 1fr 1fr; gap: 8px 26px; padding: 7px 0; border-top: 1px solid var(--ink); font-size: 13px; line-height: 1.45; }
-  ol li::before { content: counter(s); font-family: Overpass, sans-serif; font-weight: 800; font-size: 13px; background: var(--ink); color: #fff; text-align: center; height: 19px; line-height: 19px; }
+  h2.sec { font-size: 13px; margin: 16px 0 8px; }
+  ol.acts { margin: 0; padding: 0; list-style: none; }
+  ol.acts li { display: grid; grid-template-columns: 20px 1fr 1fr; gap: 6px 20px; padding: 8px 0;
+               border-top: 1px solid #c9c9c9; }
+  ol.acts li:first-child { border-top: 1.5px solid #1a1a1a; }
+  .no { width: 18px; height: 18px; background: #1a1a1a; color: #fff; font-size: 11px;
+        font-weight: 700; line-height: 18px; text-align: center; }
+  .r { text-align: right; }
   .route { font-weight: 700; }
 
-  .foot { margin-top: 14px; border-top: 3px solid var(--ink); padding-top: 12px; display: grid; grid-template-columns: 1.3fr 1fr 122px; gap: 20px; }
-  .foot .help { font-size: 12.5px; line-height: 1.45; }
-  .foot .help strong { font-family: Overpass, sans-serif; }
-  .notes { border: 1px dashed var(--ink); padding: 8px 10px; }
-  .notes .lbl { font-family: Overpass, sans-serif; font-weight: 700; font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--quiet); }
-  .notes .lines { margin-top: 8px; }
-  .notes .lines div { border-bottom: 1px solid #B9BFCC; height: 19px; }
-  .qr { border: 2px solid var(--ink); display: grid; place-items: center; text-align: center; font-size: 10.5px; padding: 8px; line-height: 1.35; height: 122px; }
-  .disclaimer { font-size: 11px; color: var(--quiet); margin-top: 10px; }
+  .keys { margin-top: 14px; border-top: 2.5px solid #1a1a1a; padding-top: 9px; }
+  .keys .k { display: grid; grid-template-columns: 20px 1fr; gap: 8px; padding: 3px 0;
+             font-size: 10.5px; color: #333; }
+  .keys .n { width: 18px; height: 18px; border: 1px solid #1a1a1a; font-size: 10px;
+             font-weight: 700; line-height: 16px; text-align: center; }
+  .keys .broken { width: 18px; border-top: 1px dashed #777; margin-top: 8px; }
 
-  @media print { body { background: #fff; } .sheet { border: 0; margin: 0; width: auto; min-height: 0; padding: 0; } .band { background: #D9D9D9; } }
+  .foot { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .handoff { border-left: 4px solid #1a1a1a; padding-left: 10px; font-size: 11px; }
+  .notes-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: .1em; color: #555;
+                 margin: 0 0 4px; }
+  .notes { border: 1px dashed #8a8a8a; height: 24mm; }
+  .small { margin-top: 10px; font-size: 10px; color: #555; }
 </style>
 </head>
 <body>
-  <div class="sheet">
-    <div class="band">
-      <div>
-        <div class="who">CJIB &middot; Verkeersboete</div>
-        <div class="what">Beschikking administratieve sanctie (Wet Mulder) &middot; 4 augustus 2026</div>
-      </div>
-      <div>
-        <div class="amount">EUR 174,00</div>
-        <div class="ref">Beschikkingsnummer 8194 5523 7761</div>
-      </div>
-    </div>
+<div class="sheet">
 
-    <div class="deadline">
-      <div>
-        <div class="lead">Betaal of maak bezwaar voor 15 september 2026.</div>
-        <div class="sub">Nog 25 dagen. Post uw bezwaar uiterlijk 8 september, dan is het op tijd binnen.</div>
-      </div>
-      <div class="stamp">15 SEP 2026<small>uiterste dag</small></div>
+  <div class="band">
+    <div>
+      <div class="who">Centraal Justitieel Incassobureau</div>
+      <div class="what">Beschikking administratieve sanctie (Wet Mulder)</div>
     </div>
+    <div class="ref">Kenmerk<br><b>8194 5523 7761</b></div>
+  </div>
 
-    <div class="idline">
-      <div><div class="k">Afzender</div><div class="v">Centraal Justitieel Incassobureau</div></div>
-      <div><div class="k">Soort brief</div><div class="v">Verkeersboete, Wet Mulder</div></div>
-      <div><div class="k">Beschikkingsnummer</div><div class="v">8194 5523 7761</div></div>
+  <div class="dl">
+    <div>
+      <div class="lead">Uiterste dag: 15 september 2026</div>
+      <div class="sub">Nog 25 dagen. Post uw brief uiterlijk 8 september 2026.</div>
     </div>
+    <div class="state">Nog tijd</div>
+  </div>
 
-    <div class="rows">
-      <div class="prow">
-        <div>
-          <h2>Wat is dit?</h2>
-          <p>Een verkeersboete van het CJIB. Op 21 juli 2026 reed u 14 km/u te hard op de Boezemweg in Rotterdam. Totaal EUR 174,00: EUR 165,00 boete en EUR 9,00 administratiekosten.</p>
-        </div>
-        <div class="ar" dir="rtl" lang="ar">
-          <h2>ما هذه الرسالة؟</h2>
-          <p>غرامة مرور من CJIB. في 21 يوليو 2026 تجاوزت السرعة بمقدار 14 كم/س في شارع Boezemweg في روتردام. المجموع <bdi>174,00</bdi> يورو: <bdi>165,00</bdi> غرامة و <bdi>9,00</bdi> رسوم إدارية.</p>
-        </div>
-      </div>
-      <div class="prow">
-        <div>
-          <h2>Wat gebeurt er als u niets doet?</h2>
-          <p>Na 15 september komt er 50 procent bij het bedrag. Betaalt u daarna nog steeds niet, dan komt er nog eens 100 procent bij. Daarna kan een deurwaarder komen.</p>
-        </div>
-        <div class="ar" dir="rtl" lang="ar">
-          <h2>ماذا يحدث إذا لم تدفع؟</h2>
-          <p>بعد 15 سبتمبر يزيد المبلغ 50 بالمئة. وإذا لم تدفع بعد ذلك يزيد 100 بالمئة أخرى. ثم قد يأتي المحضر إلى بيتك.</p>
-        </div>
-      </div>
-      <div class="prow">
-        <div>
-          <h2>Kunt u bezwaar maken?</h2>
-          <p>Ja. U heeft zes weken vanaf 4 augustus 2026, dus tot 15 september 2026. Uw beroepschrift ligt klaar aan de balie; onderteken het en stuur het op.</p>
-        </div>
-        <div class="ar" dir="rtl" lang="ar">
-          <h2>هل يمكنك الاعتراض؟</h2>
-          <p>نعم. لديك ستة أسابيع من 4 أغسطس 2026، أي حتى 15 سبتمبر 2026. رسالة الاعتراض جاهزة عند المكتب؛ وقّعها وأرسلها.</p>
-        </div>
-      </div>
+  <div class="qa">
+    <span class="q">Wat is dit &#183; ما هذه الرسالة</span>
+    <span>Een verkeersboete van het CJIB. U reed 14 km/u te hard op de Boezemweg in Rotterdam. U moet EUR 174,00 betalen.</span>
+    <span class="r ar" dir="rtl">غرامة مرور من <bdi>CJIB</bdi>. تجاوزت السرعة في شارع <bdi>Boezemweg</bdi> في روتردام. عليك دفع <bdi>EUR 174,00</bdi>.</span>
+  </div>
+
+  <div class="qa">
+    <span class="q">Wat gebeurt er als u niets doet &#183; إذا لم تدفع</span>
+    <span>Het bedrag wordt verhoogd met 50 procent. Betaalt u daarna nog niet, dan komt er nog 100 procent bij.</span>
+    <span class="r ar" dir="rtl">يزيد المبلغ <bdi>50</bdi> بالمئة. وإذا لم تدفع بعد ذلك يزيد <bdi>100</bdi> بالمئة أخرى.</span>
+  </div>
+
+  <div class="qa">
+    <span class="q">Voor wanneer &#183; قبل متى</span>
+    <span>Betaal voor 15 september 2026.</span>
+    <span class="r ar" dir="rtl">ادفع قبل <bdi>15 september 2026</bdi>.</span>
+  </div>
+
+  <h2 class="sec">Wat u nu doet &#183; ماذا تفعل الآن</h2>
+  <ol class="acts">
+    <li>
+      <span class="no">1</span>
+      <span>Betaal EUR 174,00 met beschikkingsnummer 8194 5523 7761.<br><span class="route">cjib.nl/verkeersboete</span></span>
+      <span class="r ar" dir="rtl">ادفع <bdi>EUR 174,00</bdi> بالرقم <bdi>8194 5523 7761</bdi>.<br><span class="route">cjib.nl/verkeersboete</span></span>
+    </li>
+    <li>
+      <span class="no">2</span>
+      <span>Kunt u het niet in een keer betalen? Vraag een betalingsregeling aan.<br><span class="route">cjib.nl/betalingsregeling</span></span>
+      <span class="r ar" dir="rtl">لا تستطيع الدفع دفعة واحدة؟ اطلب خطة تقسيط.<br><span class="route">cjib.nl/betalingsregeling</span></span>
+    </li>
+    <li>
+      <span class="no">3</span>
+      <span>Bent u het er niet mee eens? Stel beroep in bij de officier van justitie, binnen zes weken na 4 augustus 2026.<br><span class="route">om.nl/onderwerpen/verkeer</span></span>
+      <span class="r ar" dir="rtl">غير موافق؟ قدّم اعتراضاً إلى المدعي العام خلال ستة أسابيع من <bdi>4 augustus 2026</bdi>.<br><span class="route">om.nl/onderwerpen/verkeer</span></span>
+    </li>
+  </ol>
+
+  <div class="keys">
+    <div class="k"><span class="n">1</span><span>Beschikking administratieve sanctie (Wet Mulder)</span></div>
+    <div class="k"><span class="n">2</span><span>Beschikkingsnummer: 8194 5523 7761</span></div>
+    <div class="k"><span class="n">6</span><span>Totaal te betalen: EUR 174,00</span></div>
+    <div class="k"><span class="n">7</span><span>Betaal voor 15 september 2026.</span></div>
+    <div class="k"><span class="n">8</span><span>Betaalt u niet op tijd, dan wordt het bedrag verhoogd met 50 procent.</span></div>
+    <div class="k"><span class="broken"></span><span>Kenteken onleesbaar op de foto. Vraag de bezoeker het kenteken voor te lezen.</span></div>
+  </div>
+
+  <div class="foot">
+    <div>
+      <p class="handoff"><b>Als het ingewikkeld wordt.</b> Het Juridisch Loket, 0800 8020, gratis.
+        Bij schulden ook de schuldhulpverlening van uw gemeente.</p>
+      <p class="small">Plainletter legt brieven uit en geeft geen juridisch advies.
+        Herinnering: cjib-8194.ics. Gemaakt op 21 augustus 2026.</p>
     </div>
-
-    <div class="acts">
-      <h2>Wat u nu doet &middot; ماذا تفعل الآن</h2>
-      <ol>
-        <li>
-          <span>Betaal EUR 174,00 op <span class="route">cjib.nl/verkeersboete</span> met nummer 8194 5523 7761.</span>
-          <span class="ar" dir="rtl" lang="ar">ادفع <bdi>174,00</bdi> يورو على <span class="route">cjib.nl/verkeersboete</span> بالرقم <bdi>8194 5523 7761</bdi>.</span>
-        </li>
-        <li>
-          <span>Lukt dat niet in een keer? Bel het CJIB op <span class="route">0800 0388</span> en vraag een betalingsregeling.</span>
-          <span class="ar" dir="rtl" lang="ar">لا تستطيع الدفع دفعة واحدة؟ اتصل بـ CJIB على <bdi class="route">0800 0388</bdi> واطلب خطة تقسيط.</span>
-        </li>
-        <li>
-          <span>Oneens? Stuur uw beroepschrift voor 15 september naar de officier van justitie, Postbus 8267, 3503 RG Utrecht.</span>
-          <span class="ar" dir="rtl" lang="ar">غير موافق؟ أرسل اعتراضك قبل 15 سبتمبر إلى المدعي العام، صندوق بريد 8267، 3503 RG أوترخت.</span>
-        </li>
-        <li>
-          <span>Hulp nodig? Het Juridisch Loket helpt gratis: <span class="route">0800 8020</span>.</span>
-          <span class="ar" dir="rtl" lang="ar">تحتاج مساعدة؟ مكتب Juridisch Loket يساعد مجاناً: <bdi class="route">0800 8020</bdi>.</span>
-        </li>
-      </ol>
-    </div>
-
-    <div class="foot">
-      <div class="help">
-        <strong>Als het ingewikkeld wordt.</strong> Heeft u meer schulden, of is er al een deurwaarder bezig? Ga naar het Juridisch Loket, 0800 8020, of de schuldhulpverlening van uw gemeente. Die hulp is gratis.<br>
-        <span class="ar" dir="rtl" lang="ar">إذا أصبح الأمر معقداً: إذا كان لديك ديون أخرى أو بدأ محضر بالتنفيذ، توجه إلى Juridisch Loket على <bdi>0800 8020</bdi> أو إلى دائرة مساعدة المدينين في بلديتك. المساعدة مجانية.</span>
-        <div class="disclaimer">Plainletter legt brieven uit en geeft geen juridisch advies. Gemaakt aan het Informatiepunt Digitale Overheid, Bibliotheek Rotterdam Centrum, 21 augustus 2026.</div>
-      </div>
-      <div class="notes">
-        <div class="lbl">Aantekeningen aan de balie</div>
-        <div class="lines"><div></div><div></div><div></div><div></div><div></div></div>
-      </div>
-      <div class="qr">Scan voor de herinnering in uw agenda<br><br>cjib-15-09-2026.ics</div>
+    <div>
+      <p class="notes-label">Aantekeningen aan de balie</p>
+      <div class="notes"></div>
     </div>
   </div>
+
+</div>
 </body>
 </html>

@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
-import { Atkinson_Hyperlegible_Next, Overpass } from 'next/font/google';
+import { Atkinson_Hyperlegible_Next, Bricolage_Grotesque } from 'next/font/google';
 import '@/app/globals.css';
 import '@/env';
 
-const overpass = Overpass({
+// The brand layer only: the wordmark, the one plain sentence and landing headlines. It never
+// reaches a control, a table or the printed card.
+const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
-  weight: ['600', '700', '800'],
-  variable: '--font-overpass',
+  weight: ['400', '600', '700', '800'],
+  variable: '--font-bricolage',
   display: 'swap',
 });
 
@@ -31,7 +33,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${overpass.variable} ${hyperlegible.variable}`}>
+    <html lang="en" className={`${bricolage.variable} ${hyperlegible.variable}`}>
       <body>{children}</body>
     </html>
   );
