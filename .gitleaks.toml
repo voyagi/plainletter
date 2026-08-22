@@ -1,0 +1,20 @@
+# Secret scanning for this repository, including its whole history before it goes public.
+#
+# Default rules apply everywhere. The two files below are the client-bundle secret gate and the
+# harness that proves the gate can fail. Both carry deliberately fragmented fake credential shapes
+# in their self-test, among them the example access key from the AWS documentation, because a gate
+# that has never been seen refusing a secret cannot be told apart from a bundle that has none.
+# Nothing else is allowlisted: a real key anywhere else in the tree or the history still stops
+# the scan.
+
+title = "plainletter"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "the client-secret gate's own fake fixtures and the harness that proves it fails"
+paths = [
+  '''^scripts/check-client-secrets\.mjs$''',
+  '''^scripts/check-client-secrets\.mutants\.mjs$''',
+]
