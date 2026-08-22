@@ -217,7 +217,7 @@ class DeadlineView(Frozen):
 class Explanation(Frozen):
     """The same four answers, in one language."""
 
-    language: str = Field(min_length=2, description="BCP 47 tag, for example nl or ar")
+    language: str = Field(min_length=2, description="BCP 47 tag, for example nl or uk")
     what_is_this: str = Field(min_length=1)
     by_when: str = Field(min_length=1)
     if_you_do_nothing: str = Field(min_length=1)

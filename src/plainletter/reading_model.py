@@ -7,7 +7,9 @@ is identical in both cases.
 
 The order matters as much as the interface. `transcribe` and `read` run before the verifier and may
 return anything. `explain`, `plan` and `draft` run after it and are wrapped by the grounding guard,
-so a date they invent is refused rather than printed.
+so a date they invent is refused rather than printed. `plan` and `draft` may also look up the
+sender's official routes, and the prompts below tell them to: a route in a step has to have been
+fetched, not remembered.
 
 `transcribe` is separate from `read` on purpose, and only for pages that arrive as pictures. The
 verifier grounds every fact against the letter's own words, and a photograph has none until
@@ -69,13 +71,16 @@ able to point at it on the page and see the same characters.
 
 PLAN_PROMPT = """You turn a read letter into the steps a person takes next.
 
-Each step is one action, in the order it should happen, with the official route for it: the phone
-number, website or postal address from the knowledge base entry. Write each step twice, once in
-Dutch for the volunteer and once in the visitor's language.
+First call the official_routes tool with the sender id you are given. It returns the phone number,
+website or postal address for each route, read from an official page. Every route you name must
+come from that answer, and a sender it does not know gets no route at all.
+
+Each step is one action, in the order it should happen, with its official route. Write each step
+twice, once in Dutch for the volunteer and once in the visitor's language.
 
 Use only dates and amounts from the grounded facts, written in the letter's own notation in both
-languages. Never invent a phone number, a website or an address; if the knowledge base does not
-have one, say where to look instead. Say plainly when a step needs a person rather than a form.
+languages. Never invent a phone number, a website or an address; if the lookup does not have one,
+say where to look instead. Say plainly when a step needs a person rather than a form.
 """
 
 DRAFT_PROMPT = """You draft the letter the visitor sends back.
@@ -83,6 +88,9 @@ DRAFT_PROMPT = """You draft the letter the visitor sends back.
 Not every letter needs one. When the right next move is paying, waiting, or walking into an office,
 say that no letter is needed and write nothing. A letter sent for the sake of sending one costs the
 visitor a stamp and buys a delay.
+
+When one is needed, first call the official_routes tool with the sender id you are given: the body
+it is addressed to, and where it is sent, come from that answer and nowhere else.
 
 Write it in Dutch, then the same letter in the visitor's language so they know what they are
 signing. Keep it short, factual and polite. State the reference number, the decision being

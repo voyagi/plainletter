@@ -20,10 +20,15 @@ Python that never calls a model: for every date, amount, reference and passage i
 cited text really stands in the letter, and that the claimed value follows from that text. A
 deadline whose passage says something else fails, and so does a passage the letter never carried.
 
-Two more things sit behind it. Every stage after the verifier runs with an intervention that denies
-any tool call carrying a date or amount the check did not ground. The pipeline then re-reads
-everything the model wrote and refuses the whole reading if a stray value survived. A refused
-reading at a help desk is recoverable; a confident wrong deadline is not.
+Two more things sit behind it, one inside the agent and one outside. Every structured answer the
+agents give is asked for as a Strands tool call, and every stage after the verifier runs with an
+intervention on that boundary: an explanation, a plan or a draft carrying a date or amount the
+check did not ground is refused before it exists, the refusal goes back to the model as the tool's
+result, and the model writes again. The planner and the drafter also fetch the sender's official
+routes through a tool rather than from the prompt, so a route in a step was looked up, and an audit
+hook records every call and how it ended without recording what the letter said. The pipeline then
+re-reads everything that came through and refuses the whole reading if a stray value survived
+anyway. A refused reading at a help desk is recoverable; a confident wrong deadline is not.
 
 The knowledge base marks each sender `verified` or not. Only a sender whose procedure was read on
 an official page states a procedure; the rest say so and route the letter to a person.
@@ -49,7 +54,7 @@ dropped, and turns a PDF into one picture per page. Nothing is written to disk o
 
 ```sh
 uv sync --group dev
-uv run plainletter demo --language ar --out out
+uv run plainletter demo --language uk --out out
 ```
 
 That reads a synthetic traffic fine end to end with a scripted reading, so it needs no cloud

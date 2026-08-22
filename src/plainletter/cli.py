@@ -42,7 +42,7 @@ def main(argv: list[str] | None = None) -> int:
 
     read = sub.add_parser("read", help="read a real letter with Bedrock")
     read.add_argument("path", type=Path, help="a photograph, a PDF, or a text file")
-    read.add_argument("--language", required=True, help="the visitor's language tag, e.g. ar")
+    read.add_argument("--language", required=True, help="the visitor's language tag, e.g. uk")
     _shared_arguments(read)
 
     args = parser.parse_args(argv)
