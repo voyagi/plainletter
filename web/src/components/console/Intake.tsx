@@ -9,10 +9,14 @@ import { languageFor, VISITOR_LANGUAGES } from '@/lib/language';
 
 export type Sample = { id: string; sender: string; type: string; language: string };
 
+export type Memory = { consent: boolean; caseId: string };
+
 export function Intake({
   samples,
   language,
   onLanguage,
+  memory,
+  onMemory,
   onFile,
   onSample,
   busy,
@@ -20,6 +24,8 @@ export function Intake({
   samples: Sample[];
   language: string;
   onLanguage: (code: string) => void;
+  memory: Memory;
+  onMemory: (memory: Memory) => void;
   onFile: (file: File) => void;
   onSample: (id: string) => void;
   busy: boolean;
@@ -68,6 +74,35 @@ export function Intake({
               </option>
             ))}
           </select>
+        </label>
+      </div>
+
+      {/* The question the volunteer asks out loud before anything is kept. It is a ruled line on
+          the same surface, not a panel, because it is part of the intake and not a setting. */}
+      <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-rule pt-4">
+        <label className="flex min-h-[44px] items-center gap-2.5 text-sm">
+          <input
+            type="checkbox"
+            checked={memory.consent}
+            onChange={(event) => onMemory({ ...memory, consent: event.target.checked })}
+            className="size-[18px] accent-ink"
+          />
+          De bezoeker wil dat de balie deze zaak dertig dagen onthoudt
+        </label>
+        <label className="flex min-h-[44px] items-center gap-2.5 text-sm text-ink-2">
+          Zaaknummer van de vorige kaart
+          <input
+            type="text"
+            value={memory.caseId}
+            onChange={(event) => onMemory({ ...memory, caseId: event.target.value.toUpperCase() })}
+            inputMode="text"
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={9}
+            pattern="[A-Z0-9]{4}-[A-Z0-9]{4}"
+            className="min-h-[44px] w-[11ch] rounded-md border border-rule bg-paper px-3 text-sm tracking-[0.08em] text-ink tabular-nums"
+          />
         </label>
       </div>
 

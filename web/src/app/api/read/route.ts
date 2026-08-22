@@ -11,6 +11,9 @@ const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
 const TEXT_TYPES = new Set(['text/plain', 'text/markdown', '']);
 
+// The case number as it is printed on the desk card: two groups of four, readable across a counter.
+const CASE_ID = /^[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+
 export async function POST(request: Request): Promise<Response> {
   let payload: LetterPayload;
   try {
@@ -39,12 +42,17 @@ async function intake(request: Request): Promise<LetterPayload> {
     const body: unknown = await request.json();
     const sample = readString(body, 'sample');
     if (!sample) throw new Error('Send a letter or name a sample letter.');
-    return { sample, visitor_language: readString(body, 'visitor_language') ?? undefined };
+    return {
+      sample,
+      visitor_language: readString(body, 'visitor_language') ?? undefined,
+      ...caseFields(readString(body, 'consent') === 'true' || readFlag(body, 'consent'), readString(body, 'case_id')),
+    };
   }
 
   const form = await request.formData();
   const file = form.get('letter');
   const language = String(form.get('visitor_language') ?? 'en');
+  const memory = caseFields(form.get('consent') === 'true', stringOrNull(form.get('case_id')));
   if (!(file instanceof File) || file.size === 0) {
     throw new Error('Choose a letter first, or take a photo of one.');
   }
@@ -55,17 +63,40 @@ async function intake(request: Request): Promise<LetterPayload> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const filename = file.name || 'letter';
   if (TEXT_TYPES.has(file.type) && filename.endsWith('.txt')) {
-    return { letter: { filename, text: new TextDecoder().decode(bytes) }, visitor_language: language };
+    return {
+      letter: { filename, text: new TextDecoder().decode(bytes) },
+      visitor_language: language,
+      ...memory,
+    };
   }
   return {
     letter: { filename, content_base64: Buffer.from(bytes).toString('base64') },
     visitor_language: language,
+    ...memory,
   };
+}
+
+/** Consent travels only as an explicit true, and a case number only when it has the printed shape. */
+function caseFields(consent: boolean, caseId: string | null): { consent?: boolean; case_id?: string } {
+  const normalised = caseId?.trim().toUpperCase() ?? '';
+  if (normalised && !CASE_ID.test(normalised)) {
+    throw new Error('A case number has the shape on the card: four characters, a hyphen, four more.');
+  }
+  return { ...(consent ? { consent: true } : {}), ...(normalised ? { case_id: normalised } : {}) };
 }
 
 function readString(body: unknown, key: string): string | null {
   if (typeof body !== 'object' || body === null) return null;
   const value = (body as Record<string, unknown>)[key];
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+function readFlag(body: unknown, key: string): boolean {
+  if (typeof body !== 'object' || body === null) return false;
+  return (body as Record<string, unknown>)[key] === true;
+}
+
+function stringOrNull(value: FormDataEntryValue | null): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
 }
 

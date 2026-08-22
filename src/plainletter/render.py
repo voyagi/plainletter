@@ -37,11 +37,21 @@ def is_rtl(language: str) -> bool:
     return language.split("-")[0].lower() in RTL_LANGUAGES
 
 
-def desk_card_html(reading: DeskReading, today: date) -> str:
-    """The one-page bilingual card, styled to print readably in black and white."""
+def desk_card_html(reading: DeskReading, today: date, *, case_id: str | None = None) -> str:
+    """The one-page bilingual card, styled to print readably in black and white.
+
+    The case id is printed only when there is a case, so a visitor who declined to be remembered
+    takes home nothing that says otherwise.
+    """
     visitor = reading.visitor_language
     direction = "rtl" if is_rtl(visitor) else "ltr"
     dutch, other = _explanations(reading)
+    case = (
+        f'<p class="small"><strong>Zaaknummer {escape(case_id)}.</strong> '
+        "Neem deze kaart mee als u terugkomt, dan gaat de balie verder waar u gebleven was.</p>"
+        if case_id
+        else ""
+    )
 
     rows = "\n".join(
         _pair_row(question, dutch_text, visitor_text, visitor, direction)
@@ -91,6 +101,7 @@ gebeurt als u niets doet, en wat u nu doet, in twee talen op een vel.">
   <div class="foot">
     <div>
       {handoff}
+      {case}
       <p class="small">Plainletter legt brieven uit en geeft geen juridisch advies.
       Gemaakt op {escape(format_date(today))}.</p>
     </div>

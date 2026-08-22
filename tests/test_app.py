@@ -56,6 +56,17 @@ def test_an_empty_payload_is_answered_rather_than_crashed() -> None:
     assert read_letter({})["error"]["kind"] == "payload"
 
 
+def test_the_cli_envelope_is_opened_for_a_sample_name_or_a_request() -> None:
+    # `agentcore invoke <text>` sends {"prompt": text}. Both of its useful shapes are understood.
+    by_name = read_letter({"prompt": "cjib-verkeersboete"})
+    assert by_name["reading"]["sender_name"] == "Centraal Justitieel Incassobureau"
+    as_json = read_letter({"prompt": json.dumps({"sample": "cjib-verkeersboete", "today": TODAY})})
+    assert as_json["reading"]["deadline"]["on"] == "2026-09-15"
+    assert read_letter({"prompt": "{not json"})["error"]["kind"] == "payload"
+    mixed = read_letter({"prompt": "x", "sample": "cjib-verkeersboete"})
+    assert mixed["error"]["kind"] == "payload"
+
+
 def test_asking_for_both_a_sample_and_a_letter_is_refused() -> None:
     answer = read_letter({"sample": "cjib-verkeersboete", "letter": {"text": "hallo"}})
     assert answer["error"]["kind"] == "payload"

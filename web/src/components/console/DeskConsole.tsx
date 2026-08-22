@@ -8,9 +8,17 @@ import { ReadingPanel } from '@/components/ReadingPanel';
 import { Sentence } from '@/components/Sentence';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Wordmark } from '@/components/Wordmark';
-import { Intake, type Sample } from '@/components/console/Intake';
+import { Intake, type Memory, type Sample } from '@/components/console/Intake';
 import { languageFor } from '@/lib/language';
-import { isDone, isError, isRefusal, type DeskReading, type ReadingStage } from '@/lib/reading';
+import {
+  isCase,
+  isDone,
+  isError,
+  isRefusal,
+  type CaseInfo,
+  type DeskReading,
+  type ReadingStage,
+} from '@/lib/reading';
 import { readMessages } from '@/lib/stream';
 
 // Nothing about this letter is stored. It lives in this tab for as long as a desk conversation
@@ -22,13 +30,16 @@ type Held = {
   card: string | null;
   ics: string | null;
   photo: string | null;
+  case: CaseInfo | null;
 };
 
-const EMPTY: Held = { reading: {}, card: null, ics: null, photo: null };
+const EMPTY: Held = { reading: {}, card: null, ics: null, photo: null, case: null };
+const NO_MEMORY: Memory = { consent: false, caseId: '' };
 
 export function DeskConsole({ samples }: { samples: Sample[] }) {
   const [held, setHeld] = useState<Held>(EMPTY);
   const [language, setLanguage] = useState('uk');
+  const [memory, setMemory] = useState<Memory>(NO_MEMORY);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
@@ -47,6 +58,8 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
     setProblem(null);
     setRefusal(null);
     setBusy(false);
+    // Consent is given per letter, out loud. It never carries over to the next visitor.
+    setMemory(NO_MEMORY);
   }, []);
 
   useEffect(() => {
@@ -87,12 +100,17 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
             setRefusal(message.message);
             continue;
           }
+          if (isCase(message)) {
+            setHeld((previous) => ({ ...previous, case: message.case }));
+            continue;
+          }
           if (isDone(message)) {
             setHeld((previous) => ({
               ...previous,
               reading: message.reading,
               card: message.desk_card_html,
               ics: message.reminder_ics,
+              case: message.case ?? previous.case,
             }));
             continue;
           }
@@ -118,12 +136,18 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
     const form = new FormData();
     form.set('letter', file);
     form.set('visitor_language', language);
+    if (memory.consent) form.set('consent', 'true');
+    if (memory.caseId.trim()) form.set('case_id', memory.caseId.trim());
     void read(form, {}, file.type.startsWith('image/') ? URL.createObjectURL(file) : null);
   }
 
   function readSample(id: string) {
     void read(
-      JSON.stringify({ sample: id }),
+      JSON.stringify({
+        sample: id,
+        ...(memory.consent ? { consent: true } : {}),
+        ...(memory.caseId.trim() ? { case_id: memory.caseId.trim() } : {}),
+      }),
       { 'content-type': 'application/json' },
       null,
     );
@@ -170,6 +194,8 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
           samples={samples}
           language={language}
           onLanguage={setLanguage}
+          memory={memory}
+          onMemory={setMemory}
           onFile={readFile}
           onSample={readSample}
           busy={busy}
@@ -178,6 +204,7 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
         <>
           {problem ? <Problem detail={problem} onRetry={clear} /> : null}
           {refusal ? <Refusal message={refusal} /> : null}
+          {held.case ? <Case info={held.case} /> : null}
 
           <Sentence reading={reading} />
           <Deadline deadline={reading.deadline ?? null} />
@@ -232,7 +259,13 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
             </div>
           </div>
 
-          <Actions card={held.card} ics={held.ics} reading={reading} onClear={clear} />
+          <Actions
+            card={held.card}
+            ics={held.ics}
+            reading={reading}
+            remembered={held.case?.remembered ?? false}
+            onClear={clear}
+          />
         </>
       )}
     </div>
@@ -243,11 +276,13 @@ function Actions({
   card,
   ics,
   reading,
+  remembered,
   onClear,
 }: {
   card: string | null;
   ics: string | null;
   reading: Partial<DeskReading>;
+  remembered: boolean;
   onClear: () => void;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
@@ -295,8 +330,9 @@ function Actions({
         Nieuwe brief
       </button>
       <span className="ml-auto max-w-[340px] text-[13px] text-ink-2">
-        Niets van deze brief wordt bewaard. Wil de bezoeker een volgende keer verder waar hij nu
-        stopt, dan vraagt de balie daar eerst toestemming voor.
+        {remembered
+          ? 'Alleen de gecontroleerde feiten zijn bewaard, dertig dagen, onder het zaaknummer op de kaart. De brief zelf niet.'
+          : 'Niets van deze brief wordt bewaard. Wil de bezoeker een volgende keer verder waar hij nu stopt, dan vraagt de balie daar eerst toestemming voor.'}
       </span>
       {/* The card the printer gets is the one the agent rendered, byte for byte. Rebuilding it here
           would put a second version of the visitor's deadline on the paper they take home. */}
@@ -326,6 +362,44 @@ function Problem({ detail, onRetry }: { detail: string; onRetry: () => void }) {
       >
         Opnieuw beginnen
       </button>
+    </div>
+  );
+}
+
+/**
+ * The case line: what the desk kept, or what it found from last time. Ink only, one ruled line,
+ * because a remembered case is a fact about this visit and not a feature to be sold.
+ */
+function Case({ info }: { info: CaseInfo }) {
+  const earlier = info.earlier;
+  return (
+    <div className="mt-6 border-y border-rule py-3 text-[15px]" aria-live="polite">
+      {earlier.length > 0 ? (
+        <p className="m-0">
+          <span className="text-xs tracking-[0.12em] text-ink-2 uppercase">Eerder aan de balie</span>
+          <span className="ml-3">
+            {earlier.map((record, index) => (
+              <span key={`${record.read_on}-${index}`}>
+                {index > 0 ? ', ' : ''}
+                <b>{record.sender_name}</b>, {record.letter_type}, gelezen op {record.read_on}
+                {record.deadline ? `, uiterlijk ${record.deadline}` : ''}
+              </span>
+            ))}
+          </span>
+        </p>
+      ) : null}
+      {info.remembered && info.id ? (
+        <p className={`m-0 ${earlier.length > 0 ? 'mt-1.5' : ''}`}>
+          Deze zaak is dertig dagen bewaard onder nummer{' '}
+          <b className="tracking-[0.08em] tabular-nums">{info.id}</b>. Het staat op de kaart.
+        </p>
+      ) : null}
+      {info.note ? (
+        <p className="m-0 mt-1.5 text-ink-2">
+          Deze balie bewaart geen zaken: er is geen geheugen aan gekoppeld. De toestemming is
+          genoteerd, er is niets opgeslagen.
+        </p>
+      ) : null}
     </div>
   );
 }
