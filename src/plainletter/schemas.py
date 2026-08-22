@@ -15,13 +15,32 @@ ambiguous string surviving into the pipeline is a wrong answer waiting to happen
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from enum import StrEnum
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, computed_field
 
 from .dutch import format_date
+
+# Figure dash, en dash, em dash and horizontal bar, as codepoints so the rule can be read. The
+# desk card allows nothing longer than a hyphen, and a model writing Ukrainian or Polish reaches
+# for the em dash by habit.
+_LONG_DASHES = re.compile(rf"\s*[{chr(0x2012)}{chr(0x2013)}{chr(0x2014)}{chr(0x2015)}]\s*")
+
+# Shorter than this is a language tag or a placeholder, not a letter. The first live drafting
+# turn answered the translation field with "uk".
+MIN_LETTER_CHARS = 40
+
+
+def plain_dashes(text: str) -> str:
+    return _LONG_DASHES.sub(" - ", text)
+
+
+# Text a model wrote for a person to read. Passages copied out of the letter are never Prose: a
+# quoted passage has to match the page character for character.
+Prose = Annotated[str, AfterValidator(plain_dashes)]
 
 
 class Frozen(BaseModel):
@@ -45,8 +64,8 @@ class Unreadable(Frozen):
     """
 
     field: str
-    reason: str
-    ask_the_visitor: str = Field(description="what the volunteer should ask, in Dutch")
+    reason: Prose
+    ask_the_visitor: Prose = Field(description="what the volunteer should ask, in Dutch")
 
 
 class NamedValue(Frozen):
@@ -218,26 +237,44 @@ class Explanation(Frozen):
     """The same four answers, in one language."""
 
     language: str = Field(min_length=2, description="BCP 47 tag, for example nl or uk")
-    what_is_this: str = Field(min_length=1)
-    by_when: str = Field(min_length=1)
-    if_you_do_nothing: str = Field(min_length=1)
+    what_is_this: Prose = Field(min_length=1)
+    by_when: Prose = Field(min_length=1)
+    if_you_do_nothing: Prose = Field(min_length=1)
 
 
 class ActionStep(Frozen):
     order: int = Field(ge=1)
-    dutch: str = Field(min_length=1)
-    visitor: str = Field(min_length=1)
+    dutch: Prose = Field(min_length=1, description="the step, in Dutch, for the volunteer")
+    visitor: Prose = Field(
+        min_length=1, description="the same step, written out in the visitor's language"
+    )
     official_route: str | None = Field(
         default=None, description="the phone number, website or postal address for this step"
     )
 
 
 class DraftLetter(Frozen):
+    """The letter the visitor sends back, whole, in both languages.
+
+    Both texts are the full letter. The Dutch one is what gets sent; the visitor-language one is
+    the same letter so the visitor knows what they are signing. A language tag, a summary or a
+    note that a translation would go here is not a letter, and the length floor refuses it.
+    """
+
     kind: Literal["objection", "payment_plan", "reply"]
-    addressed_to: str
-    send_before: date | None
-    dutch: str
-    visitor: str
+    addressed_to: Prose = Field(
+        min_length=1, description="the body the letter goes to, as the official routes name it"
+    )
+    send_before: date | None = Field(
+        description="the last day it may be sent, only when the grounded facts give one"
+    )
+    dutch: Prose = Field(
+        min_length=MIN_LETTER_CHARS, description="the complete letter in Dutch, ready to sign"
+    )
+    visitor: Prose = Field(
+        min_length=MIN_LETTER_CHARS,
+        description="the complete letter translated into the visitor's language",
+    )
 
 
 class Handoff(Frozen):

@@ -15,8 +15,11 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from datetime import date
 
 from .dutch import (
+    MONTH_ABBREVIATIONS_NL,
+    MONTHS_NL,
     format_amount,
     format_date,
     normalise,
@@ -37,6 +40,108 @@ from .schemas import (
 
 _NOT_IN_LETTER = "the cited passage does not appear in the letter"
 _VALUE_NOT_IN_PASSAGE = "the passage does not carry the value that was claimed"
+
+# The month names a visitor-language sentence writes a date with. The guard reads the model's
+# prose in every language it answers in, and a wrong date is no less wrong for being written in
+# Ukrainian: on the first live run the plan wrote "15 вересня 2026" where the letter said
+# "15 september 2026", and a Latin-only pattern would have let a wrong one through unread. The
+# genitive forms are how a date is written in Ukrainian and Polish; the nominatives stay because a
+# model writes either. Russian is here to be READ, never written: the same live run saw a draft
+# drift into Russian halfway through a Ukrainian letter, and a date in it has to be checked too.
+VISITOR_MONTHS: dict[str, int] = {
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
+    "січня": 1,
+    "лютого": 2,
+    "березня": 3,
+    "квітня": 4,
+    "травня": 5,
+    "червня": 6,
+    "липня": 7,
+    "серпня": 8,
+    "вересня": 9,
+    "жовтня": 10,
+    "листопада": 11,
+    "грудня": 12,
+    "січень": 1,
+    "лютий": 2,
+    "березень": 3,
+    "квітень": 4,
+    "травень": 5,
+    "червень": 6,
+    "липень": 7,
+    "серпень": 8,
+    "вересень": 9,
+    "жовтень": 10,
+    "листопад": 11,
+    "грудень": 12,
+    "stycznia": 1,
+    "lutego": 2,
+    "marca": 3,
+    "kwietnia": 4,
+    "maja": 5,
+    "czerwca": 6,
+    "lipca": 7,
+    "sierpnia": 8,
+    "września": 9,
+    "października": 10,
+    "listopada": 11,
+    "grudnia": 12,
+    "styczeń": 1,
+    "luty": 2,
+    "marzec": 3,
+    "kwiecień": 4,
+    "maj": 5,
+    "czerwiec": 6,
+    "lipiec": 7,
+    "sierpień": 8,
+    "wrzesień": 9,
+    "październik": 10,
+    "listopad": 11,
+    "grudzień": 12,
+    "января": 1,
+    "февраля": 2,
+    "марта": 3,
+    "апреля": 4,
+    "мая": 5,
+    "июня": 6,
+    "июля": 7,
+    "августа": 8,
+    "сентября": 9,
+    "октября": 10,
+    "ноября": 11,
+    "декабря": 12,
+    "ocak": 1,
+    "şubat": 2,
+    "mart": 3,
+    "nisan": 4,
+    "mayıs": 5,
+    "haziran": 6,
+    "temmuz": 7,
+    "ağustos": 8,
+    "eylül": 9,
+    "ekim": 10,
+    "kasım": 11,
+    "aralık": 12,
+}
+
+MONTHS_ANY: dict[str, int] = {**MONTHS_NL, **MONTH_ABBREVIATIONS_NL, **VISITOR_MONTHS}
+
+# A day, a month written as a word in any script, and a four-digit year. The word class is the
+# Unicode letter class rather than A-Z, which is the whole point of the table above.
+_WORDED_DATE = re.compile(r"(?<!\d)(\d{1,2})\s+([^\W\d_]+)\.?\s+(\d{4})(?!\d)")
+_NUMERIC_DATE = re.compile(r"\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b")
+_AMOUNT = re.compile(r"(?:eur|euro|€)\s*\d[\d.]*(?:,\d{1,2})?", re.IGNORECASE)
 
 
 def verify(facts: LetterFacts, letter_text: str) -> VerificationResult:
@@ -74,19 +179,29 @@ def numeric_claims(text: str) -> frozenset[str]:
     passed the check above.
     """
     claims: set[str] = set()
-    for match in re.finditer(r"\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b", text):
+    for match in _NUMERIC_DATE.finditer(text):
         found = parse_date(match.group(0))
         if found is not None:
             claims.add(format_date(found))
-    for match in re.finditer(r"\b\d{1,2}\s+[A-Za-z]+\.?\s+\d{4}\b", text):
-        found = parse_date(match.group(0))
+    for worded in _WORDED_DATE.finditer(text):
+        found = _worded_date(worded.group(1), worded.group(2), worded.group(3))
         if found is not None:
             claims.add(format_date(found))
-    for match in re.finditer(r"(?:eur|euro|€)\s*\d[\d.]*(?:,\d{1,2})?", text, re.IGNORECASE):
+    for match in _AMOUNT.finditer(text):
         cents = parse_amount_cents(match.group(0))
         if cents is not None:
             claims.add(format_amount(cents))
     return frozenset(claims)
+
+
+def _worded_date(day: str, month_word: str, year: str) -> date | None:
+    month = MONTHS_ANY.get(month_word.casefold())
+    if month is None:
+        return None
+    try:
+        return date(int(year), month, int(day))
+    except ValueError:
+        return None
 
 
 def ungrounded_claims(text: str, allowed: Iterable[str]) -> frozenset[str]:

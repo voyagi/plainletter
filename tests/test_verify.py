@@ -1,3 +1,5 @@
+import pytest
+
 from plainletter.demo import sample_text, scripted_reading
 from plainletter.schemas import LetterDate, Money, SourceSpan
 from plainletter.verify import numeric_claims, ungrounded_claims, verify
@@ -96,3 +98,33 @@ def test_ungrounded_claims_reports_only_what_was_never_allowed() -> None:
         "Betaal EUR 174,00 voor 1 oktober 2026.", ["EUR 174,00", "15 september 2026"]
     )
     assert stray == {"1 oktober 2026"}
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "Сплатіть до 15 вересня 2026 року.",
+        "Zapłać przed 15 września 2026 r.",
+        "15 Eylül 2026 tarihine kadar ödeyin.",
+        "Pay before 15 September 2026.",
+        "Betaal voor 15 sept. 2026.",
+        "Оплатите до 15 сентября 2026 года.",
+    ],
+)
+def test_a_date_written_with_a_visitor_language_month_is_read_as_the_same_date(
+    sentence: str,
+) -> None:
+    assert numeric_claims(sentence) == {"15 september 2026"}
+
+
+def test_a_wrong_date_in_a_visitor_language_is_still_caught() -> None:
+    # The first live plan wrote its dates with Ukrainian month names. A guard that only reads
+    # Latin month names would have passed an invented one unread.
+    stray = ungrounded_claims(
+        "Відправте листа не пізніше 8 вересня 2026 року.", ["15 september 2026"]
+    )
+    assert stray == {"8 september 2026"}
+
+
+def test_a_word_that_is_not_a_month_is_not_a_date() -> None:
+    assert numeric_claims("15 stuks 2026 bestellingen, 3 keer 2025 euro") == set()

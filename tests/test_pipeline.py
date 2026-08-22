@@ -2,9 +2,16 @@ from datetime import date
 
 import pytest
 
+from plainletter import urgency
 from plainletter.demo import ScriptedReadingModel, sample_input, sample_text, scripted_model
 from plainletter.kb import load_senders
-from plainletter.pipeline import Pipeline, UngroundedOutputError, handoff_for
+from plainletter.pipeline import (
+    POST_BY,
+    Pipeline,
+    UngroundedOutputError,
+    handoff_for,
+    usable_values,
+)
 from plainletter.schemas import Urgency, VerificationResult
 from plainletter.verify import verify
 
@@ -155,6 +162,68 @@ def test_a_deadline_that_did_not_check_out_never_reaches_the_desk() -> None:
     reading = Pipeline(model=quiet).run(LETTER, visitor_language="uk", today=TODAY)
     assert reading.deadline is None
     assert reading.handoff.required
+
+
+def _usable(model: ScriptedReadingModel | None = None) -> dict[str, str]:
+    model = model or cjib_model()
+    result = verify(model.facts, sample_text(SAMPLE))
+    deadline = urgency.view(date(2026, 9, 15), TODAY)
+    return usable_values(model.facts, result, deadline)
+
+
+def test_the_writing_stages_are_told_what_each_amount_and_date_is_for() -> None:
+    # A bare `line_amount_2: EUR 9,00` made the first live planner guess what the money was for.
+    usable = _usable()
+    assert usable["total_amount (Totaal te betalen)"] == "EUR 174,00"
+    assert usable["line_amount_2 (Administratiekosten)"] == "EUR 9,00"
+    assert usable["deadline"] == "15 september 2026"
+
+    ind = scripted_model("ind-verlenging")
+    dated = usable_values(ind.facts, verify(ind.facts, sample_text("ind-verlenging")), None)
+    assert dated["other_date_1 (laatste dag dat de verblijfsvergunning geldig is)"] == (
+        "1 december 2026"
+    )
+
+
+def test_the_posting_date_the_calendar_computed_may_be_repeated() -> None:
+    usable = _usable()
+    assert usable[POST_BY] == "8 september 2026"
+    model = cjib_model()
+    first = model.steps[0]
+    posting = ScriptedReadingModel(
+        facts=model.facts,
+        explanations=model.explanations,
+        steps=(
+            first.model_copy(update={"dutch": "Post de brief uiterlijk 8 september 2026."}),
+            *model.steps[1:],
+        ),
+        draft_letter=model.draft_letter,
+    )
+    reading = run(posting)
+    assert "8 september 2026" in reading.steps[0].dutch
+
+
+def test_a_posting_date_the_calendar_did_not_compute_is_still_refused() -> None:
+    model = cjib_model()
+    first = model.steps[0]
+    invented = ScriptedReadingModel(
+        facts=model.facts,
+        explanations=model.explanations,
+        steps=(
+            first.model_copy(update={"dutch": "Post de brief uiterlijk 9 september 2026."}),
+            *model.steps[1:],
+        ),
+        draft_letter=model.draft_letter,
+    )
+    with pytest.raises(UngroundedOutputError) as refused:
+        run(invented)
+    assert refused.value.claims == {"9 september 2026"}
+
+
+def test_without_a_deadline_there_is_no_posting_date_to_repeat() -> None:
+    model = cjib_model()
+    result = verify(model.facts, sample_text(SAMPLE))
+    assert POST_BY not in usable_values(model.facts, result, None)
 
 
 def test_an_unverified_sender_is_handed_to_a_person() -> None:
