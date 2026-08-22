@@ -12,18 +12,17 @@ from __future__ import annotations
 
 import json
 import warnings
-from collections.abc import AsyncGenerator, AsyncIterable
 from typing import Any
 
 import pytest
 from strands import Agent
-from strands.models.model import Model
 
 from plainletter.bedrock import ActionPlan, BedrockReadingModel
 from plainletter.demo import sample_input, scripted_reading
 from plainletter.kb import load_senders
 from plainletter.schemas import LetterFacts
 from plainletter.tools import official_routes
+from scripted_strands import ScriptedModel, tool_use
 
 SAMPLE = "cjib-verkeersboete"
 FACTS: LetterFacts = scripted_reading(SAMPLE).facts
@@ -31,69 +30,6 @@ GROUNDED = {"total_amount": "EUR 174,00", "deadline": "15 september 2026"}
 INVENTED_STEP = "Betaal EUR 174,00 voor 1 oktober 2026."
 GROUNDED_STEP = "Betaal EUR 174,00 voor 15 september 2026."
 ROUTE = "https://www.cjib.nl/verkeersboete"
-
-
-class ScriptedModel(Model):
-    """A Strands model whose turns are written in advance, one list of content blocks per call.
-
-    It also keeps every request the agent made, so a test can read what the model was offered and
-    what it was told.
-    """
-
-    def __init__(self, turns: list[list[dict[str, Any]]]) -> None:
-        self._turns = list(turns)
-        self.requests: list[dict[str, Any]] = []
-
-    def update_config(self, **model_config: Any) -> None:
-        return None
-
-    def get_config(self) -> dict[str, Any]:
-        return {}
-
-    async def structured_output(
-        self, output_model: Any, prompt: Any, system_prompt: str | None = None, **kwargs: Any
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        raise AssertionError("the deprecated Agent.structured_output path was used")
-        yield {}  # pragma: no cover
-
-    async def stream(
-        self,
-        messages: Any,
-        tool_specs: list[dict[str, Any]] | None = None,
-        system_prompt: str | None = None,
-        *,
-        tool_choice: dict[str, Any] | None = None,
-        **kwargs: Any,
-    ) -> AsyncIterable[dict[str, Any]]:
-        self.requests.append(
-            {
-                "messages": json.loads(json.dumps(messages)),
-                "tools": [spec["name"] for spec in tool_specs or []],
-                "tool_choice": tool_choice,
-            }
-        )
-        if not self._turns:
-            raise AssertionError("the agent asked for more turns than were scripted")
-        turn = self._turns.pop(0)
-        yield {"messageStart": {"role": "assistant"}}
-        for block in turn:
-            if "text" in block:
-                yield {"contentBlockStart": {"start": {}}}
-                yield {"contentBlockDelta": {"delta": {"text": block["text"]}}}
-            else:
-                use = block["toolUse"]
-                start = {"toolUse": {"toolUseId": use["toolUseId"], "name": use["name"]}}
-                yield {"contentBlockStart": {"start": start}}
-                delta = {"toolUse": {"input": json.dumps(use["input"])}}
-                yield {"contentBlockDelta": {"delta": delta}}
-            yield {"contentBlockStop": {}}
-        stop = "tool_use" if any("toolUse" in block for block in turn) else "end_turn"
-        yield {"messageStop": {"stopReason": stop}}
-        yield {"metadata": {}}
-
-
-def tool_use(name: str, tool_use_id: str, payload: dict[str, Any]) -> dict[str, Any]:
-    return {"toolUse": {"toolUseId": tool_use_id, "name": name, "input": payload}}
 
 
 def lookup(tool_use_id: str = "u1") -> dict[str, Any]:

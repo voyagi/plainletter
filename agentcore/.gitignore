@@ -1,0 +1,17 @@
+# The deployment target names the AWS account; copy aws-targets.example.json and keep it local.
+aws-targets.json
+.env.local
+
+# CDK build artifacts
+cdk/cdk.out/
+cdk/node_modules/
+cdk/dist/
+
+# What `agentcore package` and `agentcore deploy` build here: the zip and its staging tree
+*.zip
+plainletter/
+
+# CLI internals, except the deployed state the CLI expects to find
+.cli/*
+!.cli/deployed-state.json
+.cache/*

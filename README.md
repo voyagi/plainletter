@@ -82,6 +82,23 @@ npm run verify:ship
 
 is the single gate: types, the full test suite, whole-repo lint, and the committed floors.
 
+## Deploy it
+
+The deployed agent is the same `src/` directory zipped with its dependencies and run by Amazon
+Bedrock AgentCore Runtime in Frankfurt, with a memory store beside it and its traces in AgentCore
+Observability. `agentcore/agentcore.json` describes all three, `agentcore deploy` creates them,
+and [docs/deploy.md](docs/deploy.md) is the whole procedure, including how the console is pointed
+at the deployed runtime with one environment variable and how to check, in CloudWatch, that no
+line of any letter ever reached a trace.
+
+Two things about that deployment are decided in code rather than in configuration. The agent
+masks every prompt, answer and tool argument in the spans Strands emits, by pinning the SDK's
+redaction policy before its first agent is built (`src/plainletter/telemetry.py`), so a
+deployment cannot forget it. And a reading is kept in AgentCore Memory only when the request says
+the visitor consented: what is kept is the checked, derived and masked values under a case id the
+desk card prints, never the letter, and it expires after thirty days
+(`src/plainletter/memory.py`).
+
 ## Repository layout
 
 | Path | What lives there |
@@ -90,6 +107,7 @@ is the single gate: types, the full test suite, whole-repo lint, and the committ
 | `src/plainletter/senders/` | The curated sender knowledge base, one file per sender, sourced and dated |
 | `src/plainletter/samples/` | Synthetic sample letters for the demo and the tests (no real people, no real data) |
 | `web/` | The desk console and the public landing page |
+| `agentcore/` | The AgentCore project: runtime, memory store and the CDK app that deploys them |
 | `design/` | The committed art direction and the mockups every page derives from |
 | `tests/` | Test suite |
 | `scripts/` | Repository gates run in the pre-commit hook and in CI |

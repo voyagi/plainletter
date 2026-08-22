@@ -8,6 +8,11 @@ export const env = createEnv({
   server: {
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PLAINLETTER_AGENT_ENDPOINT: z.url().default('http://127.0.0.1:8080'),
+    // The deployed agent. When set, the proxy signs calls to it and the endpoint above is unused.
+    PLAINLETTER_AGENT_RUNTIME_ARN: z
+      .string()
+      .regex(/^arn:aws:bedrock-agentcore:[a-z0-9-]+:\d{12}:runtime\/[A-Za-z0-9_-]+$/)
+      .optional(),
   },
   clientPrefix: 'NEXT_PUBLIC_',
   client: {
@@ -16,6 +21,7 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     PLAINLETTER_AGENT_ENDPOINT: process.env.PLAINLETTER_AGENT_ENDPOINT,
+    PLAINLETTER_AGENT_RUNTIME_ARN: process.env.PLAINLETTER_AGENT_RUNTIME_ARN,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   },
   emptyStringAsUndefined: true,

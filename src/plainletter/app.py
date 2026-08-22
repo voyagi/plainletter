@@ -4,7 +4,7 @@ One POST carries one letter and comes back with everything the desk needs: the c
 printable card and the calendar reminder. The console never talks to Bedrock itself, so no AWS
 credential ever reaches a browser.
 
-Three things this layer is responsible for and the pipeline is not:
+Five things this layer is responsible for and the pipeline is not:
 
 * Refusing an upload before it becomes a model call. A payload with no letter in it, or 25 MB of
   something that is not a letter, is answered rather than forwarded.
@@ -12,12 +12,19 @@ Three things this layer is responsible for and the pipeline is not:
   back as a structured verdict with a 200 rather than as a server error.
 * Masking. The card redacts on its way to the printer; this redacts every string on its way to the
   network, because a response is a place personal data can end up logged by something else.
+* Memory, only when asked. A reading is kept under a case id when the request says the visitor
+  consented, and a case id sent with a letter brings the earlier readings back. Without consent
+  nothing is written anywhere.
+* The trace. One span per letter with counts and outcomes, and a failure logged by its type, so
+  neither the monitoring nor the log ever holds a line of the letter.
 """
 
 from __future__ import annotations
 
 import base64
 import binascii
+import json
+import logging
 from collections.abc import Iterator
 from datetime import date
 from typing import Any
@@ -30,11 +37,23 @@ from .bedrock import BedrockReadingModel
 from .demo import sample_input, sample_names, scripted_model, scripted_reading
 from .intake import IntakeError, LetterInput
 from .kb import known_sender_ids
+from .memory import (
+    CASE_ID_PATTERN,
+    AgentCoreCaseMemory,
+    CaseMemory,
+    CaseRecord,
+    NoCaseMemory,
+    new_case_id,
+)
 from .pipeline import Pipeline, UngroundedOutputError
 from .reading_model import ReadingModel
 from .redact import redact
 from .render import desk_card_html, reminder_ics
 from .schemas import DeskReading, ReadingProgress
+from .settings import settings
+from .telemetry import record_tool_outcome, start_reading, within
+
+logger = logging.getLogger(__name__)
 
 # A letter is a page or a handful of pages. Anything past this is a dossier, a video, or a mistake,
 # and it should be refused before it is decoded rather than after.
@@ -43,6 +62,14 @@ MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 DEFAULT_LANGUAGE = "en"
 
 app = BedrockAgentCoreApp()
+
+
+def case_memory() -> CaseMemory:
+    """The store this deployment keeps consented cases in, or the one that keeps nothing."""
+    configured = settings()
+    if configured.memory_id:
+        return AgentCoreCaseMemory(configured.memory_id, configured.region)
+    return NoCaseMemory()
 
 
 class LetterUpload(BaseModel):
@@ -63,6 +90,14 @@ class ReadRequest(BaseModel):
     visitor_language: str = Field(default=DEFAULT_LANGUAGE, min_length=2, max_length=12)
     today: date | None = None
     stream: bool = False
+    consent: bool = Field(
+        default=False, description="true only when the visitor agreed to have this case kept"
+    )
+    case_id: str | None = Field(
+        default=None,
+        pattern=CASE_ID_PATTERN,
+        description="the case id from an earlier card, to continue that case",
+    )
 
 
 @app.entrypoint
@@ -73,7 +108,7 @@ def read_letter(payload: dict[str, Any]) -> dict[str, Any] | Iterator[dict[str, 
     the same pipeline in the same order rather than a second implementation with its own bugs.
     """
     try:
-        request = ReadRequest.model_validate(payload)
+        request = ReadRequest.model_validate(_unwrapped(payload))
     except ValidationError as invalid:
         return _error("payload", str(invalid))
 
@@ -99,39 +134,118 @@ def _events(
     today: date,
 ) -> Iterator[dict[str, Any]]:
     """Every stage as it lands, then one final message carrying the whole reading."""
-    stages = Pipeline(model=model).stages(letter, visitor_language=language, today=today)
+    span = start_reading(
+        source="sample" if request.sample else "letter",
+        kind=letter.kind,
+        pages=letter.pages,
+        visitor_language=language,
+        consent=request.consent,
+        returning=request.case_id is not None,
+    )
     try:
-        while True:
-            try:
-                progress = next(stages)
-            except StopIteration as finished:
-                reading: DeskReading = finished.value
-                yield _completed(request, letter, reading, today)
-                return
-            yield _redacted(_only_what_this_stage_set(progress))
-    except UngroundedOutputError as refusal:
-        yield {
-            "stage": "refused",
-            "refused": True,
-            "claims": sorted(refusal.claims),
-            "message": (
-                "The reading was refused because a date or amount in it does not stand in the "
-                "letter. Nothing was printed. This letter needs a person."
-            ),
-        }
+        memory = case_memory()
+        with within(span):
+            earlier = memory.recall(request.case_id) if request.case_id else ()
+        if earlier:
+            yield {"stage": "case", "case": _case_event(request.case_id, earlier)}
+
+        stages = Pipeline(model=model).stages(letter, visitor_language=language, today=today)
+        try:
+            while True:
+                with within(span):
+                    try:
+                        progress = next(stages)
+                    except StopIteration as finished:
+                        reading: DeskReading = finished.value
+                        break
+                yield _redacted(_only_what_this_stage_set(progress))
+        except UngroundedOutputError as refusal:
+            span.set_attribute("plainletter.refused", True)
+            yield {
+                "stage": "refused",
+                "refused": True,
+                "claims": sorted(refusal.claims),
+                "message": (
+                    "The reading was refused because a date or amount in it does not stand in "
+                    "the letter. Nothing was printed. This letter needs a person."
+                ),
+            }
+            return
+        except Exception as failure:
+            # The type is the diagnosis and is safe to log. The message is not: a validation
+            # error quotes the value it refused, and that value came out of the letter.
+            span.set_attribute("plainletter.failed", type(failure).__name__)
+            logger.error("plainletter.reading failed with %s", type(failure).__name__)
+            yield _error("agent", f"the reading stopped with {type(failure).__name__}")
+            return
+        finally:
+            for entry in model_audit(model):
+                record_tool_outcome(span, entry)
+
+        span.set_attribute("plainletter.facts_grounded", len(reading.verification.grounded))
+        span.set_attribute("plainletter.issues", len(reading.verification.issues))
+        span.set_attribute("plainletter.handoff", reading.handoff.required)
+        span.set_attribute("plainletter.sender", reading.facts.sender_id or "unknown")
+        with within(span):
+            case = _remember(request, reading, today, memory, earlier)
+        span.set_attribute("plainletter.remembered", bool(case and case["remembered"]))
+        yield _completed(request, letter, reading, today, case)
+    finally:
+        span.end()
+
+
+def model_audit(model: ReadingModel) -> list[str]:
+    """The audit trail the Bedrock model kept, or nothing for a scripted one."""
+    audit = getattr(model, "audit", None)
+    entries = getattr(audit, "entries", None)
+    return list(entries) if isinstance(entries, list) else []
+
+
+def _remember(
+    request: ReadRequest,
+    reading: DeskReading,
+    today: date,
+    memory: CaseMemory,
+    earlier: tuple[CaseRecord, ...],
+) -> dict[str, Any] | None:
+    """Keep the reading when, and only when, the visitor consented. Return what the desk shows."""
+    if not request.consent:
+        return _case_event(request.case_id, earlier) if request.case_id else None
+    case_id = request.case_id or new_case_id()
+    kept = memory.remember(CaseRecord.from_reading(case_id, reading, today))
+    event = _case_event(case_id, earlier)
+    event["remembered"] = kept
+    if not kept:
+        event["note"] = "This desk keeps no cases: no memory store is configured."
+    return event
+
+
+def _case_event(case_id: str | None, earlier: tuple[CaseRecord, ...]) -> dict[str, Any]:
+    return {
+        "id": case_id,
+        "remembered": False,
+        "earlier": [record.model_dump(mode="json") for record in earlier],
+    }
 
 
 def _completed(
-    request: ReadRequest, letter: LetterInput, reading: DeskReading, today: date
+    request: ReadRequest,
+    letter: LetterInput,
+    reading: DeskReading,
+    today: date,
+    case: dict[str, Any] | None,
 ) -> dict[str, Any]:
     reference = reading.facts.reference.value if reading.facts.reference else "plainletter"
+    # The card carries the case id once there is a case: kept today, or continued from before.
+    case_id = case["id"] if case and (case["remembered"] or case["earlier"]) else None
     return {
         "stage": "done",
         "source": "sample" if request.sample else "letter",
         "pages": letter.pages,
         "pages_omitted": letter.pages_omitted,
         "reading": _redacted(reading.model_dump(mode="json")),
-        "desk_card_html": desk_card_html(reading, today),
+        "case": case,
+        "desk_card_html": desk_card_html(reading, today, case_id=case_id),
         "reminder_ics": (
             reminder_ics(reading, uid=f"{reference.replace(' ', '')}@plainletter")
             if reading.deadline is not None
@@ -173,9 +287,15 @@ def _prepare(request: ReadRequest) -> tuple[LetterInput, ReadingModel, str]:
         language = scripted_reading(request.sample).visitor_language
         return sample_input(request.sample), scripted_model(request.sample), language
     if request.letter is not None:
+        configured = settings()
         return (
             _decode(request.letter),
-            BedrockReadingModel(sender_ids=known_sender_ids()),
+            BedrockReadingModel(
+                sender_ids=known_sender_ids(),
+                region=configured.region,
+                reading_model_id=configured.reading_model,
+                drafting_model_id=configured.drafting_model,
+            ),
             request.visitor_language,
         )
     raise ValueError("send either a sample name or a letter")
@@ -193,6 +313,26 @@ def _decode(upload: LetterUpload) -> LetterInput:
     except (binascii.Error, ValueError) as broken:
         raise IntakeError(f"the upload was not valid base64 ({broken})") from broken
     return intake.from_bytes(data, filename=upload.filename)
+
+
+def _unwrapped(payload: dict[str, Any]) -> dict[str, Any]:
+    """The request inside the envelope the AgentCore CLI puts around its argument.
+
+    `agentcore invoke` and `agentcore dev` send `{"prompt": text}`. A JSON object in there is the
+    request itself; a bare word is the name of a sample letter. Anything else is left alone for the
+    schema to refuse with its own reason.
+    """
+    prompt = payload.get("prompt")
+    if not isinstance(prompt, str) or set(payload) != {"prompt"}:
+        return payload
+    text = prompt.strip()
+    if not text.startswith("{"):
+        return {"sample": text}
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        return payload
+    return parsed if isinstance(parsed, dict) else payload
 
 
 def _error(kind: str, detail: str) -> dict[str, Any]:

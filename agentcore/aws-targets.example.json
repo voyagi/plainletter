@@ -1,0 +1,8 @@
+[
+  {
+    "name": "default",
+    "description": "Frankfurt, the only region this agent is deployed to",
+    "account": "000000000000",
+    "region": "eu-central-1"
+  }
+]

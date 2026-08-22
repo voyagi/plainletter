@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "plainletter",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {
+    "agentcore:project-name": "plainletter"
+  },
+  "runtimes": [
+    {
+      "name": "plainletter",
+      "description": "Reads official Dutch letters for the help desk, grounded in the letter itself",
+      "build": "CodeZip",
+      "entrypoint": "main.py",
+      "codeLocation": "src/",
+      "runtimeVersion": "PYTHON_3_11",
+      "networkMode": "PUBLIC",
+      "protocol": "HTTP",
+      "instrumentation": {
+        "enableOtel": true
+      },
+      "additionalPolicies": ["runtime-permissions.json"],
+      "envVars": [
+        {
+          "name": "OTEL_SEMCONV_STABILITY_OPT_IN",
+          "value": "gen_ai_unredacted_attributes="
+        }
+      ],
+      "lifecycleConfiguration": {
+        "idleRuntimeSessionTimeout": 300,
+        "maxLifetime": 1800
+      }
+    }
+  ],
+  "memories": [
+    {
+      "name": "plainletterMemory",
+      "description": "Consented case records: derived, masked values only, never a letter",
+      "eventExpiryDuration": 30,
+      "strategies": []
+    }
+  ],
+  "knowledgeBases": [],
+  "credentials": [],
+  "evaluators": [],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": [],
+  "configBundles": [],
+  "abTests": [],
+  "harnesses": [],
+  "datasets": [],
+  "payments": []
+}

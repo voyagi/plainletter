@@ -86,7 +86,8 @@ export default function Privacy() {
         <p className="m-0 text-[16px] text-ink-2">
           What is kept then is the derived facts and nothing else: the sender, the letter type, the
           amounts, the deadline, the steps. Not the image, not the text, and never the masked
-          identifiers. It expires after thirty days.
+          identifiers. It is filed under a case number printed on the desk card, it lives in the
+          same EU region as the reading, and it expires after thirty days.
         </p>
       </Section>
 

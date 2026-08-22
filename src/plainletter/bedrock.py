@@ -43,6 +43,7 @@ from .reading_model import (
     TRANSCRIBE_PROMPT,
 )
 from .schemas import ActionStep, DeadlineView, DraftLetter, Explanation, LetterFacts
+from .telemetry import mask_model_content_in_traces
 from .tools import official_routes
 
 READING_MODEL_ID = "eu.anthropic.claude-sonnet-4-6"
@@ -171,6 +172,8 @@ class BedrockReadingModel:
         guard: GroundingGuard | None,
         tools: list[Any] | None = None,
     ) -> Agent:
+        # The tracer is built by the first Agent in the process and reads its policy then.
+        mask_model_content_in_traces()
         return Agent(
             model=self.make_model(model_id, self.region),
             system_prompt=system_prompt,

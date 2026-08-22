@@ -104,12 +104,42 @@ export type DeskReading = {
 // with holes rather than a different shape. One renderer draws both.
 export type ReadingStage = Partial<DeskReading> & { stage: string };
 
+// One earlier reading under a case the visitor asked the desk to keep: derived values only, the
+// same ones the agent stored, so the desk can say "last time it was this letter, due then".
+export type CaseRecord = {
+  case_id: string;
+  read_on: string;
+  visitor_language: string;
+  sender_id: string | null;
+  sender_name: string;
+  letter_type: string;
+  reference: string | null;
+  issued_on: string | null;
+  deadline: string | null;
+  post_by: string | null;
+  urgency: Urgency | null;
+  total_amount: string | null;
+  steps: ActionStep[];
+  handoff_required: boolean;
+  referral: string;
+};
+
+export type CaseInfo = {
+  id: string | null;
+  remembered: boolean;
+  earlier: CaseRecord[];
+  note?: string;
+};
+
+export type CaseMessage = { stage: 'case'; case: CaseInfo };
+
 export type DoneMessage = {
   stage: 'done';
   source: 'sample' | 'letter';
   pages: number;
   pages_omitted: number;
   reading: DeskReading;
+  case: CaseInfo | null;
   desk_card_html: string;
   reminder_ics: string | null;
 };
@@ -123,7 +153,12 @@ export type RefusedMessage = {
 
 export type ErrorMessage = { error: { kind: string; detail: string } };
 
-export type AgentMessage = ReadingStage | DoneMessage | RefusedMessage | ErrorMessage;
+export type AgentMessage =
+  | ReadingStage
+  | CaseMessage
+  | DoneMessage
+  | RefusedMessage
+  | ErrorMessage;
 
 export function isError(message: AgentMessage): message is ErrorMessage {
   return 'error' in message;
@@ -135,6 +170,10 @@ export function isRefusal(message: AgentMessage): message is RefusedMessage {
 
 export function isDone(message: AgentMessage): message is DoneMessage {
   return 'stage' in message && message.stage === 'done';
+}
+
+export function isCase(message: AgentMessage): message is CaseMessage {
+  return 'stage' in message && message.stage === 'case';
 }
 
 export const STAGE_ORDER = [

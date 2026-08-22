@@ -2,6 +2,9 @@ import type { NextConfig } from 'next';
 
 const config: NextConfig = {
   reactStrictMode: true,
+  // `next dev` writes two instruction files into this directory unless told not to. They are not
+  // part of the product and nothing here reads them.
+  agentRules: false,
   // The console handles letters, so the browser gets no more reach than it needs. The proxy route
   // that talks to the agent runs on the server, which is why connect-src stays same-origin.
   async headers() {
