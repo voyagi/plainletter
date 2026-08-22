@@ -1,9 +1,10 @@
 """The Bedrock implementation of the reading model.
 
-Transcribing, reading and explaining go to a vision-capable Sonnet, the cheaper Haiku handles the
-shorter drafting turn. Both are EU cross-region inference profiles sourced from Frankfurt, because
-the letters carry personal data and processing them outside the EU is not a trade this product
-makes.
+Every turn goes to a vision-capable Sonnet on an EU cross-region inference profile sourced from
+Frankfurt, because the letters carry personal data and processing them outside the EU is not a
+trade this product makes. Drafting was the cheaper Haiku's job until the first live letter: it
+opened a Ukrainian objection in Russian and changed language halfway down, and the draft is the one
+thing the visitor signs. The drafting model stays a separate setting so that can be revisited.
 
 Transcription is a separate agent rather than a second question to the reading one, and the cost of
 that extra turn is the point: two turns that never saw each other's answer have to agree before a
@@ -45,7 +46,7 @@ from .schemas import ActionStep, DeadlineView, DraftLetter, Explanation, LetterF
 from .tools import official_routes
 
 READING_MODEL_ID = "eu.anthropic.claude-sonnet-4-6"
-DRAFTING_MODEL_ID = "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
+DRAFTING_MODEL_ID = READING_MODEL_ID
 SOURCE_REGION = "eu-central-1"
 
 AnswerT = TypeVar("AnswerT", bound=BaseModel)

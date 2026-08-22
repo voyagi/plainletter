@@ -53,6 +53,9 @@ src = ["src", "tests"]
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "C90", "S", "N", "SIM", "RUF"]
 ignore = ["RUF012"]
+# The Turkish dotless i and the Cyrillic Ze are letters of two visitor languages, not typos for
+# the Latin i and the digit 3, and the month tables and the test fixtures spell words with them.
+allowed-confusables = ["ı", "İ", "З"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25

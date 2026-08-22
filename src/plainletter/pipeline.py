@@ -29,6 +29,7 @@ from .marks import mark_letter
 from .reading_model import ReadingModel
 from .schemas import (
     ActionStep,
+    DeadlineView,
     DeskReading,
     DraftLetter,
     Explanation,
@@ -96,7 +97,8 @@ class Pipeline:
 
         result = verify(facts, letter_text)
         marked = mark_letter(letter_text, facts, result)
-        grounded = {fact.name: fact.display for fact in result.grounded}
+        deadline = urgency.view(_grounded_deadline(facts, result), today)
+        grounded = usable_values(facts, result, deadline)
         allowed = frozenset(grounded.values())
 
         sender = get_sender(facts.sender_id)
@@ -113,7 +115,6 @@ class Pipeline:
             sources=sender.sources() if sender else (),
         )
 
-        deadline = urgency.view(_grounded_deadline(facts, result), today)
         yield ReadingProgress(stage="deadline", deadline=deadline)
 
         languages = (DUTCH, visitor_language) if visitor_language != DUTCH else (DUTCH,)
@@ -190,6 +191,40 @@ def handoff_for(result: VerificationResult, sender: Sender | None) -> Handoff:
         referral=sender.referrals[0].name if sender.referrals else "Het Juridisch Loket",
         reason="the letter was read, checked and matched to a verified sender",
     )
+
+
+POST_BY = "post_by (the last day a posted reply still arrives in time, from the calendar)"
+
+
+def usable_values(
+    facts: LetterFacts, result: VerificationResult, deadline: DeadlineView | None
+) -> dict[str, str]:
+    """The values the writing stages may use, keyed so the model knows what each one is.
+
+    The key carries the letter's own label for an amount or a labelled date. A bare
+    `line_amount_2: EUR 32,00` invites the model to guess what the money is for, and on the first
+    live tax letter it guessed a health insurance contribution for what the page called interest.
+
+    The posting date is the one value here that does not stand in the letter. The calendar logic
+    derives it from the grounded deadline, the desk card prints it, and a planner handed it must
+    be allowed to repeat it. Everything else is exactly what the verifier grounded.
+    """
+    labels = {
+        f"line_amount_{index}": money.label for index, money in enumerate(facts.line_amounts, 1)
+    }
+    labels.update(
+        {f"other_date_{index}": dated.label for index, dated in enumerate(facts.other_dates, 1)}
+    )
+    if facts.total_amount is not None:
+        labels["total_amount"] = facts.total_amount.label
+
+    values: dict[str, str] = {}
+    for fact in result.grounded:
+        label = labels.get(fact.name)
+        values[f"{fact.name} ({label})" if label else fact.name] = fact.display
+    if deadline is not None and deadline.post_by_written is not None:
+        values[POST_BY] = deadline.post_by_written
+    return values
 
 
 def _grounded_deadline(facts: LetterFacts, result: VerificationResult) -> date | None:
