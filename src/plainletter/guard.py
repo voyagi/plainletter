@@ -5,8 +5,13 @@ from reaching a person anyway, by refusing the tool call that would carry it. It
 rather than a line in a prompt because a prompt is a request and this has to be a rule: the model
 that would invent a deadline is the same model that would agree not to.
 
-The audit trail beside it records that a tool ran, never what was in the letter. A log line holding
-someone's fine is the same leak as a stored letter.
+What counts as a tool call here is wider than it looks. Every structured answer the agents give is
+asked for as a tool call, so the explanation, the plan and the draft each pass this guard on their
+way out of the model, and so does the official-route lookup the planner makes. A refused call goes
+back to the model as the tool's result, with the reason, and the model writes again.
+
+The audit trail beside it records that a tool ran and how it ended, never what was in the letter. A
+log line holding someone's fine is the same leak as a stored letter.
 """
 
 from __future__ import annotations
@@ -58,7 +63,7 @@ class GroundingGuard(InterventionHandler):
 
 @dataclass
 class AuditTrail:
-    """Records that a tool ran and whether it was allowed, never what the letter said."""
+    """Records that a tool ran and how it ended, never what the letter said."""
 
     entries: list[str] = field(default_factory=list)
 
@@ -70,7 +75,12 @@ class AuditTrail:
         self._record(f"call {event.tool_use.get('name', 'unknown')}")
 
     def _after(self, event: AfterToolCallEvent) -> None:
-        outcome = "cancelled" if getattr(event, "cancel_tool", False) else "done"
+        if event.cancel_message:
+            outcome = "refused"
+        elif event.result.get("status") == "error":
+            outcome = "failed"
+        else:
+            outcome = "done"
         self._record(f"{outcome} {event.tool_use.get('name', 'unknown')}")
 
     def _record(self, line: str) -> None:

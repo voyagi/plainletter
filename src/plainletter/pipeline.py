@@ -9,9 +9,10 @@ What the facts are checked against comes from the file wherever the file can giv
 or a born-digital PDF carries the letter's own words. Only pages that arrive as pictures are
 transcribed, and then by a separate turn from the one that extracts the facts.
 
-Two independent things enforce grounding, because one of them is a model behaviour and the other is
-not. The guard denies a tool call carrying an ungrounded number. This function then re-reads
-everything the model produced and refuses the whole reading if a stray date or amount survived. A
+Two independent things enforce grounding, and they sit on different sides of the model. The guard
+sits inside the agent: every structured answer is a tool call, and one carrying an ungrounded number
+is refused there and sent back for rewriting. This function sits outside it: it re-reads everything
+that came through and refuses the whole reading if a stray date or amount survived anyway. A
 refused reading at a help desk is recoverable. A confident wrong deadline is not.
 """
 

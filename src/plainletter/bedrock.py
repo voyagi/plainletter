@@ -9,19 +9,27 @@ Transcription is a separate agent rather than a second question to the reading o
 that extra turn is the point: two turns that never saw each other's answer have to agree before a
 fact is allowed through.
 
-Every stage after the verifier is constructed with the grounding guard attached, so a date the
-model invents cannot leave through a tool call. The guard is passed in rather than built here: it
-can only be built once the verifier has said which values are real.
+Every structured answer is asked for as a tool call. Strands registers the answer's schema as a
+tool, the model has to call it, and the call goes through the same executor as any other tool. That
+routing is what makes the grounding guard real: after the verifier, an answer carrying an invented
+date or amount is refused at that boundary, the refusal goes back to the model as the tool's result,
+and the model writes again. The guard is passed in rather than built here, since it can only be
+built once the verifier has said which values are real.
+
+The planner and the drafter also carry one real tool, the official-route lookup. A route they name
+was fetched, and the fetch is on the audit trail.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 from strands import Agent
 from strands.models import BedrockModel
+from strands.models.model import Model
 
 from .guard import AuditTrail, GroundingGuard
 from .intake import LetterInput
@@ -34,23 +42,40 @@ from .reading_model import (
     TRANSCRIBE_PROMPT,
 )
 from .schemas import ActionStep, DeadlineView, DraftLetter, Explanation, LetterFacts
+from .tools import official_routes
 
 READING_MODEL_ID = "eu.anthropic.claude-sonnet-4-6"
 DRAFTING_MODEL_ID = "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
 SOURCE_REGION = "eu-central-1"
 
+AnswerT = TypeVar("AnswerT", bound=BaseModel)
 
-class _Explanations(BaseModel):
+
+class Explanations(BaseModel):
+    """The three answers about the letter, once in each language that was asked for."""
+
     items: list[Explanation]
 
 
-class _Steps(BaseModel):
+class ActionPlan(BaseModel):
+    """The steps the visitor takes next, in order, each with its official route."""
+
     items: list[ActionStep]
 
 
-class _Draft(BaseModel):
+class DraftDecision(BaseModel):
+    """Whether a letter back is the right move, and the letter itself when it is."""
+
     needed: bool
     letter: DraftLetter | None = None
+
+
+class NoStructuredAnswerError(RuntimeError):
+    """The model finished without calling the answer tool, so there is nothing to read."""
+
+
+def bedrock_model(model_id: str, region: str) -> Model:
+    return BedrockModel(model_id=model_id, region_name=region)
 
 
 @dataclass
@@ -62,6 +87,7 @@ class BedrockReadingModel:
     region: str = SOURCE_REGION
     reading_model_id: str = READING_MODEL_ID
     drafting_model_id: str = DRAFTING_MODEL_ID
+    make_model: Callable[[str, str], Model] = bedrock_model
 
     def transcribe(self, letter: LetterInput) -> str:
         agent = self._agent(self.reading_model_id, TRANSCRIBE_PROMPT, guard=None)
@@ -73,7 +99,7 @@ class BedrockReadingModel:
             READING_PROMPT.format(sender_ids=", ".join(self.sender_ids)),
             guard=None,
         )
-        return agent.structured_output(LetterFacts, list(letter.blocks))
+        return _ask(agent, list(letter.blocks), LetterFacts)
 
     def explain(
         self, facts: LetterFacts, grounded: dict[str, str], languages: tuple[str, ...]
@@ -85,7 +111,7 @@ class BedrockReadingModel:
             f"Consequences in the letter: {[span.text for span in facts.consequences]}\n"
             f"Answer in each of these languages: {', '.join(languages)}."
         )
-        return tuple(agent.structured_output(_Explanations, prompt).items)
+        return tuple(_ask(agent, prompt, Explanations).items)
 
     def plan(
         self,
@@ -95,14 +121,19 @@ class BedrockReadingModel:
         deadline: DeadlineView | None,
         visitor_language: str,
     ) -> tuple[ActionStep, ...]:
-        agent = self._agent(self.reading_model_id, PLAN_PROMPT, guard=self._guard(grounded))
+        agent = self._agent(
+            self.reading_model_id,
+            PLAN_PROMPT,
+            guard=self._guard(grounded),
+            tools=[official_routes],
+        )
         prompt = (
             f"Grounded facts: {grounded}\n"
             f"Deadline: {deadline.model_dump() if deadline else 'none in the letter'}\n"
-            f"Knowledge base entry: {sender.model_dump() if sender else 'sender not recognised'}\n"
+            f"Sender id: {_sender_id(facts, sender)}\n"
             f"Visitor language: {visitor_language}."
         )
-        return tuple(agent.structured_output(_Steps, prompt).items)
+        return tuple(_ask(agent, prompt, ActionPlan).items)
 
     def draft(
         self,
@@ -111,30 +142,60 @@ class BedrockReadingModel:
         sender: Sender | None,
         visitor_language: str,
     ) -> DraftLetter | None:
-        agent = self._agent(self.drafting_model_id, DRAFT_PROMPT, guard=self._guard(grounded))
+        agent = self._agent(
+            self.drafting_model_id,
+            DRAFT_PROMPT,
+            guard=self._guard(grounded),
+            tools=[official_routes],
+        )
         prompt = (
             f"Grounded facts: {grounded}\n"
             f"Reference: {_named(facts.reference)}\n"
             f"Objection route in the letter: "
             f"{facts.objection_route.text if facts.objection_route else 'none'}\n"
-            f"Knowledge base entry: {sender.model_dump() if sender else 'sender not recognised'}\n"
+            f"Sender id: {_sender_id(facts, sender)}\n"
             f"Visitor language: {visitor_language}."
         )
-        result = agent.structured_output(_Draft, prompt)
-        return result.letter if result.needed else None
+        decision = _ask(agent, prompt, DraftDecision)
+        return decision.letter if decision.needed else None
 
     def _guard(self, grounded: dict[str, str]) -> GroundingGuard:
         return GroundingGuard(frozenset(grounded.values()))
 
-    def _agent(self, model_id: str, system_prompt: str, *, guard: GroundingGuard | None) -> Agent:
-        model = BedrockModel(model_id=model_id, region_name=self.region)
+    def _agent(
+        self,
+        model_id: str,
+        system_prompt: str,
+        *,
+        guard: GroundingGuard | None,
+        tools: list[Any] | None = None,
+    ) -> Agent:
         return Agent(
-            model=model,
+            model=self.make_model(model_id, self.region),
             system_prompt=system_prompt,
+            tools=tools,
             hooks=[self.audit],
             interventions=[guard] if guard else [],
+            callback_handler=None,
         )
+
+
+def _ask(agent: Agent, prompt: Any, answer_type: type[AnswerT]) -> AnswerT:
+    """Run the agent until it calls the answer tool, and return what that call carried."""
+    result = agent(prompt, structured_output_model=answer_type)
+    answer = result.structured_output
+    if not isinstance(answer, answer_type):
+        raise NoStructuredAnswerError(
+            f"the model ended its turn without producing {answer_type.__name__}"
+        )
+    return answer
 
 
 def _named(value: Any) -> str:
     return str(value.value) if value is not None else "not in the letter"
+
+
+def _sender_id(facts: LetterFacts, sender: Sender | None) -> str:
+    if sender is not None:
+        return sender.id
+    return facts.sender_id or "not recognised"
