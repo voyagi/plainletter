@@ -185,13 +185,21 @@ def _events(
         span.set_attribute("plainletter.facts_grounded", len(reading.verification.grounded))
         span.set_attribute("plainletter.issues", len(reading.verification.issues))
         span.set_attribute("plainletter.handoff", reading.handoff.required)
-        span.set_attribute("plainletter.sender", reading.facts.sender_id or "unknown")
+        # The model fills sender_id and could put anything there. A span gets the knowledge
+        # base's own id or nothing, never a string the model wrote.
+        span.set_attribute("plainletter.sender", known_sender_id(reading) or "unknown")
         with within(span):
             case = _remember(request, reading, today, memory, earlier)
         span.set_attribute("plainletter.remembered", bool(case and case["remembered"]))
         yield _completed(request, letter, reading, today, case)
     finally:
         span.end()
+
+
+def known_sender_id(reading: DeskReading) -> str | None:
+    """The sender id only when it names an entry in the knowledge base."""
+    sender_id = reading.facts.sender_id
+    return sender_id if sender_id in known_sender_ids() else None
 
 
 def model_audit(model: ReadingModel) -> list[str]:

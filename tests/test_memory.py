@@ -71,6 +71,26 @@ def test_a_case_record_holds_derived_values_and_nothing_quoted_from_the_letter()
     assert "explanations" not in dumped and "source" not in dumped
 
 
+def test_a_sender_id_the_model_made_up_is_not_kept_or_traced(
+    memory: RecordingMemory, spans: InMemorySpanExporter
+) -> None:
+    # sender_id is the model's to fill, so it is the one field where letter text could arrive
+    # under an innocent name. Only an id the knowledge base knows survives.
+    reading = a_reading()
+    invented = reading.model_copy(
+        update={"facts": reading.facts.model_copy(update={"sender_id": "Kovalenko Zwanenkade"})}
+    )
+    record = CaseRecord.from_reading(CASE, invented, TODAY)
+    assert record.sender_id is None
+
+    span = runtime.start_reading(source="letter", kind="text")
+    span.set_attribute("plainletter.sender", runtime.known_sender_id(invented) or "unknown")
+    span.end()
+    [finished] = spans.get_finished_spans()
+    assert finished.attributes is not None
+    assert finished.attributes["plainletter.sender"] == "unknown"
+
+
 def test_a_record_with_a_masked_number_stays_masked_through_the_mask() -> None:
     record = CaseRecord.from_reading(CASE, a_reading(), TODAY)
     for step in record.steps:

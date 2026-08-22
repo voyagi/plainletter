@@ -24,6 +24,7 @@ from typing import Any, Protocol
 
 from pydantic import Field, ValidationError
 
+from .kb import known_sender_ids
 from .redact import redact
 from .schemas import DeskReading, Frozen
 
@@ -65,13 +66,16 @@ class CaseRecord(Frozen):
     def from_reading(cls, case_id: str, reading: DeskReading, read_on: date) -> CaseRecord:
         grounded = {fact.name: fact.display for fact in reading.verification.grounded}
         deadline = reading.deadline
+        # The model fills sender_id. Only an id the knowledge base knows is worth keeping, and
+        # only such an id is guaranteed not to be something the model copied off the page.
+        sender_id = reading.facts.sender_id
         return cls.model_validate(
             _masked(
                 {
                     "case_id": case_id,
                     "read_on": read_on,
                     "visitor_language": reading.visitor_language,
-                    "sender_id": reading.facts.sender_id,
+                    "sender_id": sender_id if sender_id in known_sender_ids() else None,
                     "sender_name": reading.sender_name,
                     "letter_type": reading.letter_type,
                     "reference": grounded.get("reference"),
