@@ -14,9 +14,10 @@ Six things this layer is responsible for and the pipeline is not:
   back as a structured verdict with a 200 rather than as a server error.
 * Masking. The card redacts on its way to the printer; this redacts every string on its way to the
   network, because a response is a place personal data can end up logged by something else.
-* Memory, only when asked. A reading is kept under a case id when the request says the visitor
-  consented, and a case id sent with a letter brings the earlier readings back. Without consent
-  nothing is written anywhere.
+* Memory, only when asked, and erasure whenever asked. A reading is kept under a case id when the
+  request says the visitor consented, and a case id sent with a letter brings the earlier readings
+  back. Without consent nothing is written anywhere, and a request carrying `forget` erases
+  everything under that case without reading anything.
 * The trace. One span per letter with counts and outcomes, and a failure logged by its type, so
   neither the monitoring nor the log ever holds a line of the letter.
 """
@@ -108,6 +109,11 @@ class ReadRequest(BaseModel):
         pattern=CASE_ID_PATTERN,
         description="the case id from an earlier card, to continue that case",
     )
+    forget: str | None = Field(
+        default=None,
+        pattern=CASE_ID_PATTERN,
+        description="the case id to erase, which is the whole request when it is set",
+    )
 
 
 @app.entrypoint
@@ -121,6 +127,9 @@ def read_letter(payload: dict[str, Any]) -> dict[str, Any] | Iterator[dict[str, 
         request = ReadRequest.model_validate(_unwrapped(payload))
     except ValidationError as invalid:
         return _error("payload", str(invalid))
+
+    if request.forget is not None:
+        return _forgotten(request.forget)
 
     try:
         letter, model, language = _prepare(request)
@@ -213,6 +222,18 @@ def _events(
         yield _completed(request, letter, reading, today, case)
     finally:
         span.end()
+
+
+def _forgotten(case_id: str) -> dict[str, Any]:
+    """Erase a case, and say how many readings were under it.
+
+    No model, no letter, no reading: withdrawing consent must be cheaper and simpler than giving
+    it. A case that was never kept answers zero rather than an error, because a visitor asking for
+    something to be deleted is entitled to hear that there is nothing there.
+    """
+    erased = case_memory().forget(case_id)
+    logger.info("plainletter.forget %s readings erased", erased)
+    return {"stage": "forgotten", "case_id": case_id, "erased": erased}
 
 
 def known_sender_id(reading: DeskReading) -> str | None:

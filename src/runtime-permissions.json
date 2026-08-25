@@ -22,7 +22,8 @@
       "Action": [
         "bedrock-agentcore:CreateEvent",
         "bedrock-agentcore:ListEvents",
-        "bedrock-agentcore:GetEvent"
+        "bedrock-agentcore:GetEvent",
+        "bedrock-agentcore:DeleteEvent"
       ],
       "Resource": "arn:aws:bedrock-agentcore:eu-central-1:*:memory/*"
     }

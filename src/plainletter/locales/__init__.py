@@ -65,6 +65,12 @@ class DeskWords:
     case_note_detail: str
     disclaimer: str
     """Template with `date`."""
+    ai_disclosure: str
+    """The EU AI Act Article 50 disclosure, printed on the card and shown at the desk.
+
+    It says two things in one breath, and both are the obligation rather than a nicety: that the
+    person is dealing with an AI system, and that the text in front of them was written by one.
+    """
 
     reminder_deadline: str
     """Template with `date`, the first sentence of the calendar entry."""

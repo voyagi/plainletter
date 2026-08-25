@@ -17,6 +17,7 @@
     "**/*.d.ts",
     "**/*.md",
     "**/docs/**",
-    "design/**"
+    "design/**",
+    "tests/fixtures/**"
   ]
 }

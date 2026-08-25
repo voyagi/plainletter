@@ -372,6 +372,36 @@ function Problem({ detail, onRetry }: { detail: string; onRetry: () => void }) {
  */
 function Case({ info }: { info: CaseInfo }) {
   const earlier = info.earlier;
+  const [erased, setErased] = useState<number | null>(null);
+  const [erasing, setErasing] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  // A consent that cannot be taken back at the counter where it was given is not a consent, so
+  // this sits on the case line itself rather than behind a page a volunteer has to go and find.
+  async function forget() {
+    if (!info.id) return;
+    setErasing(true);
+    setFailed(false);
+    try {
+      const answer = await fetch('/api/forget', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ case_id: info.id }),
+      });
+      const body: unknown = await answer.json().catch(() => null);
+      if (!answer.ok) {
+        setFailed(true);
+        return;
+      }
+      const count = (body as { erased?: number } | null)?.erased;
+      setErased(typeof count === 'number' ? count : 0);
+    } catch {
+      setFailed(true);
+    } finally {
+      setErasing(false);
+    }
+  }
+
   return (
     <div className="mt-6 border-y border-rule py-3 text-[15px]" aria-live="polite">
       {earlier.length > 0 ? (
@@ -391,7 +421,24 @@ function Case({ info }: { info: CaseInfo }) {
       {info.remembered && info.id ? (
         <p className={`m-0 ${earlier.length > 0 ? 'mt-1.5' : ''}`}>
           Deze zaak is dertig dagen bewaard onder nummer{' '}
-          <b className="tracking-[0.08em] tabular-nums">{info.id}</b>. Het staat op de kaart.
+          <b className="tracking-[0.08em] tabular-nums">{info.id}</b>. Het staat op de kaart.{' '}
+          {erased === null ? (
+            <button
+              type="button"
+              onClick={forget}
+              disabled={erasing}
+              className="underline underline-offset-4 disabled:opacity-60"
+            >
+              {erasing ? 'Bezig met wissen' : 'Wis deze zaak nu'}
+            </button>
+          ) : (
+            <b className="text-mark">Gewist. Er is niets meer bewaard onder dit nummer.</b>
+          )}
+        </p>
+      ) : null}
+      {failed ? (
+        <p className="m-0 mt-1.5 text-mark" role="alert">
+          Wissen lukte niet. Probeer het zo nog een keer.
         </p>
       ) : null}
       {info.note ? (
