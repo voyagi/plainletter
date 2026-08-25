@@ -17,7 +17,7 @@ const READ_ON = '21 August 2026';
 export const metadata: Metadata = {
   title: 'Plainletter',
   description:
-    'A free help desk in a Dutch public library. Someone photographs the letter they cannot read, and the desk reads it back in Dutch and in their own language, with every date and amount marked on the paper it came from.',
+    'Every country sends its residents letters they cannot read. At a free help desk in a Dutch public library, someone photographs the letter and the desk reads it back in Dutch and in their own language, with every date and amount marked on the paper it came from.',
   alternates: { canonical: '/' },
 };
 
