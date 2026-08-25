@@ -69,9 +69,10 @@ export default function Landing() {
               Put the letter down. Leave knowing what to do.
             </h1>
             <p className="m-0 mb-2.5 max-w-[30em] text-[17px] text-ink-2">
-              A free help desk in a Dutch public library. Someone photographs the letter they cannot
-              read, and the desk reads it back in Dutch and in their own language, with every date
-              and amount marked on the paper it came from.
+              Every country sends its residents letters they cannot read, and most answer it the
+              same way: a free help desk, usually in a library. This is one of those desks, in the
+              Netherlands. Someone photographs the letter, and the desk reads it back in Dutch and
+              in their own language, with every date and amount marked on the paper it came from.
             </p>
             <p className="m-0 max-w-[30em] text-[17px] text-ink-2">
               This page is one of those letters. Everything down this margin is what the desk said
