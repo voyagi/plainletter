@@ -24,8 +24,7 @@ export function LetterSheet({
       {letter.lines.map((line, index) => (
         <div
           key={index}
-          className="grid grid-cols-[22px_1fr] items-start gap-3"
-          style={{ minHeight: '1.62em' }}
+          className="grid min-h-[1.62em] grid-cols-[22px_1fr] items-start gap-3"
         >
           <span>
             {line.mark !== null ? <Numeral n={line.mark} /> : null}
