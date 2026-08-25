@@ -18,7 +18,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .dutch import canonical, fold_with_offsets, normalise
 from .redact import redact
 from .schemas import (
     LetterFacts,
@@ -28,6 +27,7 @@ from .schemas import (
     MarkKey,
     VerificationResult,
 )
+from .text import canonical, fold_with_offsets, normalise
 
 
 @dataclass(frozen=True)

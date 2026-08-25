@@ -17,7 +17,7 @@ from html import escape
 
 from icalendar import Alarm, Calendar, Event
 
-from .dutch import format_date
+from .locales import DeskWords, active
 from .redact import redact
 from .schemas import DeskReading, Explanation, Urgency
 
@@ -25,12 +25,14 @@ RTL_LANGUAGES = frozenset({"ar", "fa", "he", "ur", "ps"})
 
 REMINDER_LEAD_DAYS = 3
 
-_URGENCY_WORD_NL = {
-    Urgency.OVERDUE: "Te laat",
-    Urgency.DUE_SOON: "Bijna te laat",
-    Urgency.AMPLE: "Nog tijd",
-    Urgency.UNKNOWN: "Geen datum",
-}
+
+def _urgency_word(words: DeskWords, urgency: Urgency) -> str:
+    return {
+        Urgency.OVERDUE: words.urgency_overdue,
+        Urgency.DUE_SOON: words.urgency_due_soon,
+        Urgency.AMPLE: words.urgency_ample,
+        Urgency.UNKNOWN: words.urgency_unknown,
+    }[urgency]
 
 
 def is_rtl(language: str) -> bool:
@@ -43,22 +45,27 @@ def desk_card_html(reading: DeskReading, today: date, *, case_id: str | None = N
     The case id is printed only when there is a case, so a visitor who declined to be remembered
     takes home nothing that says otherwise.
     """
+    words = active().words
     visitor = reading.visitor_language
     direction = "rtl" if is_rtl(visitor) else "ltr"
-    dutch, other = _explanations(reading)
+    official, other = _explanations(reading, words.language)
     case = (
-        f'<p class="small"><strong>Zaaknummer {escape(case_id)}.</strong> '
-        "Neem deze kaart mee als u terugkomt, dan gaat de balie verder waar u gebleven was.</p>"
+        f'<p class="small"><strong>{escape(words.case_note.format(case_id=case_id))}</strong> '
+        f"{escape(words.case_note_detail)}</p>"
         if case_id
         else ""
     )
 
     rows = "\n".join(
-        _pair_row(question, dutch_text, visitor_text, visitor, direction)
-        for question, dutch_text, visitor_text in (
-            ("Wat is dit?", dutch.what_is_this, other.what_is_this),
-            ("Wat gebeurt er als u niets doet?", dutch.if_you_do_nothing, other.if_you_do_nothing),
-            ("Voor wanneer?", dutch.by_when, other.by_when),
+        _pair_row(question, official_text, visitor_text, visitor, direction)
+        for question, official_text, visitor_text in (
+            (words.question_what, official.what_is_this, other.what_is_this),
+            (
+                words.question_if_nothing,
+                official.if_you_do_nothing,
+                other.if_you_do_nothing,
+            ),
+            (words.question_by_when, official.by_when, other.by_when),
         )
     )
     steps = "\n".join(
@@ -69,19 +76,18 @@ def desk_card_html(reading: DeskReading, today: date, *, case_id: str | None = N
         for step in reading.steps
     )
     handoff = (
-        f'<p class="handoff"><strong>Als het ingewikkeld wordt.</strong> '
+        f'<p class="handoff"><strong>{escape(words.handoff_heading)}</strong> '
         f"{escape(reading.handoff.referral)}</p>"
         if reading.handoff.required
         else ""
     )
 
     return f"""<!doctype html>
-<html lang="nl">
+<html lang="{escape(words.language)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="De baliekaart bij deze brief: wat het is, voor wanneer, wat er
-gebeurt als u niets doet, en wat u nu doet, in twee talen op een vel.">
+<meta name="description" content="{escape(words.card_description)}">
 <title>{escape(reading.sender_name)} - {escape(reading.letter_type)}</title>
 <style>{_CARD_CSS}</style>
 </head>
@@ -92,21 +98,20 @@ gebeurt als u niets doet, en wat u nu doet, in twee talen op een vel.">
       <h1 class="who">{escape(reading.sender_name)}</h1>
       <div class="what">{escape(reading.letter_type)}</div>
     </div>
-    <div class="ref">{escape(_reference(reading))}</div>
+    <div class="ref">{escape(_reference(reading, words))}</div>
   </div>
-  {_deadline_block(reading)}
+  {_deadline_block(reading, words)}
   <div class="rows">{rows}</div>
-  <div class="acts"><h2>Wat u nu doet</h2><ol>{steps}</ol></div>
-  {_key_block(reading)}
+  <div class="acts"><h2>{escape(words.actions_heading)}</h2><ol>{steps}</ol></div>
+  {_key_block(reading, words)}
   <div class="foot">
     <div>
       {handoff}
       {case}
-      <p class="small">Plainletter legt brieven uit en geeft geen juridisch advies.
-      Gemaakt op {escape(format_date(today))}.</p>
+      <p class="small">{escape(words.disclaimer.format(date=active().format_date(today)))}</p>
     </div>
     <div>
-      <p class="notes-label">Aantekeningen aan de balie</p>
+      <p class="notes-label">{escape(words.notes_heading)}</p>
       <div class="notes"></div>
     </div>
   </div>
@@ -121,9 +126,11 @@ def reminder_ics(reading: DeskReading, *, uid: str) -> str:
     if reading.deadline is None:
         raise ValueError("a reminder needs a deadline; this reading has none")
 
+    locale = active()
+    words = locale.words
     deadline = reading.deadline.on
     calendar = Calendar()
-    calendar.add("prodid", "-//Plainletter//NL//EN")
+    calendar.add("prodid", f"-//Plainletter//{locale.reminder_region}//EN")
     calendar.add("version", "2.0")
 
     event = Event()
@@ -132,7 +139,8 @@ def reminder_ics(reading: DeskReading, *, uid: str) -> str:
     event.add(
         "description",
         redact(
-            f"Uiterste dag: {format_date(deadline)}. "
+            words.reminder_deadline.format(date=locale.format_date(deadline))
+            + " "
             + " ".join(step.dutch for step in reading.steps)
         ),
     )
@@ -144,7 +152,10 @@ def reminder_ics(reading: DeskReading, *, uid: str) -> str:
 
     alarm = Alarm()
     alarm.add("action", "DISPLAY")
-    alarm.add("description", f"{reading.sender_name}: nog {REMINDER_LEAD_DAYS} dagen")
+    alarm.add(
+        "description",
+        f"{reading.sender_name}: {words.reminder_alarm.format(days=REMINDER_LEAD_DAYS)}",
+    )
     alarm.add("trigger", timedelta(days=-REMINDER_LEAD_DAYS))
     event.add_component(alarm)
 
@@ -153,18 +164,22 @@ def reminder_ics(reading: DeskReading, *, uid: str) -> str:
     return ical.decode("utf-8")
 
 
-def _explanations(reading: DeskReading) -> tuple[Explanation, Explanation]:
+def _explanations(reading: DeskReading, language: str) -> tuple[Explanation, Explanation]:
     by_language = {item.language: item for item in reading.explanations}
-    dutch = by_language.get("nl")
-    other = by_language.get(reading.visitor_language, dutch)
-    if dutch is None or other is None:
-        raise ValueError("a desk card needs a Dutch explanation and one in the visitor's language")
-    return dutch, other
+    official = by_language.get(language)
+    other = by_language.get(reading.visitor_language, official)
+    if official is None or other is None:
+        raise ValueError(
+            "a desk card needs an explanation in the letter's language and one in the visitor's"
+        )
+    return official, other
 
 
-def _reference(reading: DeskReading) -> str:
+def _reference(reading: DeskReading, words: DeskWords) -> str:
     reference = reading.facts.reference
-    return f"Kenmerk {reference.value}" if reference else "Geen kenmerk in de brief"
+    if reference is None:
+        return words.reference_missing
+    return words.reference.format(reference=reference.value)
 
 
 def _route(url: str | None) -> str:
@@ -176,30 +191,34 @@ def _short_route(url: str) -> str:
     return url.removeprefix("https://").removeprefix("http://").removeprefix("www.").rstrip("/")
 
 
-def _deadline_block(reading: DeskReading) -> str:
+def _deadline_block(reading: DeskReading, words: DeskWords) -> str:
     view = reading.deadline
     if view is None:
         return (
-            '<div class="deadline none"><div class="lead">Deze brief noemt geen uiterste datum.'
+            f'<div class="deadline none"><div class="lead">{escape(words.deadline_missing)}'
             "</div></div>"
         )
-    word = _URGENCY_WORD_NL[view.urgency]
+    locale = active()
+    word = _urgency_word(words, view.urgency)
     days = (
-        f"Nog {view.days_left} dagen."
+        words.days_left.format(days=view.days_left)
         if view.days_left >= 0
-        else f"{abs(view.days_left)} dagen te laat."
+        else words.days_overdue.format(days=abs(view.days_left))
     )
     post_by = (
-        f" Post uw brief uiterlijk {format_date(view.post_by)}." if view.post_by is not None else ""
+        words.post_by.format(date=locale.format_date(view.post_by))
+        if view.post_by is not None
+        else ""
     )
+    lead = words.deadline_lead.format(date=locale.format_date(view.on))
     return f"""<div class="deadline {escape(view.urgency.value)}">
-    <div><div class="lead">Uiterste dag: {escape(format_date(view.on))}</div>
+    <div><div class="lead">{escape(lead)}</div>
     <div class="sub">{escape(days)}{escape(post_by)}</div></div>
     <div class="state">{escape(word)}</div>
   </div>"""
 
 
-def _key_block(reading: DeskReading) -> str:
+def _key_block(reading: DeskReading, words: DeskWords) -> str:
     """The key at the foot: each numeral against the words on the letter it was drawn under.
 
     A gap prints as a broken rule with no number, which is how the card says the desk could not
@@ -218,17 +237,17 @@ def _key_block(reading: DeskReading) -> str:
     )
     if not keys and not gaps:
         return ""
-    return f'<div class="keys"><h2>De markeringen op de brief</h2>{keys}{gaps}</div>'
+    return f'<div class="keys"><h2>{escape(words.keys_heading)}</h2>{keys}{gaps}</div>'
 
 
 def _one_line(text: str) -> str:
     return " ".join(text.split())
 
 
-def _pair_row(question: str, dutch: str, visitor: str, language: str, direction: str) -> str:
+def _pair_row(question: str, official: str, visitor: str, language: str, direction: str) -> str:
     return (
         f'<div class="prow"><span class="q">{escape(question)}</span>'
-        f"<span>{escape(redact(dutch))}</span>"
+        f"<span>{escape(redact(official))}</span>"
         f'<span class="r" lang="{escape(language)}" dir="{direction}">'
         f"{escape(redact(visitor))}</span></div>"
     )

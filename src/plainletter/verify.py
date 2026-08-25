@@ -17,16 +17,7 @@ import re
 from collections.abc import Iterable
 from datetime import date
 
-from .dutch import (
-    MONTH_ABBREVIATIONS_NL,
-    MONTHS_NL,
-    format_amount,
-    format_date,
-    normalise,
-    parse_amount_cents,
-    parse_date,
-    passage_is_in,
-)
+from .locales import active
 from .schemas import (
     GroundedFact,
     LetterDate,
@@ -37,6 +28,7 @@ from .schemas import (
     VerificationIssue,
     VerificationResult,
 )
+from .text import normalise, passage_is_in
 
 _NOT_IN_LETTER = "the cited passage does not appear in the letter"
 _VALUE_NOT_IN_PASSAGE = "the passage does not carry the value that was claimed"
@@ -135,7 +127,20 @@ VISITOR_MONTHS: dict[str, int] = {
     "aralık": 12,
 }
 
-MONTHS_ANY: dict[str, int] = {**MONTHS_NL, **MONTH_ABBREVIATIONS_NL, **VISITOR_MONTHS}
+# Merged once per locale rather than per match: the guard runs this over every sentence a model
+# writes, and the table is a hundred entries long.
+_months_any: dict[str, dict[str, int]] = {}
+
+
+def month_words() -> dict[str, int]:
+    """Every month name this check will read: the letter's country plus the visitor languages."""
+    locale = active()
+    merged = _months_any.get(locale.code)
+    if merged is None:
+        merged = {**locale.month_words(), **VISITOR_MONTHS}
+        _months_any[locale.code] = merged
+    return merged
+
 
 # A day, a month written as a word in any script, and a four-digit year. The word class is the
 # Unicode letter class rather than A-Z, which is the whole point of the table above.
@@ -178,24 +183,25 @@ def numeric_claims(text: str) -> frozenset[str]:
     The guard uses this to ask whether a draft or an action step is carrying a number that never
     passed the check above.
     """
+    locale = active()
     claims: set[str] = set()
     for match in _NUMERIC_DATE.finditer(text):
-        found = parse_date(match.group(0))
+        found = locale.parse_date(match.group(0))
         if found is not None:
-            claims.add(format_date(found))
+            claims.add(locale.format_date(found))
     for worded in _WORDED_DATE.finditer(text):
         found = _worded_date(worded.group(1), worded.group(2), worded.group(3))
         if found is not None:
-            claims.add(format_date(found))
+            claims.add(locale.format_date(found))
     for match in _AMOUNT.finditer(text):
-        cents = parse_amount_cents(match.group(0))
+        cents = locale.parse_amount_cents(match.group(0))
         if cents is not None:
-            claims.add(format_amount(cents))
+            claims.add(locale.format_amount(cents))
     return frozenset(claims)
 
 
 def _worded_date(day: str, month_word: str, year: str) -> date | None:
-    month = MONTHS_ANY.get(month_word.casefold())
+    month = month_words().get(month_word.casefold())
     if month is None:
         return None
     try:
@@ -218,29 +224,31 @@ def _check_date(
 ) -> None:
     if value is None:
         return
+    locale = active()
     claimed = value.to_date()
+    written = locale.format_date(claimed)
     if not passage_is_in(letter_text, value.source.text):
         issues.append(
             VerificationIssue(
                 name=name,
                 problem=_NOT_IN_LETTER,
-                claimed=format_date(claimed),
+                claimed=written,
                 span_text=value.source.text,
             )
         )
         return
-    found = parse_date(value.source.text)
+    found = locale.parse_date(value.source.text)
     if found != claimed:
         issues.append(
             VerificationIssue(
                 name=name,
                 problem=_VALUE_NOT_IN_PASSAGE,
-                claimed=format_date(claimed),
+                claimed=written,
                 span_text=value.source.text,
             )
         )
         return
-    grounded.append(GroundedFact(name=name, display=format_date(claimed), span=value.source))
+    grounded.append(GroundedFact(name=name, display=written, span=value.source))
 
 
 def _check_money(
@@ -252,7 +260,8 @@ def _check_money(
 ) -> None:
     if value is None:
         return
-    display = format_amount(value.cents)
+    locale = active()
+    display = locale.format_amount(value.cents)
     if not passage_is_in(letter_text, value.source.text):
         issues.append(
             VerificationIssue(
@@ -260,7 +269,7 @@ def _check_money(
             )
         )
         return
-    if parse_amount_cents(value.source.text) != value.cents:
+    if locale.parse_amount_cents(value.source.text) != value.cents:
         issues.append(
             VerificationIssue(
                 name=name,

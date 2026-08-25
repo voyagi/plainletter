@@ -3,7 +3,6 @@ from datetime import date
 import pytest
 
 from plainletter.demo import sample_input, sample_names, sample_text, scripted_model
-from plainletter.dutch import canonical, fold_with_offsets, normalise
 from plainletter.marks import mark_letter
 from plainletter.pipeline import Pipeline
 from plainletter.schemas import (
@@ -13,6 +12,7 @@ from plainletter.schemas import (
     Unreadable,
     VerificationResult,
 )
+from plainletter.text import canonical, fold_with_offsets, normalise
 
 TODAY = date(2026, 8, 21)
 

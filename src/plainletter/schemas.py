@@ -22,7 +22,7 @@ from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, computed_field
 
-from .dutch import format_date
+from .locales import active
 
 # Figure dash, en dash, em dash and horizontal bar, as codepoints so the rule can be read. The
 # desk card allows nothing longer than a hyphen, and a model writing Ukrainian or Polish reaches
@@ -225,12 +225,12 @@ class DeadlineView(Frozen):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def on_written(self) -> str:
-        return format_date(self.on)
+        return active().format_date(self.on)
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def post_by_written(self) -> str | None:
-        return format_date(self.post_by) if self.post_by is not None else None
+        return active().format_date(self.post_by) if self.post_by is not None else None
 
 
 class Explanation(Frozen):
