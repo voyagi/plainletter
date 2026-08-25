@@ -5,7 +5,7 @@ package and the runtime's own launcher runs it as a script. Everything it serves
 package; this file only exists so the runtime has a fixed name to start.
 """
 
-from plainletter.app import app
+from plainletter.app import serve
 
 if __name__ == "__main__":
-    app.run()
+    serve()

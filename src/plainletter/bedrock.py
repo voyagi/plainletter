@@ -47,9 +47,21 @@ from .spend import MAX_OUTPUT_TOKENS, transcription_tokens
 from .telemetry import mask_model_content_in_traces
 from .tools import official_routes
 
+# The whole published id, read off the model's own Bedrock card on 2026-08-25:
+# https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-sonnet-4-6.html
+# AWS publishes no dated variant for the 4.6 generation, unlike the 4.5 line, whose id really does
+# carry one (anthropic.claude-haiku-4-5-20251001-v1:0). So this is not an alias standing in front of
+# a newer model: the `eu.` prefix is the geo inference profile, which decides which regions may
+# serve the request and never which model answers it. What a deployment can still get wrong is
+# pointing at something else through the environment, which is what the probe below is for.
 READING_MODEL_ID = "eu.anthropic.claude-sonnet-4-6"
 DRAFTING_MODEL_ID = READING_MODEL_ID
 SOURCE_REGION = "eu-central-1"
+
+# The ids the twelve recorded sample readings and the live checks were made against. An id outside
+# this set is not refused, since an operator may have a reason, but it is said out loud.
+VERIFIED_MODEL_IDS = frozenset({READING_MODEL_ID, DRAFTING_MODEL_ID})
+VERIFIED_ON = "2026-08-25"
 
 AnswerT = TypeVar("AnswerT", bound=BaseModel)
 
@@ -79,6 +91,50 @@ class NoStructuredAnswerError(RuntimeError):
 
 def bedrock_model(model_id: str, region: str, max_tokens: int) -> Model:
     return BedrockModel(model_id=model_id, region_name=region, max_tokens=max_tokens)
+
+
+@dataclass(frozen=True)
+class ModelCheck:
+    """What the startup probe could establish about one configured model id."""
+
+    model_id: str
+    #: Whether this id is one the recorded readings and the live checks were made against.
+    as_verified: bool
+    #: True when the region answered for it, False when it said there is no such profile, and None
+    #: when the account would not say, which is a different thing and must not read as a failure.
+    reachable: bool | None
+    detail: str
+
+
+def probe_models(
+    model_ids: tuple[str, ...], region: str, client: Any | None = None
+) -> tuple[ModelCheck, ...]:
+    """Ask the region about each configured model id, before a letter depends on the answer.
+
+    A wrong id is otherwise found by the first visitor, halfway through their reading. This cannot
+    catch a provider quietly changing what an id points at, and nothing on this side could: what it
+    catches is a deployment pointing somewhere the account cannot reach, or somewhere this build was
+    never checked against.
+    """
+    import boto3
+    from botocore.exceptions import BotoCoreError, ClientError
+
+    asked = client or boto3.client("bedrock", region_name=region)
+    checks: list[ModelCheck] = []
+    for model_id in model_ids:
+        as_verified = model_id in VERIFIED_MODEL_IDS
+        try:
+            asked.get_inference_profile(inferenceProfileIdentifier=model_id)
+            checks.append(ModelCheck(model_id, as_verified, True, f"{region} knows it"))
+        except ClientError as refused:
+            code = refused.response.get("Error", {}).get("Code", "")
+            reachable = False if code == "ResourceNotFoundException" else None
+            checks.append(ModelCheck(model_id, as_verified, reachable, code or "an AWS error"))
+        except BotoCoreError as unreachable:
+            # No credentials, no endpoint, no network. The reading path may still work, so this is
+            # reported rather than treated as a missing model.
+            checks.append(ModelCheck(model_id, as_verified, None, type(unreachable).__name__))
+    return tuple(checks)
 
 
 @dataclass

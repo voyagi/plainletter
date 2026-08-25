@@ -36,7 +36,7 @@ from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from . import intake
-from .bedrock import BedrockReadingModel
+from .bedrock import VERIFIED_MODEL_IDS, VERIFIED_ON, BedrockReadingModel, probe_models
 from .demo import sample_input, sample_names, scripted_model, scripted_reading
 from .intake import IntakeError, LetterInput
 from .kb import known_sender_ids
@@ -304,8 +304,37 @@ def _last(events: Iterator[dict[str, Any]]) -> dict[str, Any]:
 
 
 def serve() -> None:
-    """Run the same entrypoint locally. Outside a container this binds to the loopback only."""
+    """Check the models this deployment is pointed at, then serve. Nothing starts on a wrong id."""
+    check_models()
     app.run(port=8080)
+
+
+def check_models() -> None:
+    """Say what the region knows about the configured models, and refuse a model it does not have.
+
+    Refusing here rather than later is the point: an id that does not resolve fails every reading,
+    and finding that out with a visitor in front of the desk is the worst place to find it out. An
+    account that will not answer is not the same as a missing model and does not stop the service.
+    """
+    configured = settings()
+    for check in probe_models(
+        (configured.reading_model, configured.drafting_model), configured.region
+    ):
+        if check.reachable is False:
+            raise SystemExit(
+                f"{check.model_id} does not resolve in {configured.region} ({check.detail}). "
+                "Check PLAINLETTER_READING_MODEL and that the model is enabled on this account."
+            )
+        if not check.as_verified:
+            logger.warning(
+                "plainletter.model %s is not one this build was checked against on %s (%s)",
+                check.model_id,
+                VERIFIED_ON,
+                ", ".join(sorted(VERIFIED_MODEL_IDS)),
+            )
+        logger.info(
+            "plainletter.model %s in %s: %s", check.model_id, configured.region, check.detail
+        )
 
 
 def _prepare(request: ReadRequest) -> tuple[LetterInput, ReadingModel, str]:
