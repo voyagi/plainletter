@@ -1,30 +1,28 @@
-from datetime import date, timedelta
+from datetime import date
+from typing import cast
 
 import pytest
 
 from plainletter import urgency
+from plainletter.locales import Locale, use
+from plainletter.locales.nl import NL
 from plainletter.schemas import Urgency
 
 
-def test_the_shifting_holidays_hang_off_easter() -> None:
-    holidays = urgency.dutch_public_holidays(2026)
+def test_the_calendar_comes_from_the_locale_not_from_this_module() -> None:
+    # Which days are working days is the one thing here that depends on the country, so a locale
+    # with no holidays at all must make a national holiday an ordinary working day.
+    class NoHolidays:
+        def public_holidays(self, year: int) -> frozenset[date]:
+            return frozenset()
+
     easter_monday = date(2026, 4, 6)
-    assert easter_monday in holidays
-    assert easter_monday + timedelta(days=38) in holidays  # Hemelvaartsdag
-    assert date(2026, 1, 1) in holidays
-    assert date(2026, 12, 26) in holidays
-
-
-def test_kings_day_steps_back_when_it_lands_on_a_sunday() -> None:
-    # 27 April 2031 is a Sunday, so the day off is the Saturday before it.
-    assert date(2031, 4, 27).weekday() == 6
-    assert date(2031, 4, 26) in urgency.dutch_public_holidays(2031)
-    assert date(2031, 4, 27) not in urgency.dutch_public_holidays(2031)
-
-
-def test_liberation_day_is_only_a_day_off_in_the_lustrum_years() -> None:
-    assert date(2030, 5, 5) in urgency.dutch_public_holidays(2030)
-    assert date(2026, 5, 5) not in urgency.dutch_public_holidays(2026)
+    assert not urgency.is_working_day(easter_monday)
+    use(cast(Locale, NoHolidays()))
+    try:
+        assert urgency.is_working_day(easter_monday)
+    finally:
+        use(NL)
 
 
 def test_working_days_skip_weekends_and_holidays() -> None:

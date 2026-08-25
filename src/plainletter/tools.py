@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from strands import tool
 
 from .kb import ObjectionRoute, PaymentRoute, Referral, get_sender
+from .locales import active
 
 
 class OfficialRoutes(BaseModel):
@@ -40,8 +41,8 @@ class OfficialRoutes(BaseModel):
 
 UNKNOWN_SENDER_NOTE = (
     "This sender is not in the knowledge base. Do not invent a route: tell the visitor to check "
-    "the letter itself for the address, website or phone number, and refer them to Het Juridisch "
-    "Loket, 0800 8020, if the letter gives none."
+    "the letter itself for the address, website or phone number, and refer them to {referral} if "
+    "the letter gives none."
 )
 UNVERIFIED_SENDER_NOTE = (
     "The routes for this sender have not been checked against an official page. Use them only to "
@@ -65,7 +66,11 @@ def official_routes(sender_id: str) -> OfficialRoutes:
     """
     sender = get_sender(sender_id)
     if sender is None:
-        return OfficialRoutes(sender_id=sender_id, known=False, note=UNKNOWN_SENDER_NOTE)
+        return OfficialRoutes(
+            sender_id=sender_id,
+            known=False,
+            note=UNKNOWN_SENDER_NOTE.format(referral=active().words.referral_last_resort),
+        )
     return OfficialRoutes(
         sender_id=sender.id,
         known=True,

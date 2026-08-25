@@ -1,4 +1,5 @@
 from plainletter.kb import load_senders
+from plainletter.locales.nl import NL
 from plainletter.tools import (
     UNKNOWN_SENDER_NOTE,
     UNVERIFIED_SENDER_NOTE,
@@ -29,7 +30,10 @@ def test_a_sender_outside_the_knowledge_base_is_an_answer_not_an_error() -> None
     routes = official_routes(sender_id="bank-of-nowhere")
     assert not routes.known
     assert routes.objection is None and routes.payment is None and routes.referrals == ()
-    assert routes.note == UNKNOWN_SENDER_NOTE
+    # The body of last resort comes from the locale, so the note the model reads names a real one
+    # rather than a placeholder.
+    assert routes.note == UNKNOWN_SENDER_NOTE.format(referral=NL.words.referral_last_resort)
+    assert "{referral}" not in routes.note
 
 
 def test_the_tool_tells_the_model_what_it_is_for() -> None:

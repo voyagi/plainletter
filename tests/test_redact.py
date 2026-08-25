@@ -1,4 +1,5 @@
-from plainletter.redact import BSN_MASK, is_valid_iban, looks_like_bsn, redact
+from plainletter.locales.nl import BSN_MASK, looks_like_bsn
+from plainletter.redact import is_valid_iban, redact
 
 
 def test_the_elfproef_accepts_a_real_bsn_shape() -> None:

@@ -25,6 +25,7 @@ from datetime import date
 from . import urgency
 from .intake import LetterInput
 from .kb import Sender, get_sender, known_sender_ids
+from .locales import active
 from .marks import mark_letter
 from .reading_model import ReadingModel
 from .schemas import (
@@ -39,15 +40,6 @@ from .schemas import (
     VerificationResult,
 )
 from .verify import ungrounded_claims, verify
-
-DUTCH = "nl"
-
-NOT_GROUNDED_REFERRAL = (
-    "Het Juridisch Loket, 0800 8020. Deze brief kon niet volledig gecontroleerd worden."
-)
-UNKNOWN_SENDER_REFERRAL = (
-    "Het Juridisch Loket, 0800 8020. De afzender van deze brief staat niet in de kennisbank."
-)
 
 
 class UngroundedOutputError(RuntimeError):
@@ -101,9 +93,10 @@ class Pipeline:
         grounded = usable_values(facts, result, deadline)
         allowed = frozenset(grounded.values())
 
+        words = active().words
         sender = get_sender(facts.sender_id)
         sender_name = _sender_name(facts, sender)
-        letter_type = facts.letter_type.value if facts.letter_type else "Onbekende brief"
+        letter_type = facts.letter_type.value if facts.letter_type else words.unknown_letter_type
         yield ReadingProgress(
             stage="letter",
             verification=result,
@@ -117,7 +110,8 @@ class Pipeline:
 
         yield ReadingProgress(stage="deadline", deadline=deadline)
 
-        languages = (DUTCH, visitor_language) if visitor_language != DUTCH else (DUTCH,)
+        official = words.language
+        languages = (official, visitor_language) if visitor_language != official else (official,)
         explanations = self.model.explain(facts, grounded, languages)
         _refuse_stray(_explanation_text(explanations), allowed)
         yield ReadingProgress(stage="explanations", explanations=explanations)
@@ -162,16 +156,17 @@ def handoff_for(result: VerificationResult, sender: Sender | None) -> Handoff:
     procedure has not been verified against an official source. In every case the desk says so and
     names where to go.
     """
+    words = active().words
     if not result.is_grounded:
         return Handoff(
             required=True,
-            referral=NOT_GROUNDED_REFERRAL,
+            referral=words.referral_not_grounded,
             reason="not every fact in the letter could be checked against the page itself",
         )
     if sender is None:
         return Handoff(
             required=True,
-            referral=UNKNOWN_SENDER_REFERRAL,
+            referral=words.referral_unknown_sender,
             reason=f"the sender is not one of {', '.join(known_sender_ids())}",
         )
     if not sender.verified:
@@ -181,14 +176,14 @@ def handoff_for(result: VerificationResult, sender: Sender | None) -> Handoff:
             referral=(
                 f"{referral.name}, {referral.phone}"
                 if referral and referral.phone
-                else "Het Juridisch Loket, 0800 8020"
+                else words.referral_last_resort
             ),
             reason=sender.handoff_reason_en
             or "this sender's procedure has not been checked against an official source",
         )
     return Handoff(
         required=False,
-        referral=sender.referrals[0].name if sender.referrals else "Het Juridisch Loket",
+        referral=sender.referrals[0].name if sender.referrals else words.referral_last_resort_name,
         reason="the letter was read, checked and matched to a verified sender",
     )
 
@@ -239,7 +234,9 @@ def _grounded_deadline(facts: LetterFacts, result: VerificationResult) -> date |
 def _sender_name(facts: LetterFacts, sender: Sender | None) -> str:
     if sender is not None:
         return sender.name_nl
-    return facts.sender_name.value if facts.sender_name else "Onbekende afzender"
+    if facts.sender_name:
+        return facts.sender_name.value
+    return active().words.unknown_sender_name
 
 
 def _refuse_stray(parts: Iterable[str], allowed: frozenset[str]) -> None:
