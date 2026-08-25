@@ -4,10 +4,12 @@ One POST carries one letter and comes back with everything the desk needs: the c
 printable card and the calendar reminder. The console never talks to Bedrock itself, so no AWS
 credential ever reaches a browser.
 
-Five things this layer is responsible for and the pipeline is not:
+Six things this layer is responsible for and the pipeline is not:
 
 * Refusing an upload before it becomes a model call. A payload with no letter in it, or 25 MB of
   something that is not a letter, is answered rather than forwarded.
+* The daily ceiling on readings, claimed here for the same reason: it is the last point at which
+  refusing is still free. What that ceiling can and cannot promise is written in `spend.py`.
 * Answering a refusal as an answer. When the check fails, that is the product working, so it comes
   back as a structured verdict with a 200 rather than as a server error.
 * Masking. The card redacts on its way to the printer; this redacts every string on its way to the
@@ -27,13 +29,14 @@ import json
 import logging
 from collections.abc import Iterator
 from datetime import date
+from functools import lru_cache
 from typing import Any
 
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from . import intake
-from .bedrock import BedrockReadingModel
+from .bedrock import VERIFIED_MODEL_IDS, VERIFIED_ON, BedrockReadingModel, probe_models
 from .demo import sample_input, sample_names, scripted_model, scripted_reading
 from .intake import IntakeError, LetterInput
 from .kb import known_sender_ids
@@ -51,6 +54,7 @@ from .redact import redact
 from .render import desk_card_html, reminder_ics
 from .schemas import DeskReading, ReadingProgress
 from .settings import settings
+from .spend import DailyReadings
 from .telemetry import record_tool_outcome, start_reading, within
 
 logger = logging.getLogger(__name__)
@@ -62,6 +66,12 @@ MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 DEFAULT_LANGUAGE = "en"
 
 app = BedrockAgentCoreApp()
+
+
+@lru_cache(maxsize=1)
+def daily_readings() -> DailyReadings:
+    """This runtime's ceiling on model-backed readings, built once and kept for its lifetime."""
+    return DailyReadings(limit=settings().max_readings_per_day)
 
 
 def case_memory() -> CaseMemory:
@@ -118,6 +128,18 @@ def read_letter(payload: dict[str, Any]) -> dict[str, Any] | Iterator[dict[str, 
         return _error("upload", str(unreadable))
     except ValueError as unusable:
         return _error("payload", str(unusable))
+
+    # After the upload has been decoded and before the first model call: a letter that was never
+    # readable should not spend a reading, and a reading that is refused should cost nothing.
+    if request.letter is not None:
+        claim = daily_readings().claim()
+        if not claim.allowed:
+            return _error(
+                "budget",
+                f"this desk has read its {claim.limit} letters for today. Try again tomorrow, "
+                "or ask whoever runs this desk to raise the daily limit.",
+            )
+        logger.info("plainletter.budget %s of %s on %s", claim.used, claim.limit, claim.day)
 
     today = request.today or date.today()
     events = _events(request, letter, model, language, today)
@@ -282,8 +304,37 @@ def _last(events: Iterator[dict[str, Any]]) -> dict[str, Any]:
 
 
 def serve() -> None:
-    """Run the same entrypoint locally. Outside a container this binds to the loopback only."""
+    """Check the models this deployment is pointed at, then serve. Nothing starts on a wrong id."""
+    check_models()
     app.run(port=8080)
+
+
+def check_models() -> None:
+    """Say what the region knows about the configured models, and refuse a model it does not have.
+
+    Refusing here rather than later is the point: an id that does not resolve fails every reading,
+    and finding that out with a visitor in front of the desk is the worst place to find it out. An
+    account that will not answer is not the same as a missing model and does not stop the service.
+    """
+    configured = settings()
+    for check in probe_models(
+        (configured.reading_model, configured.drafting_model), configured.region
+    ):
+        if check.reachable is False:
+            raise SystemExit(
+                f"{check.model_id} does not resolve in {configured.region} ({check.detail}). "
+                "Check PLAINLETTER_READING_MODEL and that the model is enabled on this account."
+            )
+        if not check.as_verified:
+            logger.warning(
+                "plainletter.model %s is not one this build was checked against on %s (%s)",
+                check.model_id,
+                VERIFIED_ON,
+                ", ".join(sorted(VERIFIED_MODEL_IDS)),
+            )
+        logger.info(
+            "plainletter.model %s in %s: %s", check.model_id, configured.region, check.detail
+        )
 
 
 def _prepare(request: ReadRequest) -> tuple[LetterInput, ReadingModel, str]:

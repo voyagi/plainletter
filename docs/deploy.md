@@ -90,6 +90,19 @@ never sees any of it.
 Without the variable, the console posts to `PLAINLETTER_AGENT_ENDPOINT` (default
 `http://127.0.0.1:8080`), which is the same agent started locally with `uv run plainletter-serve`.
 
+Set one more variable wherever the console is hosted behind a proxy, which includes Vercel and
+every managed host:
+
+```sh
+PLAINLETTER_TRUST_PROXY_HEADER=true
+```
+
+The upload route meters each caller by the last hop of `X-Forwarded-For`, and that entry is only
+trustworthy when a proxy really wrote it. Left unset, every caller is counted as one, so the desk
+still works and the ceiling is simply shared. The ceilings themselves are in
+`web/src/server/limits.ts`; the agent's own daily ceiling is `PLAINLETTER_MAX_READINGS_PER_DAY`
+(default 200, zero closes the service), and neither of them replaces the account budget alarm.
+
 ## Check the three things this deployment promises
 
 **It reads a live letter end to end.** Open the console, choose a language, photograph a synthetic

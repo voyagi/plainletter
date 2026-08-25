@@ -77,8 +77,10 @@ follow_untyped_imports = true
 
 # pypdfium2 ships no py.typed marker, so following it turns every PDFium call into an untyped call
 # in a strict context. Treating the module as opaque keeps the strictness where our own code is.
+# boto3 and botocore are the same case, and their stub packages are large enough that pulling them
+# in for two calls would cost more than it checks.
 [[tool.mypy.overrides]]
-module = ["pypdfium2.*"]
+module = ["pypdfium2.*", "boto3.*", "botocore.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

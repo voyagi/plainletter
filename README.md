@@ -150,8 +150,12 @@ debt. Plainletter is built so that almost none of that has anywhere to go.
 - Nothing is remembered unless the visitor says so. A consented case holds checked, derived and
   masked values for thirty days: no name, no letter, no identity number.
 - A case id is the only key to a case. It carries no personal data and cannot be looked up by name,
-  but it is also short enough to guess at, so a deployment that serves the public should rate limit
-  the endpoint that reads one. There is no such limit in this repository today.
+  but it is short enough to guess at, so the endpoint that reads one is metered: an origin check, a
+  size cap, a per-address and per-browser burst limit and a daily ceiling in the console
+  (`web/src/server/limits.ts`), and a second daily ceiling inside the agent, claimed before the
+  first model call (`src/plainletter/spend.py`). Both counters live in the process that serves the
+  request and say so; the ceiling that cannot be restarted is an account budget alarm, and setting
+  one is part of deploying this.
 - Every sample letter here is synthetic. The names, addresses, identity numbers and reference
   numbers were made up for this project.
 

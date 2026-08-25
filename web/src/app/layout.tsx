@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Atkinson_Hyperlegible_Next, Bricolage_Grotesque, Noto_Sans } from 'next/font/google';
+import { headers } from 'next/headers';
 import '@/app/globals.css';
 import '@/env';
 import { env } from '@/env';
@@ -68,7 +69,10 @@ export const viewport: Viewport = {
 // this belongs in a component, not in the document head.
 const THEME = `try{var t=localStorage.getItem("plainletter-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Set in src/proxy.ts, and the reason every page is rendered per request: the script below has
+  // to carry the same nonce the Content-Security-Policy names, and a nonce is per request.
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     <html
       lang="en"
@@ -76,7 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME }} />
       </head>
       <body>{children}</body>
     </html>
