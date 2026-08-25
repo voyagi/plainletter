@@ -1,7 +1,7 @@
 # ADR 0001: Stack
 
 Date: 2026-08-20
-Status: accepted
+Status: accepted, with four decisions superseded during the build (see the last section)
 
 ## Context
 
@@ -81,3 +81,15 @@ Quality floors
 - Lighthouse discipline matters on the console route (keep the landing and print routes static).
 - The Python version is pinned to 3.11 through `.python-version` until the AgentCore Runtime base
   image and the dependency set are re-checked against 3.13.
+
+## Superseded during the build
+
+Four decisions above did not survive contact with the product. They are corrected here rather than
+edited out, because the reason each one changed is the useful part.
+
+| Decided 2026-08-20 | What shipped | Why |
+|---|---|---|
+| Orchestration with `GraphBuilder` | A plain Python function, `pipeline.py` | The verification step is deterministic and must run before anything is explained, planned, drafted or printed. A graph node is an agent, and an agent can be re-planned at runtime; a sequence written in Python is a guarantee where a graph is a preference. The load-bearing Strands surface moved to structured output as tool calls, the intervention on that boundary, the hooks and the `official_routes` tool |
+| Haiku for the cheap turns, Sonnet for reading | Sonnet for every turn, with drafting a separate setting | On the first live letters Haiku opened a Ukrainian objection in Russian. Drafting is the one output the visitor signs, so it moved to the reading model and kept its own setting so the choice stays visible |
+| PDFs as Bedrock document blocks, rasterisation as the fallback | The text layer is pulled out locally with pypdfium2, and only pages without one are rendered to an image | The verifier grounds every fact against the letter's own words. A born-digital PDF already carries them, so reading them locally makes the check run against the document rather than against something a model said about it |
+| `Agent.structured_output` for typed answers | `structured_output_model` on the invocation | Only the invocation path reaches the tool executor, which is where the grounding intervention sits. The other call would have returned a typed answer nothing had inspected |
