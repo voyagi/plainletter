@@ -85,6 +85,27 @@ class Sender(BaseModel):
         description="why this sender always needs a person, when it does",
     )
 
+    def route_values(self) -> frozenset[str]:
+        """Every way of reaching somebody that the official-route lookup can hand out for this
+        sender, and therefore the only ones a step may name.
+
+        The `source` URLs count: the lookup returns them, and the page a claim was read on is a
+        real place a visitor can go. A number printed on the letter does not count, however
+        official it looks, because a letter is the one thing in this pipeline an attacker writes.
+        """
+        values: list[str | None] = []
+        if self.objection:
+            values += [
+                self.objection.postal_address,
+                self.objection.online_route,
+                self.objection.source,
+            ]
+        if self.payment:
+            values += [self.payment.website, self.payment.phone, self.payment.source]
+        for referral in self.referrals:
+            values += [referral.phone, referral.website]
+        return frozenset(value for value in values if value)
+
     def sources(self) -> tuple[str, ...]:
         urls = [fact.source for fact in self.consequences]
         if self.objection:

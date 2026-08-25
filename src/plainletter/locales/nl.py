@@ -102,6 +102,10 @@ WORDS = DeskWords(
         "Neem deze kaart mee als u terugkomt, dan gaat de balie verder waar u gebleven was."
     ),
     disclaimer=("Plainletter legt brieven uit en geeft geen juridisch advies. Gemaakt op {date}."),
+    ai_disclosure=(
+        "Deze tekst is gemaakt door een AI-systeem. Elke datum en elk bedrag is gecontroleerd "
+        "tegen uw eigen brief. Laat een medewerker meekijken voordat u iets verstuurt."
+    ),
     reminder_deadline="Uiterste dag: {date}.",
     reminder_alarm="nog {days} dagen",
     unknown_letter_type="Onbekende brief",

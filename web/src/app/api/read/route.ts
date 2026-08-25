@@ -1,7 +1,5 @@
-import { randomUUID } from 'node:crypto';
-import { env } from '@/env';
 import { readLetter, type LetterPayload } from '@/server/agent';
-import { addressOf, createLimiter } from '@/server/limits';
+import { admit, withMarker } from '@/server/caller';
 
 // The one door between the browser and the agent. It runs on Node rather than at the edge because
 // the deployment phase signs these requests, and the signing needs Node's crypto.
@@ -17,35 +15,10 @@ const TEXT_TYPES = new Set(['text/plain', 'text/markdown', '']);
 // The case number as it is printed on the desk card: two groups of four, readable across a counter.
 const CASE_ID = /^[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 
-// A random marker, kept for the browser session, so a busy desk is metered as one desk rather than
-// as the whole building. It identifies nothing and grants nothing: discarding it only moves a
-// caller closer to the address ceiling. It is strictly necessary to keep an unauthenticated,
-// metered endpoint standing, which is why it is set without asking.
-const DESK_COOKIE = 'pl_desk';
-const DESK_IN_COOKIE_HEADER = new RegExp(`(?:^|;\\s*)${DESK_COOKIE}=([A-Za-z0-9-]+)`);
-
-// Module scope, so it lives as long as this instance does. What that is worth, and what it is not,
-// is written in server/limits.ts.
-const limiter = createLimiter();
-
 export async function POST(request: Request): Promise<Response> {
-  if (!sameOrigin(request)) {
-    return problem('This endpoint only answers the Plainletter console.', 403);
-  }
-
-  const known = request.headers.get('cookie')?.match(DESK_IN_COOKIE_HEADER)?.[1];
-  const desk = known ?? randomUUID();
-  // Every answer past this point carries the marker, refusals included. A caller who only ever
-  // sees refusals would otherwise arrive with no marker every time and be counted as a new desk.
-  const marker = known ? null : deskCookie(desk);
-
-  const decision = limiter.take({
-    address: addressOf(request.headers, env.PLAINLETTER_TRUST_PROXY_HEADER === 'true'),
-    visitor: desk,
-  });
-  if (!decision.allowed) {
-    return refused(decision.refusedBy, decision.retryAfterSeconds, marker);
-  }
+  const admission = admit(request);
+  if (admission.refused) return admission.refused;
+  const marker = admission.marker;
 
   let payload: LetterPayload;
   try {
@@ -73,53 +46,6 @@ export async function POST(request: Request): Promise<Response> {
       marker,
     ),
   });
-}
-
-function withMarker(base: Record<string, string>, marker: string | null): Headers {
-  const headers = new Headers(base);
-  if (marker) headers.append('set-cookie', marker);
-  return headers;
-}
-
-/**
- * Refuse a request that a browser did not make from this application's own pages.
- *
- * A browser sends Origin on every cross-origin POST and on same-origin fetches, so a request
- * without one is not the console. That refuses curl too, which is the point: this is a metered
- * path into a model, and it exists for the page in front of it.
- */
-function sameOrigin(request: Request): boolean {
-  const origin = request.headers.get('origin');
-  if (!origin) return false;
-  try {
-    const sent = new URL(origin);
-    return sent.host === request.headers.get('host') || sent.origin === siteOrigin();
-  } catch {
-    return false;
-  }
-}
-
-function siteOrigin(): string {
-  return new URL(env.NEXT_PUBLIC_SITE_URL).origin;
-}
-
-function deskCookie(desk: string): string {
-  const secure = env.NODE_ENV === 'production' ? '; Secure' : '';
-  return `${DESK_COOKIE}=${desk}; Path=/; HttpOnly; SameSite=Lax${secure}`;
-}
-
-function refused(kind: string | null, retryAfterSeconds: number, marker: string | null): Response {
-  const detail =
-    kind === 'daily'
-      ? 'This desk has read its letters for today. It starts again tomorrow.'
-      : 'That is more letters at once than this desk reads. Wait a moment and try again.';
-  return Response.json(
-    { error: { kind: 'rate', detail } },
-    {
-      status: 429,
-      headers: withMarker({ 'retry-after': String(retryAfterSeconds) }, marker),
-    },
-  );
 }
 
 async function intake(request: Request): Promise<LetterPayload> {

@@ -12,6 +12,10 @@ card prints. A returning visitor reads the id off the card, the desk recalls eve
 under it, and the new letter is read in the light of the old ones. Nothing here uses a long-term
 memory strategy: those mine stored events for insights across visits, which is a second consent the
 visitor was never asked for.
+
+Everything kept expires by itself after thirty days, and `forget` takes it out before then. A
+consent that cannot be withdrawn is not a consent, and the case id printed on the card is the only
+thing a visitor needs to withdraw it.
 """
 
 from __future__ import annotations
@@ -101,7 +105,7 @@ class CaseRecord(Frozen):
 
 
 class CaseMemory(Protocol):
-    """Where case records go, and where they come back from."""
+    """Where case records go, where they come back from, and how they are taken back out."""
 
     def remember(self, record: CaseRecord) -> bool:
         """Store the record. True when it is now kept, False when this desk keeps nothing."""
@@ -109,6 +113,10 @@ class CaseMemory(Protocol):
 
     def recall(self, case_id: str) -> tuple[CaseRecord, ...]:
         """Every earlier reading under this case id, newest first."""
+        ...
+
+    def forget(self, case_id: str) -> int:
+        """Erase every reading under this case id, and answer how many there were."""
         ...
 
 
@@ -120,6 +128,9 @@ class NoCaseMemory:
 
     def recall(self, case_id: str) -> tuple[CaseRecord, ...]:
         return ()
+
+    def forget(self, case_id: str) -> int:
+        return 0
 
 
 class AgentCoreCaseMemory:
@@ -147,6 +158,24 @@ class AgentCoreCaseMemory:
         ]
         records.sort(key=lambda record: record.read_on, reverse=True)
         return tuple(records)
+
+    def forget(self, case_id: str) -> int:
+        """Delete every event under this case, now, rather than waiting for it to expire.
+
+        The case id is the only key a visitor has, and it is the only key this store has, so
+        erasure is exactly "delete everything filed under it". Deleting each event by its own id
+        rather than the whole actor is deliberate: the deletion is a list of the same events a
+        recall would have returned, so what was erased is what the visitor was shown.
+        """
+        events = self._store.list_events(actor_id=case_id, session_id=case_id, max_results=100)
+        erased = 0
+        for event in events:
+            event_id = event.get("eventId") if hasattr(event, "get") else None
+            if not event_id:
+                continue
+            self._store.delete_event(actor_id=case_id, session_id=case_id, event_id=event_id)
+            erased += 1
+        return erased
 
 
 def new_case_id() -> str:

@@ -8,6 +8,7 @@ from datetime import date
 import pytest
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
+from conftest import RecordingMemory
 from plainletter import app as runtime
 from plainletter.app import read_letter
 from plainletter.demo import sample_text, scripted_model
@@ -23,29 +24,6 @@ from plainletter.pipeline import Pipeline
 SAMPLE = "belastingdienst-aanslag"
 TODAY = date(2026, 8, 21)
 CASE = "K7P2-4MXQ"
-
-
-class RecordingMemory:
-    """A store that keeps records in a dict, so a test can see exactly what was written."""
-
-    def __init__(self, earlier: dict[str, list[CaseRecord]] | None = None) -> None:
-        self.kept: dict[str, list[CaseRecord]] = dict(earlier or {})
-        self.recalled: list[str] = []
-
-    def remember(self, record: CaseRecord) -> bool:
-        self.kept.setdefault(record.case_id, []).append(record)
-        return True
-
-    def recall(self, case_id: str) -> tuple[CaseRecord, ...]:
-        self.recalled.append(case_id)
-        return tuple(reversed(self.kept.get(case_id, [])))
-
-
-@pytest.fixture
-def memory(monkeypatch: pytest.MonkeyPatch) -> RecordingMemory:
-    store = RecordingMemory()
-    monkeypatch.setattr(runtime, "case_memory", lambda: store)
-    return store
 
 
 def a_reading():

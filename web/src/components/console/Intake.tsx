@@ -42,6 +42,12 @@ export function Intake({
         De balie leest hem terug in het Nederlands en in de taal van de bezoeker, met elke datum en
         elk bedrag gemarkeerd op het papier waar het vandaan komt.
       </p>
+      {/* Said before the first letter goes in, not after the reading comes back: the obligation is
+          to tell the person at the moment they start dealing with the system. */}
+      <p className="mt-3 max-w-[46ch] text-[15px] text-ink-2">
+        Het lezen doet een AI-systeem. Elke datum en elk bedrag wordt daarna gecontroleerd tegen de
+        brief zelf, en wat niet klopt komt niet op de kaart.
+      </p>
 
       <div className="mt-7 flex flex-wrap items-center gap-3">
         <button

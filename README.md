@@ -58,6 +58,14 @@ hook records every call and how it ended without recording what the letter said.
 re-reads everything that came through and refuses the whole reading if a stray value survived
 anyway. A refused reading at a help desk is recoverable; a confident wrong deadline is not.
 
+The same refusal covers where a step sends somebody. A step may name only a phone number, address
+or page the knowledge base itself handed out, and a reading naming anything else is refused whole.
+That matters because the letter is the one input to this pipeline that somebody else wrote: it can
+carry instructions aimed at the agent reading it, and a fraudulent phone number printed on an
+official-looking page is the obvious thing to try. Every prompt is told the letter is data and
+never an order, and `tests/test_injection.py` runs a letter carrying exactly that attack through a
+model that obeys it, then proves the checks refuse the reading anyway.
+
 The knowledge base marks each sender `verified` or not. Only a sender whose procedure was read on
 an official page states a procedure; the rest say so and route the letter to a person.
 

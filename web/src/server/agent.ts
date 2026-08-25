@@ -48,10 +48,45 @@ export async function readLetter(
   payload: LetterPayload,
   signal: AbortSignal,
 ): Promise<AgentAnswer> {
-  const body = JSON.stringify({ ...payload, stream: true });
+  return ask(JSON.stringify({ ...payload, stream: true }), signal);
+}
+
+function ask(body: string, signal: AbortSignal): Promise<AgentAnswer> {
   return env.PLAINLETTER_AGENT_RUNTIME_ARN
     ? invokeRuntime(env.PLAINLETTER_AGENT_RUNTIME_ARN, body, signal)
     : postLocally(body, signal);
+}
+
+export type ForgetAnswer = {
+  ok: boolean;
+  status: number;
+  body: unknown;
+  detail?: string;
+};
+
+/** Ask the agent to erase a case. Not streamed: one question with a number for an answer. */
+export async function forgetCase(caseId: string, signal: AbortSignal): Promise<ForgetAnswer> {
+  const answer = await ask(JSON.stringify({ forget: caseId }), signal);
+  if (!answer.ok || !answer.body) {
+    return { ok: false, status: answer.status, body: null, detail: answer.detail };
+  }
+  const text = await new Response(answer.body).text();
+  return { ok: true, status: 200, body: JSON.parse(lastEvent(text) ?? text) };
+}
+
+/**
+ * The last `data:` line of an event stream, or null when the answer was a plain body.
+ *
+ * The runtime can answer a non-streaming request over the same event-stream transport, so reading
+ * the last data line covers both shapes and needs no second contract with the agent.
+ */
+function lastEvent(text: string): string | null {
+  const lines = text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('data:'));
+  const last = lines[lines.length - 1];
+  return last ? last.slice('data:'.length).trim() : null;
 }
 
 async function invokeRuntime(arn: string, body: string, signal: AbortSignal): Promise<AgentAnswer> {
