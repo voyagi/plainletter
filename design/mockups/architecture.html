@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plainletter architecture</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible+Next:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --desk: #EFEAE6; --paper: #FFFFFF; --ink: #221E1C; --ink2: #5C534E; --ink3: #847871;
+    --rule: #DCD4CE; --mark: #B01E4B; --wash: #FFDDE7; --shadow: rgba(34, 30, 28, 0.10);
+  }
+  html[data-theme="dark"] {
+    --desk: #191614; --paper: #221E1C; --ink: #F5F1ED; --ink2: #BDB2AB; --ink3: #8E827A;
+    --rule: #3A3330; --mark: #FF8FAE; --wash: #4A1626; --shadow: rgba(0, 0, 0, 0.55);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--desk); color: var(--ink);
+         font-family: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+         font-size: 15px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+
+  .sheet { width: 1240px; margin: 0 auto; background: var(--paper);
+           box-shadow: 0 18px 40px var(--shadow); padding: 40px 44px 34px; }
+
+  /* The page is the letter, so it opens in the letter's own margin rather than in a hero band. */
+  .head { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px;
+          border-bottom: 2.5px solid var(--ink); padding-bottom: 14px; }
+  .wordmark { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 30px;
+              letter-spacing: -0.025em; margin: 0; }
+  .lede { font-family: "Bricolage Grotesque", sans-serif; font-size: 20px; font-weight: 400;
+          color: var(--ink2); margin: 4px 0 0; letter-spacing: -0.01em; }
+  .stamp { text-align: right; font-size: 12px; color: var(--ink3); line-height: 1.7; }
+
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+           color: var(--ink3); margin: 0 0 10px; }
+
+  .body { display: grid; grid-template-columns: 216px minmax(0, 1fr) 268px; gap: 0 34px;
+          padding-top: 22px; align-items: start; }
+
+  /* What arrives, as three pieces of paper rather than three icons. */
+  .chip { border: 1.5px solid var(--rule); padding: 10px 12px; margin-bottom: 10px; }
+  .chip b { display: block; font-size: 14px; }
+  .chip span { display: block; font-size: 12.5px; color: var(--ink2); line-height: 1.45; }
+  .chip.out { border-color: var(--ink); border-width: 2px; }
+
+  .feed { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink3);
+          margin: 14px 0 0; }
+  .feed .line { flex: 1; border-top: 1.5px solid var(--rule); }
+
+  /* The spine: one numbered row per stage, the numeral sitting on the margin rule. */
+  .spine { border-left: 2.5px solid var(--ink); padding-left: 0; margin-left: 13px; }
+  .step { display: grid; grid-template-columns: 26px minmax(0, 1fr) 96px; gap: 0 14px;
+          padding: 9px 0 9px 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
+  .step:last-child { border-bottom: 0; }
+  .n { width: 26px; height: 26px; margin-left: -14px; background: var(--paper);
+       border: 1.5px solid var(--mark); color: var(--mark); font-size: 12px; font-weight: 700;
+       line-height: 23px; text-align: center; }
+  .n.plain { border-color: var(--ink); color: var(--ink); }
+  .n.broken { border: 0; border-top: 1.5px dashed var(--ink3); height: 0; margin-top: 12px; }
+  .step h3 { margin: 0; font-size: 15px; font-weight: 700; }
+  .step h3 mark { background: var(--wash); color: inherit; padding: 0.06em 0.3em;
+                  box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .step p { margin: 2px 0 0; font-size: 13px; color: var(--ink2); line-height: 1.5; }
+  .step code { font-family: inherit; font-size: 12.5px; color: var(--ink3); }
+  .who { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+         text-align: right; color: var(--ink3); }
+  .who.model { color: var(--mark); }
+
+  /* The margin apparatus: what holds the model, keyed to the rows it acts on. */
+  .note { border-top: 1.5px solid var(--ink); padding: 10px 0 14px; }
+  .note h4 { margin: 0 0 3px; font-size: 13.5px; font-weight: 700; }
+  .note p { margin: 0; font-size: 12.5px; color: var(--ink2); line-height: 1.5; }
+  .note .keys { font-size: 11px; color: var(--mark); font-weight: 700; letter-spacing: .06em; }
+
+  .runs { margin-top: 26px; border-top: 2.5px solid var(--ink); padding-top: 16px; }
+  .lanes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 22px; }
+  .lane h4 { margin: 0 0 4px; font-size: 13.5px; font-weight: 700; }
+  .lane p { margin: 0; font-size: 12.5px; color: var(--ink2); line-height: 1.5; }
+  .lane + .lane { border-left: 1px solid var(--rule); padding-left: 22px; }
+
+  .legend { margin-top: 20px; border-top: 1px solid var(--rule); padding-top: 12px;
+            display: flex; gap: 26px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink2); }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .swatch { width: 22px; height: 14px; background: var(--wash); }
+  .swatch.plain { background: transparent; border: 1.5px solid var(--ink); }
+  .swatch.broken { background: transparent; border: 0; border-top: 1.5px dashed var(--ink3);
+                   height: 0; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="head">
+    <div>
+      <h1 class="wordmark">Plainletter</h1>
+      <p class="lede">How one letter becomes an answer somebody can act on.</p>
+    </div>
+    <div class="stamp">
+      Strands Agents on Amazon Bedrock<br>
+      AgentCore Runtime, eu-central-1<br>
+      Nothing printed that is not in the letter
+    </div>
+  </div>
+
+  <div class="body">
+
+    <div>
+      <p class="label">What arrives</p>
+      <div class="chip">
+        <b>A photograph</b>
+        <span>Sideways, shadowed, creased. Taken on the visitor's phone at the counter.</span>
+      </div>
+      <div class="chip">
+        <b>A PDF</b>
+        <span>Born digital, so its own text layer is the ground truth.</span>
+      </div>
+      <div class="chip">
+        <b>Typed text</b>
+        <span>Pasted at the desk, or one of twelve synthetic sample letters.</span>
+      </div>
+      <p class="feed"><span class="line"></span> into the reading</p>
+
+      <p class="label" style="margin-top:26px">What the visitor takes home</p>
+      <div class="chip out">
+        <b>A one page desk card</b>
+        <span>Two languages side by side, in the monochrome a library printer has. Every mark
+        numbered against the words it was drawn under.</span>
+      </div>
+      <div class="chip out">
+        <b>A calendar reminder</b>
+        <span>The deadline, with an alarm three days ahead of it.</span>
+      </div>
+      <div class="chip out">
+        <b>A case number, if asked for</b>
+        <span>Only with consent. Printed on the card, and the only key to the record.</span>
+      </div>
+
+      <p class="label" style="margin-top:26px">What is never kept</p>
+      <div class="chip">
+        <b>The letter itself</b>
+        <span>The picture and its words live only for the length of the reading. Never written to
+        disk, never in a log, never in a trace.</span>
+      </div>
+      <div class="chip">
+        <b>Anything at all, without consent</b>
+        <span>A consented case holds checked, masked values for thirty days and nothing else.</span>
+      </div>
+    </div>
+
+    <div>
+      <p class="label">The reading, in the order it happens</p>
+      <div class="spine">
+
+        <div class="step">
+          <div class="n plain">1</div>
+          <div>
+            <h3>Intake</h3>
+            <p>Applies the orientation the phone recorded, cuts the long edge to what the model
+            reads, re-encodes so the location metadata is dropped, turns a PDF into one picture per
+            page. Nothing is written to disk. <code>intake.py</code></p>
+          </div>
+          <div class="who">Python</div>
+        </div>
+
+        <div class="step">
+          <div class="n">2</div>
+          <div>
+            <h3><mark>Transcription,</mark> for pages that arrived as pictures</h3>
+            <p>A separate turn types the page out, word for word, and writes a gap marker where a
+            line is genuinely unreadable. A photograph has no words until something produces
+            them. <code>reading_model.py</code></p>
+          </div>
+          <div class="who model">Model</div>
+        </div>
+
+        <div class="step">
+          <div class="n">3</div>
+          <div>
+            <h3><mark>The facts,</mark> each with the passage it came from</h3>
+            <p>Sender, letter type, reference, every amount and every date, returned as a Strands
+            tool call against a typed schema. <code>schemas.LetterFacts</code></p>
+          </div>
+          <div class="who model">Model</div>
+        </div>
+
+        <div class="step">
+          <div class="n plain">4</div>
+          <div>
+            <h3>The check</h3>
+            <p>For every fact: does that passage really stand in the letter, and does the value
+            follow from it. Plain string handling, no model, and the reading fails visibly rather
+            than quietly. <code>verify.py</code></p>
+          </div>
+          <div class="who">Python</div>
+        </div>
+
+        <div class="step">
+          <div class="n plain">5</div>
+          <div>
+            <h3>The marks and their key</h3>
+            <p>Each grounded passage is washed and numbered down the page. What could not be
+            grounded gets no number at all, which is how the desk says so. <code>marks.py</code></p>
+          </div>
+          <div class="who">Python</div>
+        </div>
+
+        <div class="step">
+          <div class="n plain">6</div>
+          <div>
+            <h3>Urgency</h3>
+            <p>Days left, and the last day a posted reply still arrives, counted on the country's
+            own working calendar. <code>urgency.py</code></p>
+          </div>
+          <div class="who">Python</div>
+        </div>
+
+        <div class="step">
+          <div class="n">7</div>
+          <div>
+            <h3><mark>The explanation,</mark> in two languages</h3>
+            <p>What this is, by when, and what happens if nothing is done. B1 level, one column in
+            the letter's language and one in the visitor's.</p>
+          </div>
+          <div class="who model">Model</div>
+        </div>
+
+        <div class="step">
+          <div class="n">8</div>
+          <div>
+            <h3><mark>The steps,</mark> with their official routes</h3>
+            <p>Each route is fetched through the knowledge base tool rather than remembered, so a
+            route in a step was looked up.</p>
+          </div>
+          <div class="who model">Model</div>
+        </div>
+
+        <div class="step">
+          <div class="n">9</div>
+          <div>
+            <h3><mark>The draft,</mark> when a letter is the right move</h3>
+            <p>The reply or objection in both languages, or the decision that none is needed.
+            Skipped outright when the check did not pass.</p>
+          </div>
+          <div class="who model">Model</div>
+        </div>
+
+        <div class="step">
+          <div class="n broken"></div>
+          <div>
+            <h3>Or the desk hands over</h3>
+            <p>A reading that did not fully check out, a sender the knowledge base does not carry,
+            or a sender whose procedure was never read on an official page: the card names a person
+            to go to instead. <code>pipeline.handoff_for</code></p>
+          </div>
+          <div class="who">Python</div>
+        </div>
+
+        <div class="step">
+          <div class="n plain">10</div>
+          <div>
+            <h3>The card and the reminder</h3>
+            <p>One A4 sheet and one calendar file, built from the checked reading with no model
+            involved. <code>render.py</code></p>
+          </div>
+          <div class="who">Python</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div>
+      <p class="label">What holds the model to the letter</p>
+
+      <div class="note">
+        <h4>The grounding guard</h4>
+        <p class="keys">on 7, 8, 9</p>
+        <p>A Strands intervention on the answer tool. A date or amount the check did not ground is
+        refused before it exists, the refusal goes back as the tool's result, and the model writes
+        again. <code>guard.py</code></p>
+      </div>
+
+      <div class="note">
+        <h4>The knowledge base, as a tool</h4>
+        <p class="keys">on 8, 9</p>
+        <p>Twelve senders, each route carrying the official page it was read on and the date.
+        Unverified senders say so and route to a person. <code>tools.py</code>, <code>kb.py</code></p>
+      </div>
+
+      <div class="note">
+        <h4>The audit hook</h4>
+        <p class="keys">on 2, 3, 7, 8, 9</p>
+        <p>Every tool call and how it ended. What the letter said is never in it.</p>
+      </div>
+
+      <div class="note">
+        <h4>One last look, outside the agent</h4>
+        <p class="keys">after 7, 8, 9</p>
+        <p>The pipeline re-reads what came through and refuses the whole reading if a stray value
+        survived anyway. A refused reading is recoverable. A confident wrong deadline is not.</p>
+      </div>
+
+      <div class="note">
+        <h4>Masked before it is shown</h4>
+        <p class="keys">on 5, 9, 10</p>
+        <p>The citizen number and the bank account are masked everywhere the text is displayed,
+        printed, logged or remembered. <code>redact.py</code></p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="runs">
+    <p class="label">Where it runs</p>
+    <div class="lanes">
+      <div class="lane">
+        <h4>The desk console</h4>
+        <p>Next.js. The browser never holds an AWS credential: a server route signs
+        <code>InvokeAgentRuntime</code> and streams each stage back as it finishes.</p>
+      </div>
+      <div class="lane">
+        <h4>AgentCore Runtime</h4>
+        <p>The same <code>src/</code> directory zipped with its dependencies, arm64, Python 3.11,
+        Frankfurt. It runs locally on port 8080 with the identical entrypoint.</p>
+      </div>
+      <div class="lane">
+        <h4>Amazon Bedrock</h4>
+        <p>EU inference profiles from eu-central-1, so the letter is processed in the EU. Reading
+        and drafting are separate settings.</p>
+      </div>
+      <div class="lane">
+        <h4>Memory and traces</h4>
+        <p>AgentCore Memory keeps a consented case as checked, masked values for thirty days.
+        Every prompt, answer and tool argument reads REDACTED in the spans.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i class="swatch"></i> A model speaks here</span>
+    <span><i class="swatch plain"></i> Deterministic Python, no model</span>
+    <span><i class="swatch broken" style="width:22px"></i> A refusal: no number, no fact</span>
+  </div>
+
+</div>
+</body>
+</html>
