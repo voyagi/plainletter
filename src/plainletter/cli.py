@@ -18,7 +18,7 @@ from .bedrock import BedrockReadingModel
 from .demo import sample_input, sample_names, scripted_model, scripted_reading
 from .intake import IntakeError, LetterInput
 from .kb import known_sender_ids
-from .pipeline import Pipeline, UngroundedOutputError
+from .pipeline import Pipeline, RefusedReadingError
 from .reading_model import ReadingModel
 from .render import desk_card_html, reminder_ics
 from .schemas import DeskReading
@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         reading = Pipeline(model=model).run(letter, visitor_language=language, today=today)
-    except UngroundedOutputError as refusal:
+    except RefusedReadingError as refusal:
         print(f"Refused: {refusal}", file=sys.stderr)
         print("Nothing was printed. Send this letter to a person.", file=sys.stderr)
         return REFUSED

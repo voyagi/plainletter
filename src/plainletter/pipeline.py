@@ -14,6 +14,10 @@ sits inside the agent: every structured answer is a tool call, and one carrying 
 is refused there and sent back for rewriting. This function sits outside it: it re-reads everything
 that came through and refuses the whole reading if a stray date or amount survived anyway. A
 refused reading at a help desk is recoverable. A confident wrong deadline is not.
+
+The same reasoning covers routes, and it is why a step's phone number or address is checked against
+the knowledge base here rather than trusted because the prompt asked for it. The letter is the one
+input to this pipeline that somebody else wrote, so a number printed on it is a claim, not a route.
 """
 
 from __future__ import annotations
@@ -42,12 +46,40 @@ from .schemas import (
 from .verify import ungrounded_claims, verify
 
 
-class UngroundedOutputError(RuntimeError):
+class RefusedReadingError(RuntimeError):
+    """A reading a deterministic layer stopped. This is the product working, not the product
+    failing, so it is answered as a verdict rather than raised at a visitor as an error."""
+
+    def __init__(self, claims: frozenset[str], message: str) -> None:
+        self.claims = claims
+        self.message = message
+        super().__init__(f"{message} ({', '.join(sorted(claims))})")
+
+
+class UngroundedOutputError(RefusedReadingError):
     """Raised when a date or amount reached the output without passing the verifier."""
 
     def __init__(self, claims: frozenset[str]) -> None:
-        self.claims = claims
-        super().__init__(f"ungrounded values in the output: {', '.join(sorted(claims))}")
+        super().__init__(
+            claims,
+            "The reading was refused because a date or amount in it does not stand in the letter.",
+        )
+
+
+class UnofficialRouteError(RefusedReadingError):
+    """Raised when a step named a way to reach the sender that the lookup never handed out.
+
+    The letter is the one input an attacker writes, so a phone number printed on it is not a route
+    however official the page looks. A wrong deadline costs a visitor a fine; a wrong phone number
+    on a printed card costs them whatever the person answering it asks for.
+    """
+
+    def __init__(self, routes: frozenset[str]) -> None:
+        super().__init__(
+            routes,
+            "The reading was refused because a step named a way to reach the sender that the "
+            "knowledge base never gave out.",
+        )
 
 
 @dataclass(frozen=True)
@@ -118,6 +150,7 @@ class Pipeline:
 
         steps = self.model.plan(facts, grounded, sender, deadline, visitor_language)
         _refuse_stray(_step_text(steps), allowed)
+        _refuse_unofficial(steps, sender)
         yield ReadingProgress(stage="steps", steps=steps)
 
         # Whether a letter needs writing back to is the drafter's call, not a property of the
@@ -249,6 +282,23 @@ def _refuse_stray(parts: Iterable[str], allowed: frozenset[str]) -> None:
     stray = ungrounded_claims(" ".join(parts), allowed)
     if stray:
         raise UngroundedOutputError(stray)
+
+
+def _refuse_unofficial(steps: tuple[ActionStep, ...], sender: Sender | None) -> None:
+    """Stop the reading when a step names a route the knowledge base never handed out.
+
+    The planning prompt says every route has to come from the lookup, and a prompt is a preference.
+    This is the check. A sender the knowledge base does not carry has no routes at all, so a route
+    on one of those letters is by definition invented, and those letters already go to a person.
+    """
+    permitted = sender.route_values() if sender is not None else frozenset()
+    invented = frozenset(
+        step.official_route
+        for step in steps
+        if step.official_route and step.official_route not in permitted
+    )
+    if invented:
+        raise UnofficialRouteError(invented)
 
 
 def _explanation_text(explanations: tuple[Explanation, ...]) -> list[str]:

@@ -48,7 +48,7 @@ from .memory import (
     NoCaseMemory,
     new_case_id,
 )
-from .pipeline import Pipeline, UngroundedOutputError
+from .pipeline import Pipeline, RefusedReadingError
 from .reading_model import ReadingModel
 from .redact import redact
 from .render import desk_card_html, reminder_ics
@@ -181,16 +181,13 @@ def _events(
                         reading: DeskReading = finished.value
                         break
                 yield _redacted(_only_what_this_stage_set(progress))
-        except UngroundedOutputError as refusal:
+        except RefusedReadingError as refusal:
             span.set_attribute("plainletter.refused", True)
             yield {
                 "stage": "refused",
                 "refused": True,
                 "claims": sorted(refusal.claims),
-                "message": (
-                    "The reading was refused because a date or amount in it does not stand in "
-                    "the letter. Nothing was printed. This letter needs a person."
-                ),
+                "message": f"{refusal.message} Nothing was printed. This letter needs a person.",
             }
             return
         except Exception as failure:
