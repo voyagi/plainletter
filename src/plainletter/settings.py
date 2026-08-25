@@ -14,6 +14,7 @@ from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .bedrock import DRAFTING_MODEL_ID, READING_MODEL_ID, SOURCE_REGION
+from .spend import DEFAULT_READINGS_PER_DAY
 
 
 class Settings(BaseSettings):
@@ -32,6 +33,13 @@ class Settings(BaseSettings):
     memory_id: str | None = Field(
         default=None,
         validation_alias=AliasChoices("PLAINLETTER_MEMORY_ID", "MEMORY_PLAINLETTERMEMORY_ID"),
+    )
+    # Zero closes the reading service without taking it down, which is a setting an operator who is
+    # watching a bill climb actually wants.
+    max_readings_per_day: int = Field(
+        default=DEFAULT_READINGS_PER_DAY,
+        ge=0,
+        validation_alias=AliasChoices("PLAINLETTER_MAX_READINGS_PER_DAY"),
     )
 
 

@@ -43,6 +43,7 @@ from .reading_model import (
     TRANSCRIBE_PROMPT,
 )
 from .schemas import ActionStep, DeadlineView, DraftLetter, Explanation, LetterFacts
+from .spend import MAX_OUTPUT_TOKENS, transcription_tokens
 from .telemetry import mask_model_content_in_traces
 from .tools import official_routes
 
@@ -76,8 +77,8 @@ class NoStructuredAnswerError(RuntimeError):
     """The model finished without calling the answer tool, so there is nothing to read."""
 
 
-def bedrock_model(model_id: str, region: str) -> Model:
-    return BedrockModel(model_id=model_id, region_name=region)
+def bedrock_model(model_id: str, region: str, max_tokens: int) -> Model:
+    return BedrockModel(model_id=model_id, region_name=region, max_tokens=max_tokens)
 
 
 @dataclass
@@ -89,10 +90,15 @@ class BedrockReadingModel:
     region: str = SOURCE_REGION
     reading_model_id: str = READING_MODEL_ID
     drafting_model_id: str = DRAFTING_MODEL_ID
-    make_model: Callable[[str, str], Model] = bedrock_model
+    make_model: Callable[[str, str, int], Model] = bedrock_model
 
     def transcribe(self, letter: LetterInput) -> str:
-        agent = self._agent(self.reading_model_id, TRANSCRIBE_PROMPT, guard=None)
+        agent = self._agent(
+            self.reading_model_id,
+            TRANSCRIBE_PROMPT,
+            guard=None,
+            max_tokens=transcription_tokens(letter.pages),
+        )
         return str(agent(list(letter.blocks)))
 
     def read(self, letter: LetterInput) -> LetterFacts:
@@ -171,11 +177,12 @@ class BedrockReadingModel:
         *,
         guard: GroundingGuard | None,
         tools: list[Any] | None = None,
+        max_tokens: int = MAX_OUTPUT_TOKENS,
     ) -> Agent:
         # The tracer is built by the first Agent in the process and reads its policy then.
         mask_model_content_in_traces()
         return Agent(
-            model=self.make_model(model_id, self.region),
+            model=self.make_model(model_id, self.region, max_tokens),
             system_prompt=system_prompt,
             tools=tools,
             hooks=[self.audit],

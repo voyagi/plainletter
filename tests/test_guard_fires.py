@@ -52,7 +52,9 @@ def explanation(by_when: str, tool_use_id: str) -> dict[str, Any]:
 
 
 def reader_with(model: ScriptedModel) -> BedrockReadingModel:
-    return BedrockReadingModel(sender_ids=("cjib",), make_model=lambda model_id, region: model)
+    return BedrockReadingModel(
+        sender_ids=("cjib",), make_model=lambda model_id, region, max_tokens: model
+    )
 
 
 def tool_result_text(messages: list[dict[str, Any]], tool_use_id: str) -> str:

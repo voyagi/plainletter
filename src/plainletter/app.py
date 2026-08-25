@@ -4,10 +4,12 @@ One POST carries one letter and comes back with everything the desk needs: the c
 printable card and the calendar reminder. The console never talks to Bedrock itself, so no AWS
 credential ever reaches a browser.
 
-Five things this layer is responsible for and the pipeline is not:
+Six things this layer is responsible for and the pipeline is not:
 
 * Refusing an upload before it becomes a model call. A payload with no letter in it, or 25 MB of
   something that is not a letter, is answered rather than forwarded.
+* The daily ceiling on readings, claimed here for the same reason: it is the last point at which
+  refusing is still free. What that ceiling can and cannot promise is written in `spend.py`.
 * Answering a refusal as an answer. When the check fails, that is the product working, so it comes
   back as a structured verdict with a 200 rather than as a server error.
 * Masking. The card redacts on its way to the printer; this redacts every string on its way to the
@@ -27,6 +29,7 @@ import json
 import logging
 from collections.abc import Iterator
 from datetime import date
+from functools import lru_cache
 from typing import Any
 
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
@@ -51,6 +54,7 @@ from .redact import redact
 from .render import desk_card_html, reminder_ics
 from .schemas import DeskReading, ReadingProgress
 from .settings import settings
+from .spend import DailyReadings
 from .telemetry import record_tool_outcome, start_reading, within
 
 logger = logging.getLogger(__name__)
@@ -62,6 +66,12 @@ MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 DEFAULT_LANGUAGE = "en"
 
 app = BedrockAgentCoreApp()
+
+
+@lru_cache(maxsize=1)
+def daily_readings() -> DailyReadings:
+    """This runtime's ceiling on model-backed readings, built once and kept for its lifetime."""
+    return DailyReadings(limit=settings().max_readings_per_day)
 
 
 def case_memory() -> CaseMemory:
@@ -118,6 +128,18 @@ def read_letter(payload: dict[str, Any]) -> dict[str, Any] | Iterator[dict[str, 
         return _error("upload", str(unreadable))
     except ValueError as unusable:
         return _error("payload", str(unusable))
+
+    # After the upload has been decoded and before the first model call: a letter that was never
+    # readable should not spend a reading, and a reading that is refused should cost nothing.
+    if request.letter is not None:
+        claim = daily_readings().claim()
+        if not claim.allowed:
+            return _error(
+                "budget",
+                f"this desk has read its {claim.limit} letters for today. Try again tomorrow, "
+                "or ask whoever runs this desk to raise the daily limit.",
+            )
+        logger.info("plainletter.budget %s of %s on %s", claim.used, claim.limit, claim.day)
 
     today = request.today or date.today()
     events = _events(request, letter, model, language, today)
