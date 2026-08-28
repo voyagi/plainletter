@@ -1,12 +1,28 @@
 """What a trace may carry, decided in code before the first agent exists.
 
-Strands writes every prompt, every model answer and every tool argument into its spans by default.
-On the runtime that would put the photographed letter, its transcript and the citizen service number
-printed on it into CloudWatch as span events, which is the stored letter this product promises never
-to keep, kept by the monitoring instead. The SDK masks all of that when one environment variable
-says so, and this module says so at import, before the tracer is built, rather than leaving it to a
-deployment setting that a second deployment can forget. A deployment that unmasks specific
-attributes is overruled on purpose: there is no attribute on a letter worth the exception.
+There are TWO ways a letter reaches CloudWatch, they are switched off by different variables, and
+the first deployed run proved that shutting only the first one is not enough.
+
+Strands writes every prompt, every model answer and every tool argument into its own spans by
+default. That is the first, and `OTEL_SEMCONV_STABILITY_OPT_IN` closes it.
+
+The second is the AWS OpenTelemetry distro. It instruments botocore itself, so it sees the Bedrock
+request before Strands is involved, and it emits the whole request body as a `gen_ai.user.message`
+log record. Nothing in Strands touches that. Worse, the distro OPTS IN on your behalf:
+`aws_opentelemetry_distro.py` runs
+`os.environ.setdefault("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true")`, while the
+instrumentation's own default is `false`. Because it is `setdefault`, a value already present wins,
+which is why this module sets it rather than asking for it.
+
+Measured on the deployed runtime on 2026-08-28, before this was pinned: 49 places in one trace read
+`[REDACTED]`, and one log record carried all sixteen lines of the letter, with the visitor's name,
+street, reference number and every amount. The first switch was working perfectly and the letter was
+in CloudWatch anyway.
+
+Both are pinned here, at import, before any tracer or agent exists, rather than left to a deployment
+setting a second deployment can forget. `agentcore.json` carries them too, so the process starts
+with them; this module is what holds when it does not. A deployment that unmasks specific attributes
+is overruled on purpose: there is no attribute on a letter worth the exception.
 
 Beside the SDK's own spans the product records one span per reading, carrying counts and outcomes
 only: how many facts were grounded, whether the check passed, which tools ran and how each ended.
@@ -27,6 +43,11 @@ UNREDACTED_PREFIX = "gen_ai_unredacted_attributes="
 # The token with an empty list after it: nothing is left unmasked.
 MASK_EVERYTHING = UNREDACTED_PREFIX
 
+#: The AWS distro's variable, read by the botocore instrumentation on every Bedrock call. Its own
+#: default is "false" and only the exact string "true" turns it on, so anything else closes it.
+CAPTURE_VARIABLE = "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
+CAPTURE_NOTHING = "false"
+
 READING_SPAN = "plainletter.reading"
 
 
@@ -43,7 +64,25 @@ def mask_model_content_in_traces() -> str:
     return value
 
 
-mask_model_content_in_traces()
+def stop_capturing_message_content() -> str:
+    """Close the distro's own channel, the one that put a whole letter in CloudWatch.
+
+    Overwritten rather than defaulted. The distro sets this to "true" with `setdefault` before any
+    of our code runs, so a value has to be written OVER it, and the instrumentation reads the
+    variable on each call rather than caching it, which is what makes writing it here effective at
+    all.
+    """
+    os.environ[CAPTURE_VARIABLE] = CAPTURE_NOTHING
+    return CAPTURE_NOTHING
+
+
+def keep_letters_out_of_traces() -> None:
+    """Both switches, together, because closing either one alone leaves the letter in the trace."""
+    mask_model_content_in_traces()
+    stop_capturing_message_content()
+
+
+keep_letters_out_of_traces()
 
 
 def start_reading(**attributes: str | int | bool) -> Span:

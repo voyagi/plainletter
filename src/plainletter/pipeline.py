@@ -22,6 +22,7 @@ input to this pipeline that somebody else wrote, so a number printed on it is a 
 
 from __future__ import annotations
 
+import re
 from collections.abc import Generator, Iterable
 from dataclasses import dataclass
 from datetime import date
@@ -148,9 +149,10 @@ class Pipeline:
         _refuse_stray(_explanation_text(explanations), allowed)
         yield ReadingProgress(stage="explanations", explanations=explanations)
 
-        steps = self.model.plan(facts, grounded, sender, deadline, visitor_language)
+        steps = official_steps(
+            self.model.plan(facts, grounded, sender, deadline, visitor_language), sender
+        )
         _refuse_stray(_step_text(steps), allowed)
-        _refuse_unofficial(steps, sender)
         yield ReadingProgress(stage="steps", steps=steps)
 
         # Whether a letter needs writing back to is the drafter's call, not a property of the
@@ -284,21 +286,96 @@ def _refuse_stray(parts: Iterable[str], allowed: frozenset[str]) -> None:
         raise UngroundedOutputError(stray)
 
 
-def _refuse_unofficial(steps: tuple[ActionStep, ...], sender: Sender | None) -> None:
-    """Stop the reading when a step names a route the knowledge base never handed out.
+# Anything left in a route after the permitted values are taken out that could itself be a way to
+# reach somebody: a digit, an address, a scheme, or a bare host name. Labels and punctuation are
+# not.
+#
+# The last alternative is the one that is easy to leave out and it is why this is a pattern rather
+# than a list of three obvious things: `spoedbetaling-belastingdienst.nl` carries no digit, no `@`,
+# no `://` and no `www.`, and it is a perfectly good way to send somebody to the wrong place. Two
+# letters after the dot is enough to catch every host and short enough not to catch `z.o.z.`.
+#
+# The host label is `\w`, not `a-z`, so an internationalised name counts. A pattern spelled in ASCII
+# would have let a route through on the strength of the alphabet it was written in, which is not a
+# security property anybody would defend out loud.
+_REACHABLE = re.compile(r"\d|@|://|\b[^\W_][\w-]*\.[^\W\d_]{2,}", re.UNICODE)
+
+
+def route_is_official(route: str, permitted: frozenset[str]) -> bool:
+    """Whether every way of reaching somebody inside this route came from the lookup.
+
+    An exact match is the ordinary case. The rest of this exists because of what the first deployed
+    run did: asked for one route, the model wrote the referral's phone and website into the single
+    field, as `0800 8020 | https://www.juridischloket.nl/` and in ten other arrangements. Both
+    halves were values the lookup had just returned, an exact comparison matched neither, and twenty
+    of twenty-two letters were refused over formatting. That is a worse failure than the one this
+    check prevents: a desk that refuses nine letters in ten helps nobody.
+
+    So the values are taken out and what remains is judged. If nothing that could reach a person is
+    left, every route in the string came from the lookup and the arrangement is just prose. A number
+    printed on the letter survives that removal and is still refused, which is the property worth
+    keeping: the letter is the one input somebody else wrote.
+    """
+    if route in permitted:
+        return True
+    remainder = route
+    # Longest first, so a value that contains another is removed whole rather than in pieces.
+    for value in sorted(permitted, key=len, reverse=True):
+        remainder = remainder.replace(value, " ")
+    return not _REACHABLE.search(remainder)
+
+
+def single_route(route: str, permitted: frozenset[str]) -> str | None:
+    """The one lookup value this route should carry, out of however many it was written with.
+
+    Accepting a combined route is not the same as printing one. The console renders this field as
+    the target of a link and the desk card prints it as the one place to go, so
+    `0800 8020 | https://www.juridischloket.nl/` arriving intact is a dead link on a screen in front
+    of a frightened person: better than refusing the letter, and still wrong.
+
+    The first permitted value in the string wins, which keeps the order the planner chose rather
+    than imposing one, and it is always exactly a value the lookup returned. A route that is already
+    one value is returned untouched, and one that carries none is left alone for the check above to
+    refuse.
+    """
+    if route in permitted:
+        return route
+    found = [(route.find(value), value) for value in permitted if value in route]
+    if not found:
+        return None
+    # Earliest wins, and the longest of the ones that tie. Two permitted routes can share a prefix,
+    # `https://example.test/` and `https://example.test/pay`, and both then match at the same
+    # position: ordering on the string instead would quietly hand back the shorter one and send the
+    # visitor to a different official page than the step meant.
+    return min(found, key=lambda match: (match[0], -len(match[1])))[1]
+
+
+def official_steps(steps: tuple[ActionStep, ...], sender: Sender | None) -> tuple[ActionStep, ...]:
+    """Refuse a step naming a route the knowledge base never handed out, and reduce the rest to one.
 
     The planning prompt says every route has to come from the lookup, and a prompt is a preference.
     This is the check. A sender the knowledge base does not carry has no routes at all, so a route
     on one of those letters is by definition invented, and those letters already go to a person.
+
+    The reduction is here rather than at the two places that display a route, because a step leaving
+    this function with two of them in one field is a bug wherever it is eventually printed.
     """
     permitted = sender.route_values() if sender is not None else frozenset()
     invented = frozenset(
         step.official_route
         for step in steps
-        if step.official_route and step.official_route not in permitted
+        if step.official_route and not route_is_official(step.official_route, permitted)
     )
     if invented:
         raise UnofficialRouteError(invented)
+
+    def reduced(step: ActionStep) -> ActionStep:
+        if not step.official_route or step.official_route in permitted:
+            return step
+        one = single_route(step.official_route, permitted)
+        return step.model_copy(update={"official_route": one})
+
+    return tuple(reduced(step) for step in steps)
 
 
 def _explanation_text(explanations: tuple[Explanation, ...]) -> list[str]:

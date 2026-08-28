@@ -7,11 +7,26 @@ cdk/cdk.out/
 cdk/node_modules/
 cdk/dist/
 
+# The CDK app's lockfile. It was committed once and taken straight back out, and the reason is worth
+# keeping so nobody adds it again for the same good reason. `aws-cdk-lib` BUNDLES its dependencies,
+# among them a `brace-expansion` with three HIGH denial-of-service advisories against it, and a
+# bundled dependency cannot be moved by an npm override: it arrives inside the published tarball.
+# Committing the lockfile therefore turns the CI security job red over a package that runs on the
+# operator's own machine while a stack is synthesised, is never in the Python runtime that ships,
+# and is reached only by file paths the operator wrote. The honest options were a documented
+# suppression or no lockfile, and no lockfile is smaller: this directory is generated scaffolding
+# for a one-command deploy, not a dependency surface anybody consumes.
+cdk/package-lock.json
+
 # What `agentcore package` and `agentcore deploy` build here: the zip and its staging tree
 *.zip
 plainletter/
 
-# CLI internals, except the deployed state the CLI expects to find
-.cli/*
-!.cli/deployed-state.json
+# CLI internals. The scaffold tracks .cli/deployed-state.json and that is right for a private
+# repository, wrong for this one: the moment a deploy runs, the CLI fills it with four ARNs and
+# every one of them carries the AWS account id. This repository goes public at submission, and the
+# build spec's deploy decision is that the account id stays out of git, which is also why
+# aws-targets.json is ignored above. The CLI rebuilds this file from the stack whenever it is
+# missing, so nothing is lost by keeping it local.
+.cli/
 .cache/*

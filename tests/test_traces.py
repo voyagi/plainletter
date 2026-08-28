@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -22,11 +25,15 @@ from plainletter.app import ReadRequest, _events
 from plainletter.bedrock import BedrockReadingModel
 from plainletter.demo import sample_input, sample_text, scripted_reading
 from plainletter.telemetry import (
+    CAPTURE_NOTHING,
+    CAPTURE_VARIABLE,
     MASK_EVERYTHING,
     OPT_IN_VARIABLE,
+    keep_letters_out_of_traces,
     mask_model_content_in_traces,
     record_tool_outcome,
     start_reading,
+    stop_capturing_message_content,
 )
 from scripted_strands import ScriptedModel, tool_use
 
@@ -51,6 +58,83 @@ def everything_in(spans: list[ReadableSpan]) -> str:
 
 def test_the_policy_is_pinned_in_the_environment_before_any_agent_exists() -> None:
     assert MASK_EVERYTHING in os.environ[OPT_IN_VARIABLE].split(",")
+
+
+def test_the_restrictive_values_are_what_they_are_spelled_out_here() -> None:
+    """Written out, not imported, because every other assertion here imports them.
+
+    A test that compares the environment against the constant it came from passes just as happily
+    when both are changed to something permissive. These two strings are the ones the AWS distro and
+    the Strands tracer actually read, so this is the assertion that would notice.
+    """
+    assert CAPTURE_NOTHING == "false"
+    assert MASK_EVERYTHING == "gen_ai_unredacted_attributes="
+    assert CAPTURE_VARIABLE == "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
+    assert OPT_IN_VARIABLE == "OTEL_SEMCONV_STABILITY_OPT_IN"
+
+    assert os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] == "false"
+    assert "gen_ai_unredacted_attributes=" in os.environ["OTEL_SEMCONV_STABILITY_OPT_IN"].split(",")
+
+
+def test_the_distros_own_capture_switch_is_pinned_shut_too() -> None:
+    """The second channel, and the one that actually leaked on the deployed runtime.
+
+    Strands' redaction was working perfectly and a whole letter was in CloudWatch anyway, because
+    the AWS distro instruments botocore and emits the Bedrock request body as its own log record.
+    """
+    assert os.environ[CAPTURE_VARIABLE] == CAPTURE_NOTHING
+
+
+@contextmanager
+def restored(*names: str) -> Iterator[None]:
+    """Put every named environment variable back, whether it was set before or absent."""
+    before = {name: os.environ.get(name) for name in names}
+    try:
+        yield
+    finally:
+        for name, value in before.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+
+def test_the_distro_turning_capture_on_is_overwritten_not_defaulted() -> None:
+    """`aws_opentelemetry_distro` runs `setdefault(CAPTURE, "true")` before any of our code.
+
+    A value that merely defaulted would lose that race every time, so this one has to overwrite.
+    """
+    with restored(CAPTURE_VARIABLE):
+        os.environ[CAPTURE_VARIABLE] = "true"
+        assert stop_capturing_message_content() == CAPTURE_NOTHING
+        assert os.environ[CAPTURE_VARIABLE] == CAPTURE_NOTHING
+
+
+def test_closing_one_channel_is_not_closing_both() -> None:
+    # The lesson from the live run, kept as a test: whoever adds a third channel should have to
+    # delete an assertion rather than merely forget one.
+    #
+    # Both variables are restored, not just the one this test sets. The calls below write to the
+    # opt-in variable as well, and a test that leaves the environment changed makes the next one
+    # depend on the order they happened to run in.
+    with restored(CAPTURE_VARIABLE, OPT_IN_VARIABLE):
+        os.environ[CAPTURE_VARIABLE] = "true"
+        mask_model_content_in_traces()
+        assert os.environ[CAPTURE_VARIABLE] == "true", "masking spans must not touch the distro"
+        keep_letters_out_of_traces()
+        assert os.environ[CAPTURE_VARIABLE] == CAPTURE_NOTHING
+        assert MASK_EVERYTHING in os.environ[OPT_IN_VARIABLE].split(",")
+
+
+def test_the_deployment_carries_both_switches_as_well_as_the_code() -> None:
+    """A runbook naming a runtime variable is worth nothing unless the deploy spec carries it.
+
+    The same lesson as the emergency stop that set a variable on the operator's own laptop.
+    """
+    spec = json.loads(Path("agentcore/agentcore.json").read_text(encoding="utf-8"))
+    declared = {item["name"]: item["value"] for item in spec["runtimes"][0]["envVars"]}
+    assert declared[CAPTURE_VARIABLE] == CAPTURE_NOTHING
+    assert declared[OPT_IN_VARIABLE] == MASK_EVERYTHING
 
 
 def test_a_deployment_that_unmasks_an_attribute_is_overruled() -> None:

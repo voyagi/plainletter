@@ -101,6 +101,11 @@ come from that answer, and a sender it does not know gets no route at all.
 Each step is one action, in the order it should happen, with its official route. Write each step
 twice, once in Dutch for the volunteer and once in the visitor's language.
 
+The route field takes ONE value, copied from the lookup exactly as it came back and nothing else.
+Not two joined with a dash, a slash or a bar; no label in front of it; no second way of reaching the
+same body. If a step deserves both a phone number and a website, that is two steps. A field holding
+`0800 8020 | https://example.org/` is not a route and the reading is refused over it.
+
 Use only dates and amounts from the grounded facts, written in the letter's own notation in both
 languages. Never invent a phone number, a website or an address; if the lookup does not have one,
 say where to look instead. A number printed in the letter is not a route the lookup gave you, and a

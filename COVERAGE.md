@@ -13,12 +13,18 @@ both.
 
 | Suite | Command | Tests | Time |
 | --- | --- | --- | --- |
-| Agent, scripts and the eval harness, Python | `uv run pytest -q` | 635 passed | 6.1s |
+| Agent, scripts and the eval harness, Python | `uv run pytest -q` | 915 passed | 7.9s |
 | Console and landing page | `npm run test --workspace @plainletter/web` | 34 passed, 4 files | 1.5s |
 
-323 of those 635 are the evaluation set checking itself and its scorer, which is a large share of
-the count and a small share of the work: most of them are one letter's worth of assertion, run once
-per letter.
+Two thirds of that count is one assertion repeated per item rather than a large body of work: 323
+are the evaluation set checking itself and its scorer, and 251 belong to the account-id check, which
+is one case per tracked file (`git ls-files | wc -l` says 250) plus one that asserts the file listing
+came back at all, since a check that ran over nothing would pass just as quietly. The repository goes
+public at submission
+and is then frozen, so a leak found afterwards cannot be edited out, and the only remedy is deleting
+and recreating the repository. That check exists because the first deploy nearly caused exactly
+that: the AgentCore scaffold tracks `agentcore/.cli/deployed-state.json` on purpose, and the deploy
+filled it with four ARNs carrying the account id.
 
 Neither suite can reach Amazon Bedrock or spend anything. The model is replaced by a scripted
 stand-in (`tests/scripted_strands.py`), so a test that appears to read a letter is exercising the
@@ -169,9 +175,13 @@ letters and not the ratio.
   measured by driving a real browser by hand: zero contrast failures in both themes on every route,
   no body text under 16px, one heading per page, no control under 44px, no horizontal scroll at
   390px. Real measurements, and not one of them will run again by itself. A committed gate would.
-- **A live deployment.** Nothing here has run against Amazon Bedrock or AgentCore Runtime. The
-  three claims in `docs/deploy.md` under "Check the three things" are proven locally against a
-  scripted model, a fake store and the local runtime, and are unproven in Frankfurt.
+- **A live deployment: done, and it changed two things.** The agent ran on AgentCore Runtime in
+  Frankfurt on 2026-08-28 and all three claims in `docs/deploy.md` under "Check the three things"
+  were checked against it rather than against a scripted model. Two passed as written. The third did
+  not: the first trace carried all sixteen lines of the letter, because the AWS OpenTelemetry distro
+  captures the Bedrock request itself and opts you in, which no Strands setting touches. It is
+  switched off in code and in the deployment now, and a fresh trace of the same letter carries none
+  of it. What is still unproven in Frankfurt is the console, which is not hosted yet.
 - **A Lighthouse score.** `lighthouse` is not installed, so the composite figure has never been
   produced. Its parts were measured directly, including a 166 kB bundle against a 260 kB budget
   enforced by `npm run gate:size`.

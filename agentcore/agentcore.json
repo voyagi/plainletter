@@ -26,6 +26,10 @@
           "value": "gen_ai_unredacted_attributes="
         },
         {
+          "name": "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT",
+          "value": "false"
+        },
+        {
           "name": "PLAINLETTER_MAX_READINGS_PER_DAY",
           "value": "200"
         }
