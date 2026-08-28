@@ -25,6 +25,12 @@ export const env = createEnv({
     // visitors, at the exact line where the law wants a real one.
     PLAINLETTER_CONTROLLER_NAME: z.string().min(1).optional(),
     PLAINLETTER_CONTROLLER_CONTACT: z.string().min(1).optional(),
+    // Article 37 makes a data protection officer compulsory for a public authority or body, and
+    // Article 37(7) makes publishing their contact details compulsory too. Whether it applies is a
+    // fact about the operator, so it is configured here for the same reason the controller is: a
+    // municipality running its own copy would otherwise publish a page saying it has no officer,
+    // which is the one thing it may not say.
+    PLAINLETTER_DPO_CONTACT: z.string().min(1).optional(),
   },
   clientPrefix: 'NEXT_PUBLIC_',
   client: {
@@ -37,6 +43,7 @@ export const env = createEnv({
     PLAINLETTER_TRUST_PROXY_HEADER: process.env.PLAINLETTER_TRUST_PROXY_HEADER,
     PLAINLETTER_CONTROLLER_NAME: process.env.PLAINLETTER_CONTROLLER_NAME,
     PLAINLETTER_CONTROLLER_CONTACT: process.env.PLAINLETTER_CONTROLLER_CONTACT,
+    PLAINLETTER_DPO_CONTACT: process.env.PLAINLETTER_DPO_CONTACT,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   },
   emptyStringAsUndefined: true,

@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 const CONTROLLER = env.PLAINLETTER_CONTROLLER_NAME;
 const CONTROLLER_CONTACT = env.PLAINLETTER_CONTROLLER_CONTACT;
 const CONTROLLER_NAMED = Boolean(CONTROLLER) && Boolean(CONTROLLER_CONTACT);
+const DPO_CONTACT = env.PLAINLETTER_DPO_CONTACT;
 
 function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
@@ -81,10 +82,20 @@ export default function Privacy() {
           itself is the controller of that installation, and its own name belongs here rather than
           anybody else&rsquo;s.
         </p>
-        <p className="m-0 text-[16px] text-ink-2">
-          This desk has no data protection officer, because none is required of it. A public body
-          running its own copy does need one and names them here. Questions go to the controller.
-        </p>
+        {DPO_CONTACT ? (
+          <p className="m-0 text-[16px] text-ink-2">
+            This desk&rsquo;s data protection officer can be reached at{' '}
+            <a className="underline underline-offset-2" href={`mailto:${DPO_CONTACT}`}>
+              {DPO_CONTACT}
+            </a>
+            . Anything else goes to the controller.
+          </p>
+        ) : (
+          <p className="m-0 text-[16px] text-ink-2">
+            This desk has not named a data protection officer, so questions go to the controller. A
+            public body running its own copy has to name one, and names them here.
+          </p>
+        )}
       </Section>
 
       <Section heading="What is processed, why, and on what basis">

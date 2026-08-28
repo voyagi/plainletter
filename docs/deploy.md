@@ -110,7 +110,23 @@ PLAINLETTER_CONTROLLER_CONTACT=hello@taranity.com
 Those are the values for the hosted demo. A library running its own copy is the controller of that
 copy and sets its own name and contact address here. Left unset, the page says the organisation
 running the desk is the controller and tells the visitor to ask at the counter, which is true but is
-not the name and address Article 13 asks for.
+not the name and address Article 13 asks for. They are a pair: the console refuses to start with one
+of them set and the other empty, because a name nobody can write to is not a disclosure.
+
+One more, and it is compulsory rather than optional for some operators:
+
+```sh
+PLAINLETTER_DPO_CONTACT=dpo@example.org
+```
+
+Article 37 makes a data protection officer compulsory for a public authority or body, and Article
+37(7) makes publishing their contact details compulsory with it. **If you are a municipality, a
+public library service or any other public body, this is not optional and the page is not correct
+without it.** The hosted demo leaves it empty, and an empty value makes the page say this desk has
+not named an officer and send questions to the controller, which describes the configuration rather
+than claiming that no officer is required. The assessment behind the demo's own answer is written
+out limb by limb in `docs/privacy-accountability.md`, and it is an assessment about that deployment
+and not about yours.
 
 The upload route meters each caller by the last hop of `X-Forwarded-For`, and that entry is only
 trustworthy when a proxy really wrote it. Left unset, every caller is counted as one, so the desk
