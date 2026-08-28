@@ -17,8 +17,10 @@ both.
 | Console and landing page | `npm run test --workspace @plainletter/web` | 34 passed, 4 files | 1.5s |
 
 Two thirds of that count is one assertion repeated per item rather than a large body of work: 323
-are the evaluation set checking itself and its scorer, and 249 are one check applied to each of the
-248 tracked files, that no file carries an AWS account id. The repository goes public at submission
+are the evaluation set checking itself and its scorer, and 251 belong to the account-id check, which
+is one case per tracked file (`git ls-files | wc -l` says 250) plus one that asserts the file listing
+came back at all, since a check that ran over nothing would pass just as quietly. The repository goes
+public at submission
 and is then frozen, so a leak found afterwards cannot be edited out, and the only remedy is deleting
 and recreating the repository. That check exists because the first deploy nearly caused exactly
 that: the AgentCore scaffold tracks `agentcore/.cli/deployed-state.json` on purpose, and the deploy

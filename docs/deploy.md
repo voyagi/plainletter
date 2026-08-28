@@ -117,6 +117,11 @@ where `request.json` holds the real request, and a JSON object sent any other wa
 }
 ```
 
+`today` is optional and exists so a reading can be pinned to a chosen day. The date above is the one
+the evaluation letters are written around, not today's, which is deliberate: it makes two runs of the
+same letter comparable. **Leave it out for a real letter**, or the deadline count and the posting date
+are worked out from somebody else's calendar.
+
 The answer is the finished reading with the printable card and the calendar reminder in it.
 
 ## Wire the console to the deployed agent

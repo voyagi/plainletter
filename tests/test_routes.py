@@ -12,7 +12,13 @@ from __future__ import annotations
 import pytest
 
 from plainletter.kb import get_sender
-from plainletter.pipeline import route_is_official
+from plainletter.pipeline import (
+    UnofficialRouteError,
+    official_steps,
+    route_is_official,
+    single_route,
+)
+from plainletter.schemas import ActionStep
 
 CJIB = get_sender("cjib")
 assert CJIB is not None
@@ -87,6 +93,72 @@ def test_a_sender_the_knowledge_base_does_not_carry_gets_no_route_at_all() -> No
     assert not route_is_official(PHONE, frozenset())
     assert not route_is_official(SITE, frozenset())
     assert route_is_official("vraag het aan de balie", frozenset())
+
+
+@pytest.mark.parametrize(
+    "route",
+    [
+        # An internationalised host is still a host. An ASCII-only pattern would have let one
+        # through on the strength of the alphabet it was written in.
+        "例子.测试",
+        "税務署.jp",
+        f"{PHONE} of ga naar例子.测试",
+    ],
+)
+def test_a_route_naming_an_internationalised_host_is_refused(route: str) -> None:
+    assert not route_is_official(route, PERMITTED)
+
+
+@pytest.mark.parametrize(
+    ("route", "kept"),
+    [
+        (f"{PHONE} | {SITE}", PHONE),
+        (f"{SITE} | telefoon: {PHONE}", SITE),
+        (f"Telefoon: {PHONE} | Website: {SITE}", PHONE),
+        (f"Het Juridisch Loket {EN_DASH} {PHONE} | {SITE}", PHONE),
+        (PHONE, PHONE),
+        (SITE, SITE),
+    ],
+)
+def test_a_combined_route_is_reduced_to_the_first_value_in_it(route: str, kept: str) -> None:
+    """Accepting a combined route is not the same as printing one.
+
+    The console renders this field as the target of a link and the card prints it as the one place
+    to go, so a string holding two of them is a dead link in front of a frightened person. The first
+    one wins, which keeps the order the planner chose.
+    """
+    assert single_route(route, PERMITTED) == kept
+
+
+def test_a_route_with_nothing_from_the_lookup_in_it_is_left_for_the_check_to_refuse() -> None:
+    assert single_route("0900 123 456", PERMITTED) is None
+
+
+def test_the_steps_that_leave_the_pipeline_carry_one_route_each() -> None:
+    combined = ActionStep(
+        order=1,
+        dutch="Bel het Juridisch Loket of kijk op de website.",
+        visitor="Hukuk Burosunu arayin veya web sitesine bakin.",
+        official_route=f"{PHONE} | {SITE}",
+    )
+    plain = ActionStep(order=2, dutch="Betaal de boete.", visitor="Cezayi odeyin.")
+
+    kept = official_steps((combined, plain), CJIB)
+
+    assert kept[0].official_route == PHONE
+    assert kept[0].dutch == combined.dutch, "only the route field is touched"
+    assert kept[1].official_route is None
+
+
+def test_an_invented_route_still_refuses_the_whole_reading() -> None:
+    step = ActionStep(
+        order=1,
+        dutch="Bel 0900 123 456.",
+        visitor="0900 123 456 numarasini arayin.",
+        official_route="0900 123 456",
+    )
+    with pytest.raises(UnofficialRouteError):
+        official_steps((step,), CJIB)
 
 
 def test_a_value_that_contains_another_is_removed_whole() -> None:
