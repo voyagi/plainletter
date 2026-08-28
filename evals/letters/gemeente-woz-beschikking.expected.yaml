@@ -1,0 +1,17 @@
+what_it_tests: >-
+  The largest number on the page is not the bill. A property valuation of EUR 312.000,00 sits above
+  three charges totalling EUR 1.025,10, and a reading that reports the valuation as the amount due
+  hands a visitor a figure three hundred times too big. The line amounts are deliberately not
+  asserted: the valuation has a label and no other field to sit in, so a careful reading may put it
+  beside the charges without being wrong.
+visitor_language: uk
+sender_id: gemeente
+reference: "3011 7745 2"
+issued_on: 2026-08-14
+deadline: 2026-10-15
+urgency: ample
+total_amount_cents: 102510
+handoff_required: false
+consequences_at_least: 1
+must_appear:
+  - "EUR 1.025,10"

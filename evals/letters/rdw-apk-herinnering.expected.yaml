@@ -1,0 +1,14 @@
+what_it_tests: >-
+  A deadline with no money anywhere near it. Every other letter in the set carries an amount, so
+  this is the one that catches a reading which produces one because it expects one. The reference is
+  not asserted: the only identifier on the page is a number plate, and calling that the reference is
+  a defensible reading rather than a wrong one.
+visitor_language: tr
+sender_id: rdw
+issued_on: 2026-08-13
+deadline: 2026-09-30
+urgency: ample
+total_amount_cents: null
+line_amount_cents: []
+handoff_required: true
+consequences_at_least: 1

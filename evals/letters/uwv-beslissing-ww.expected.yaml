@@ -1,0 +1,14 @@
+what_it_tests: >-
+  Three dates, none of them a deadline. The benefit starts on one, ends on another, and the letter
+  is dated a third time, so a reading that promotes the start date to a deadline puts an alarm in a
+  visitor's calendar for the day their money arrives. The monthly amount is not asserted as a total:
+  it is what the visitor receives, and the schema has no separate home for that.
+visitor_language: tr
+sender_id: uwv
+reference: "WW 8830 5514 06"
+issued_on: 2026-08-21
+deadline: null
+handoff_required: true
+consequences_at_least: 1
+must_appear:
+  - "EUR 1.876,40"

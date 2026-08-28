@@ -1,0 +1,14 @@
+what_it_tests: >-
+  Money that leaves by direct debit rather than by an act the visitor performs. The deadline is
+  deliberately not asserted: the letter names a repayment start and a first collection and no day by
+  which anyone must do anything, so both readings are defensible and scoring one of them would be
+  scoring a coin toss. What is asserted is the monthly amount reaching the visitor and the handoff,
+  since this sender's procedure has not been checked against an official page.
+visitor_language: uk
+sender_id: duo
+reference: "1198 4477"
+issued_on: 2026-08-17
+handoff_required: true
+consequences_at_least: 1
+must_appear:
+  - "EUR 89,55"

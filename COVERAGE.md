@@ -2,7 +2,8 @@
 
 Measured 2026-08-28. Every number below is the output of the command printed beside it, run that
 day on this tree. Nothing here is estimated, and a figure nobody can reproduce does not belong in
-this file.
+this file. Where a figure differs from an earlier revision of this file, the one here is the one
+that was just run.
 
 The short version: the agent is covered well, the browser half is covered thinly, and the reasons
 are different in each case and stated below rather than averaged into one number that would hide
@@ -12,8 +13,12 @@ both.
 
 | Suite | Command | Tests | Time |
 | --- | --- | --- | --- |
-| Agent and scripts, Python | `uv run pytest -q` | 301 passed | 4.9s |
+| Agent, scripts and the eval harness, Python | `uv run pytest -q` | 627 passed | 6.3s |
 | Console and landing page | `npm run test --workspace @plainletter/web` | 34 passed, 4 files | 1.5s |
+
+318 of those 627 are the evaluation set checking itself and its scorer, which is a large share of
+the count and a small share of the work: most of them are one letter's worth of assertion, run once
+per letter.
 
 Neither suite can reach Amazon Bedrock or spend anything. The model is replaced by a scripted
 stand-in (`tests/scripted_strands.py`), so a test that appears to read a letter is exercising the
@@ -23,7 +28,7 @@ pipeline, the verifier and the guard against a canned answer, never a live model
 
 `uv run pytest -q --cov=plainletter --cov=scripts --cov-report=term`
 
-**92% of 1,730 statements, 147 missed.**
+**92% of 1,735 statements, 143 missed.**
 
 | Module | Stmts | Miss | Cover | What it is |
 | --- | --- | --- | --- | --- |
@@ -41,12 +46,12 @@ pipeline, the verifier and the guard against a canned answer, never a live model
 | `scripts/__init__.py` | 0 | 0 | 100% | Package marker |
 | `plainletter/bedrock.py` | 99 | 1 | 99% | The model calls and the startup probe |
 | `plainletter/guard.py` | 44 | 1 | 98% | The intervention that refuses an ungrounded value |
-| `plainletter/kb.py` | 82 | 2 | 98% | The knowledge base of senders and official routes |
-| `plainletter/locales/nl.py` | 89 | 2 | 98% | Every Dutch fact, behind the boundary |
+| `plainletter/kb.py` | 82 | 1 | 99% | The knowledge base of senders and official routes |
+| `plainletter/locales/nl.py` | 90 | 2 | 98% | Every Dutch fact, behind the boundary |
+| `plainletter/pipeline.py` | 112 | 2 | 98% | The stages, in order |
 | `plainletter/marks.py` | 86 | 3 | 97% | The numerals in the margin of the letter |
-| `plainletter/pipeline.py` | 112 | 5 | 96% | The stages, in order |
 | `plainletter/redact.py` | 20 | 1 | 95% | Masking a citizen service number and an IBAN |
-| `plainletter/memory.py` | 103 | 6 | 94% | The consented case store and erasure |
+| `plainletter/memory.py` | 107 | 6 | 94% | The consented case store and erasure |
 | `plainletter/render.py` | 84 | 5 | 94% | The desk card and the calendar reminder |
 | `plainletter/app.py` | 206 | 15 | 93% | The AgentCore entrypoint |
 | `plainletter/intake.py` | 132 | 12 | 91% | Photographs, PDFs, and what is refused |
@@ -61,9 +66,20 @@ path is reported, what the exit codes are. Written down here rather than left to
 whoever first runs it.
 
 The rest of the misses are narrow and deliberate: branches that need a real AWS client
-(`bedrock.py` line 255), a failure path in the guard, the two knowledge-base lookups that only fire
-on an unknown sender, and the error arms of the intake and verifier that need a malformed model
-answer to reach.
+(`bedrock.py` line 255), a failure path in the guard, the knowledge-base lookup that only fires on
+an unknown sender, and the error arms of the intake and verifier that need a malformed model answer
+to reach.
+
+`pipeline.py` reads two lines higher than it did before the evaluation set existed, because reading
+twenty-two letters with stand-in models that answer badly reaches both refusal paths.
+
+## Line coverage, the evaluation harness
+
+`uv run pytest -q --cov=evals --cov-report=term`
+
+**99% of 400 statements, 2 missed.** `cases.py`, `fingerprint.py` and `scoring.py` are at 100%. The
+two missed lines are both in `run.py` and are the two that cannot run without Amazon Bedrock or a
+terminal: the factory that builds the live model, and the module's own entry point.
 
 ## Line coverage, the console and landing page
 
@@ -124,11 +140,31 @@ is worth finishing on a machine that can leave it running.
 Nothing in the product itself is mutation tested. There is no Stryker configuration and no score to
 quote, so none is quoted.
 
+The evaluation set is held to the same standard, and for the same reason: a harness only ever run
+against a good answer has never been shown to detect a bad one. Thirteen kinds of wrong reading are
+manufactured and each one has to fail exactly one named check, one, not at least one. A refused
+letter has to fail every question it asks rather than skipping them, since skipping would shrink the
+denominator exactly when the product broke. And the whole corpus is read end to end by two stand-in
+models that answer badly on purpose.
+
+| Harness | Command | Result |
+| --- | --- | --- |
+| The eval scorer, one fault at a time | `uv run pytest tests/test_eval_scoring.py` | **21 passed**, 13 of them a manufactured fault caught by exactly one check |
+| The eval corpus against its own letters | `uv run pytest tests/test_eval_corpus.py` | **272 passed** |
+| The whole set read by a model that reads nothing | `uv run pytest tests/test_eval_runner.py` | **25 passed**; that model scores 72 of 253 properties and 0 of 22 letters |
+
+The floor of 72 is not zero and cannot be. Several letters assert that there is no deadline and no
+amount, and an answer containing nothing satisfies those, which is why the line worth reading is the
+letters and not the ratio.
+
 ## What nothing covers yet
 
-- **An evaluation set.** No corpus of letters with expected properties exists, so nothing measures
-  whether a change to a prompt made readings better or worse. Twelve synthetic samples in
-  `src/plainletter/samples/` are fixtures for the pipeline, not an eval.
+- **A live evaluation run.** The evaluation set now exists: twenty-two letters with expected
+  properties in `evals/`, and a scorecard that reads them with a real model behind
+  `PLAINLETTER_EVAL=1`. **It has never been run against Amazon Bedrock**, so no score has ever been
+  produced and none is quoted here. What is proven is the instrument, offline, by reading every
+  letter with stand-in models that answer badly on purpose: `evals/README.md` says what a score
+  would and would not mean, and the section below records what the instrument catches.
 - **A committed accessibility gate.** The accessibility figures in this project's records were
   measured by driving a real browser by hand: zero contrast failures in both themes on every route,
   no body text under 16px, one heading per page, no control under 44px, no horizontal scroll at

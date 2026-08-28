@@ -1,0 +1,12 @@
+what_it_tests: >-
+  A letter that asks for nothing at all. It confirms that an objection arrived and says a decision
+  follows within twelve weeks, which is a period and not a date. A reading that manufactures a
+  deadline or a payment out of this one is inventing work for a person who has none.
+visitor_language: pl
+sender_id: gemeente
+reference: "BZW-2026-04417"
+issued_on: 2026-08-24
+deadline: null
+total_amount_cents: null
+handoff_required: false
+draft: none

@@ -1,0 +1,13 @@
+what_it_tests: >-
+  Money going the other way. The letter owes the visitor EUR 472,00 and asks for nothing, so a
+  reading that produces a deadline, a payment step or a letter to send back has misread it in the
+  direction that frightens people.
+visitor_language: pl
+sender_id: belastingdienst
+reference: "4419 2077 H 51"
+issued_on: 2026-08-18
+deadline: null
+handoff_required: false
+draft: none
+must_appear:
+  - "EUR 472,00"
