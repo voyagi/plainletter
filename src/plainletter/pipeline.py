@@ -343,7 +343,11 @@ def single_route(route: str, permitted: frozenset[str]) -> str | None:
     found = [(route.find(value), value) for value in permitted if value in route]
     if not found:
         return None
-    return min(found)[1]
+    # Earliest wins, and the longest of the ones that tie. Two permitted routes can share a prefix,
+    # `https://example.test/` and `https://example.test/pay`, and both then match at the same
+    # position: ordering on the string instead would quietly hand back the shorter one and send the
+    # visitor to a different official page than the step meant.
+    return min(found, key=lambda match: (match[0], -len(match[1])))[1]
 
 
 def official_steps(steps: tuple[ActionStep, ...], sender: Sender | None) -> tuple[ActionStep, ...]:

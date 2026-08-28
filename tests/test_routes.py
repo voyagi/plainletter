@@ -134,6 +134,21 @@ def test_a_route_with_nothing_from_the_lookup_in_it_is_left_for_the_check_to_ref
     assert single_route("0900 123 456", PERMITTED) is None
 
 
+def test_two_permitted_routes_sharing_a_prefix_keep_the_longer_one() -> None:
+    """Both match at position zero, and picking on the string would take the shorter.
+
+    A knowledge base carrying a page and a deeper page under it is ordinary, and handing back the
+    shallower one sends the visitor somewhere official and wrong, which is the harder mistake to
+    notice of the two.
+    """
+    page = "https://example.test/"
+    deeper = "https://example.test/betalingsregeling"
+    permitted = frozenset({page, deeper})
+
+    assert single_route(f"{deeper} of bel de balie", permitted) == deeper
+    assert single_route(f"{page} of bel de balie", permitted) == page
+
+
 def test_the_steps_that_leave_the_pipeline_carry_one_route_each() -> None:
     combined = ActionStep(
         order=1,
