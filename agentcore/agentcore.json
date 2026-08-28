@@ -24,6 +24,10 @@
         {
           "name": "OTEL_SEMCONV_STABILITY_OPT_IN",
           "value": "gen_ai_unredacted_attributes="
+        },
+        {
+          "name": "PLAINLETTER_MAX_READINGS_PER_DAY",
+          "value": "200"
         }
       ],
       "lifecycleConfiguration": {

@@ -24,8 +24,10 @@ profiles, which are sourced from Frankfurt and stay within EU regions.
    the path.
 2. Sign in to AWS in your terminal (`aws login`, or a profile in `~/.aws`). The CLI deploys with
    whatever credentials boto3 and the AWS SDK find.
-3. Make sure the two models are enabled for the account in the Bedrock console:
-   `anthropic.claude-sonnet-4-6` and `anthropic.claude-haiku-4-5`.
+3. Enable `anthropic.claude-sonnet-4-6` for the account in the Bedrock console. That is the one the
+   product calls, for every stage. `anthropic.claude-haiku-4-5` is in the runtime's IAM policy and
+   is called by nothing today, so enabling it is optional: do it only if you intend to point
+   `PLAINLETTER_DRAFTING_MODEL` back at it.
 4. Copy the deployment target and fill in the account id:
 
    ```sh
@@ -96,6 +98,19 @@ every managed host:
 ```sh
 PLAINLETTER_TRUST_PROXY_HEADER=true
 ```
+
+And two more before the console serves a real letter, because the privacy page has to name a real
+person or organisation and the code cannot know which one you are:
+
+```sh
+PLAINLETTER_CONTROLLER_NAME=Taranity
+PLAINLETTER_CONTROLLER_CONTACT=hello@taranity.com
+```
+
+Those are the values for the hosted demo. A library running its own copy is the controller of that
+copy and sets its own name and contact address here. Left unset, the page says the organisation
+running the desk is the controller and tells the visitor to ask at the counter, which is true but is
+not the name and address Article 13 asks for.
 
 The upload route meters each caller by the last hop of `X-Forwarded-For`, and that entry is only
 trustworthy when a proxy really wrote it. Left unset, every caller is counted as one, so the desk

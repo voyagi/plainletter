@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "gate:deps": "depcruise src --config .dependency-cruiser.cjs",
     "gate:size": "size-limit"
   },
@@ -30,6 +31,7 @@
     "@types/node": "^26.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@vitest/coverage-v8": "^4.1.11",
     "dependency-cruiser": "^18.0.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.0",
