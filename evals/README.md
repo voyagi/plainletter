@@ -12,7 +12,7 @@ ever touches.
 The run reads every letter with a real model on Amazon Bedrock and costs money on the account whose
 credentials are in the environment, so it does not start unless it is asked for:
 
-```
+```sh
 PLAINLETTER_EVAL=1 uv run python -m evals.run --json out/eval-before.json
 ```
 
@@ -24,14 +24,15 @@ is repeatable.
 Then change a prompt, run it again into a second file, and compare the two. Comparing reads no
 letters and calls no model:
 
-```
+```sh
 uv run python -m evals.run --compare out/eval-before.json out/eval-after.json
 ```
 
 ## What a score means, and what it does not
 
-**Read the letters line, not the property ratio.** A letter is correct only when it produced the
-outcome expected of it and answered every question it asks. The property count has a floor well
+**Read the letters line, not the property ratio.** A letter is correct only when it was read at all
+and answered every question it asks. Every letter here is one the desk should be able to read, so a
+refusal is always a finding and never a possible right answer. The property count has a floor well
 above zero for a reason that is not flattering: several letters assert that there is no deadline and
 no amount, and an answer containing nothing satisfies those. Measured on this corpus with
 `uv run pytest tests/test_eval_runner.py`, a stand-in that returns an empty reading for every letter

@@ -77,7 +77,10 @@ class Expected(BaseModel):
     visitor_language: str = Field(min_length=2, description="BCP 47 tag, for example uk")
     today: date = TODAY
 
-    outcome: Literal["reading", "refusal"] = "reading"
+    # There is no field for expecting a refusal, and that is the design rather than an omission.
+    # Every letter in this set is one the desk should be able to read, so a refusal is always a
+    # finding. A case that expected one could assert nothing about the reading, and a scorer asked
+    # to compare properties against a refusal would fail all of them and call the case correct.
 
     sender_id: str | None = None
     reference: str | None = None

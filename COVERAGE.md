@@ -13,10 +13,10 @@ both.
 
 | Suite | Command | Tests | Time |
 | --- | --- | --- | --- |
-| Agent, scripts and the eval harness, Python | `uv run pytest -q` | 627 passed | 6.3s |
+| Agent, scripts and the eval harness, Python | `uv run pytest -q` | 635 passed | 6.1s |
 | Console and landing page | `npm run test --workspace @plainletter/web` | 34 passed, 4 files | 1.5s |
 
-318 of those 627 are the evaluation set checking itself and its scorer, which is a large share of
+323 of those 635 are the evaluation set checking itself and its scorer, which is a large share of
 the count and a small share of the work: most of them are one letter's worth of assertion, run once
 per letter.
 
@@ -77,9 +77,9 @@ twenty-two letters with stand-in models that answer badly reaches both refusal p
 
 `uv run pytest -q --cov=evals --cov-report=term`
 
-**99% of 400 statements, 2 missed.** `cases.py`, `fingerprint.py` and `scoring.py` are at 100%. The
-two missed lines are both in `run.py` and are the two that cannot run without Amazon Bedrock or a
-terminal: the factory that builds the live model, and the module's own entry point.
+**100% of 403 statements.** The instrument is the one thing here with no unexercised line in it,
+which is deliberate: a measuring tool with an untested branch reports a number nobody can stand
+behind. That is coverage, not proof, and the proof is the section below.
 
 ## Line coverage, the console and landing page
 
@@ -149,9 +149,9 @@ models that answer badly on purpose.
 
 | Harness | Command | Result |
 | --- | --- | --- |
-| The eval scorer, one fault at a time | `uv run pytest tests/test_eval_scoring.py` | **21 passed**, 13 of them a manufactured fault caught by exactly one check |
+| The eval scorer, one fault at a time | `uv run pytest tests/test_eval_scoring.py` | **23 passed**, 13 of them a manufactured fault caught by exactly one check |
 | The eval corpus against its own letters | `uv run pytest tests/test_eval_corpus.py` | **272 passed** |
-| The whole set read by a model that reads nothing | `uv run pytest tests/test_eval_runner.py` | **25 passed**; that model scores 72 of 253 properties and 0 of 22 letters |
+| The whole set read by a model that reads nothing | `uv run pytest tests/test_eval_runner.py` | **28 passed**; that model scores 72 of 253 properties and 0 of 22 letters |
 
 The floor of 72 is not zero and cannot be. Several letters assert that there is no deadline and no
 amount, and an answer containing nothing satisfies those, which is why the line worth reading is the

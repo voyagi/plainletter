@@ -82,7 +82,19 @@ def run(selected: Iterable[Case], make_model: MakeModel) -> Scorecard:
 
 
 def bedrock_model() -> ReadingModel:
-    return BedrockReadingModel(sender_ids=known_sender_ids())
+    """Built from the same settings the runtime reads, not from the defaults in the dataclass.
+
+    The saved run records the configured model and region, so a factory ignoring them would file a
+    score under a model that never answered, which is the one failure that would quietly invalidate
+    every comparison this harness exists to make. `app.py` builds it the same way.
+    """
+    configured = settings()
+    return BedrockReadingModel(
+        sender_ids=known_sender_ids(),
+        region=configured.region,
+        reading_model_id=configured.reading_model,
+        drafting_model_id=configured.drafting_model,
+    )
 
 
 def stamp(card: Scorecard) -> dict[str, Any]:
@@ -105,6 +117,16 @@ def compare(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
     two improving, and the second reading is the one people reach for.
     """
     out: list[str] = []
+    # A run that measured nothing is not a low score, and comparing against one reads as every
+    # letter having got worse. Lapsed credentials produce exactly that file.
+    unmeasured = [
+        label for label, run in (("earlier", before), ("later", after)) if not run.get("measured")
+    ]
+    if unmeasured:
+        out.append(f"The {' and '.join(unmeasured)} run measured nothing, so there is no")
+        out.append("comparison to make. Read its own scorecard and run it again.")
+        return out
+
     for name in ("prompts", "corpus"):
         was, now = before.get(name), after.get(name)
         out.append(f"{name:8s} {was} -> {now}" + ("" if was == now else "   CHANGED"))

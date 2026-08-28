@@ -72,7 +72,11 @@ _AMOUNT = re.compile(r"(?:eur|euro|€)?\s*(?P<number>\d[\d.]*(?:,\d{1,2})?)", r
 # came from, the verifier then finds the passage does not carry the value and refuses the letter. A
 # span with no currency marker at all still falls through to the pattern above, which is what
 # "bedrag 2.000" and a bare "165" depend on.
-_MARKED_AMOUNT = re.compile(r"(?:eur|euro|€)\s*(?P<number>\d[\d.]*(?:,\d{1,2})?)", re.IGNORECASE)
+# The lookbehind is load bearing: "eur" is the last three letters of Debiteur and kleur, and without
+# it "Debiteur 12345: EUR 50,00" reads as twelve thousand euro from inside the word.
+_MARKED_AMOUNT = re.compile(
+    r"(?<!\w)(?:eur|euro|€)\s*(?P<number>\d[\d.]*(?:,\d{1,2})?)", re.IGNORECASE
+)
 _DOT_GROUPS = re.compile(r"^\d{1,3}(?:\.\d{3})+$")
 
 _BSN_LABELLED = re.compile(

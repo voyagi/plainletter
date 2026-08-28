@@ -274,8 +274,35 @@ def test_a_refusal_fails_every_question_rather_than_skipping_them(good: DeskRead
 
     assert len(refused.checks) == len(answered.checks)
     assert all(not check.passed for check in refused.checks)
-    assert not refused.outcome_agreed
+    assert not refused.completed
     assert not refused.passed
+
+
+def test_a_harness_error_is_not_scored_as_a_dozen_wrong_answers(good: DeskReading) -> None:
+    """A rate limit on one letter must not move the accuracy figure.
+
+    A refusal is an answer and every question it was asked is marked wrong. A timeout is not an
+    answer at all, so it asks nothing: otherwise a Bedrock hiccup halfway through a run reads as a
+    regression in the next comparison, which is a change nobody made.
+    """
+    case = corpus.case(SLUG)
+    broken = score(case, RunOutcome(error="ThrottlingException: rate exceeded"))
+
+    assert broken.checks == ()
+    assert not broken.passed
+    assert not broken.completed
+    assert "rate exceeded" in broken.detail
+
+    card = Scorecard()
+    card.add(score(case, RunOutcome(reading=good)))
+    card.add(broken)
+    assert card.ran == 2
+    assert card.cases_passed == 1
+    assert len(card.errors) == 1
+    assert card.measured, "one letter answered is still a measurement, with the error beside it"
+    # The properties figure is over the letter that answered, and says so.
+    assert card.checks_passed == card.checks_total
+    assert "over the 1 letters the model answered" in "\n".join(card.lines())
 
 
 def test_a_forbidden_string_is_counted_apart_from_the_score() -> None:
@@ -340,6 +367,17 @@ def test_a_draft_that_should_not_exist_is_caught() -> None:
     )
     with_draft = _bare_reading(draft=unwanted)
     assert "draft" in failures(with_draft, slug="belastingdienst-teruggaaf")
+
+
+def test_a_refusal_fails_a_case_that_asked_for_no_draft() -> None:
+    # "No letter needs writing back" is a claim about a reading, so a refusal cannot satisfy it by
+    # having produced no draft. The check has to fail on the missing reading, not pass on the
+    # missing draft.
+    case = corpus.case("belastingdienst-teruggaaf")
+    result = score(case, RunOutcome(refusal="the reading was refused"))
+    draft = next(check for check in result.checks if check.name == "draft")
+    assert not draft.passed
+    assert draft.actual == "no reading was produced"
 
 
 def test_an_empty_scorecard_says_unknown_rather_than_clean() -> None:

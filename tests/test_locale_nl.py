@@ -57,6 +57,11 @@ def test_reads_amounts_in_dutch_notation(text: str, cents: int) -> None:
         ("Openstaande factuur 2026-0881: EUR 134,00", 13400),
         ("WOZ-waarde peildatum 1 januari 2025: EUR 312.000,00", 31200000),
         ("3 termijnen van EUR 25,00", 2500),
+        # "eur" is the last three letters of plenty of Dutch words, and a currency marker found
+        # inside one is worse than none: it reads the word's neighbouring digits as money.
+        ("Debiteur 12345: EUR 50,00", 5000),
+        ("Factuur 2026, kleur 3: EUR 148,75", 14875),
+        ("Chauffeur 8: EUR 12,00", 1200),
     ],
 )
 def test_reads_the_amount_and_not_a_number_in_its_own_label(text: str, cents: int) -> None:

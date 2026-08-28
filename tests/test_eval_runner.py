@@ -15,7 +15,8 @@ import pytest
 
 from evals import cases as corpus
 from evals import fingerprint
-from evals.run import COULD_NOT_RUN, compare, main, run, stamp
+from evals.run import COULD_NOT_RUN, bedrock_model, compare, main, run, stamp
+from evals.scoring import Scorecard
 from plainletter.intake import LetterInput
 from plainletter.kb import Sender
 from plainletter.schemas import (
@@ -27,6 +28,7 @@ from plainletter.schemas import (
     LetterFacts,
     SourceSpan,
 )
+from plainletter.settings import settings
 
 
 class ReadsNothing:
@@ -169,10 +171,10 @@ def test_a_model_that_invents_a_deadline_is_refused_and_the_refusal_is_counted()
     result = card.results[0]
 
     assert result.actual_outcome == "refusal"
-    assert not result.outcome_agreed
+    assert not result.completed
     assert "1 december 2026" in result.detail
     assert result.checks and all(not check.passed for check in result.checks)
-    assert card.outcomes_agreed == 0
+    assert card.completed == 0
     # The reason has to be on the card. "It refused" without the date it refused over sends whoever
     # is comparing two prompt versions back to the model to find out what happened.
     assert "1 december 2026" in "\n".join(card.lines())
@@ -200,6 +202,24 @@ def test_the_runner_goes_the_whole_way_through_with_the_toggle_on(
     assert saved["prompts"] == fingerprint.prompts()
     assert saved["corpus"] == fingerprint.corpus()
     assert saved["cases"][0]["slug"] == "cjib-eerste-aanmaning"
+
+
+def test_a_run_where_every_letter_broke_exits_non_zero_and_says_unknown(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """What lapsed credentials look like. It must not exit zero and must not print a score."""
+
+    class Breaks(ReadsNothing):
+        def read(self, letter: LetterInput) -> LetterFacts:
+            raise RuntimeError("NoCredentialsError: unable to locate credentials")
+
+    monkeypatch.setenv(corpus.TOGGLE, "1")
+    monkeypatch.setattr("evals.run.bedrock_model", Breaks)
+
+    assert main(["--only", "rdw-apk-herinnering"]) == COULD_NOT_RUN
+    printed = capsys.readouterr().out
+    assert "UNKNOWN" in printed
+    assert "unable to locate credentials" in printed
 
 
 def test_an_unknown_letter_is_refused_rather_than_quietly_running_none(
@@ -284,12 +304,39 @@ def test_an_empty_corpus_stops_the_run_rather_than_scoring_it(
     assert "not a clean run" in capsys.readouterr().err
 
 
+def test_the_comparison_refuses_to_compare_against_a_run_that_measured_nothing() -> None:
+    # Lapsed credentials produce a file where every letter errored. Comparing against it would read
+    # as every letter having got worse, which is the most misleading answer available.
+    blind = _saved(better=True) | {"measured": False}
+    printed = "\n".join(compare(blind, _saved(better=True)))
+    assert "measured nothing" in printed
+    assert "better" not in printed
+
+
 def test_the_comparison_says_so_when_the_letters_themselves_changed() -> None:
     before = _saved(better=False)
     after = _saved(better=True) | {"corpus": "0000deadbeef"}
     printed = "\n".join(compare(before, after))
     assert "CHANGED" in printed
     assert "not measuring the same" in printed
+
+
+def test_the_live_model_is_built_from_the_settings_the_run_files_its_score_under(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Otherwise the JSON names a model that never answered, and every comparison is worthless."""
+    monkeypatch.setenv("PLAINLETTER_READING_MODEL", "eu.anthropic.some-other-model")
+    monkeypatch.setenv("PLAINLETTER_REGION", "eu-west-1")
+    settings.cache_clear()
+    try:
+        built = bedrock_model()
+        saved = stamp(Scorecard())
+        assert built.reading_model_id == "eu.anthropic.some-other-model"
+        assert built.region == "eu-west-1"
+        assert saved["reading_model"] == built.reading_model_id
+        assert saved["region"] == built.region
+    finally:
+        settings.cache_clear()
 
 
 def test_the_stamp_records_what_the_run_was_a_run_of() -> None:
@@ -309,6 +356,7 @@ def test_two_different_splits_of_the_same_bytes_hash_differently() -> None:
 
 def _saved(*, better: bool) -> dict[str, object]:
     return {
+        "measured": True,
         "prompts": "aaaabbbbcccc",
         "corpus": "111122223333",
         "guard_denials": 3 if better else 7,

@@ -2,10 +2,11 @@
 
 Three rules hold this together, and each of them is a way the instrument could otherwise lie.
 
-A refusal is not a missing result. When a reading was expected and the pipeline refused, every
-property this case asserts is recorded as FAILED rather than skipped. Skipping them would shrink
-the denominator exactly when the product broke, so a model that refused all twenty letters would
-score full marks on nothing at all.
+A refusal is not a missing result. When the pipeline refused, every property that case asserts is
+recorded as FAILED rather than skipped. Skipping them would shrink the denominator exactly when the
+product broke, so a model that refused all twenty letters would score full marks on nothing at all.
+A harness error is the opposite and is treated as the opposite: a timeout is not an answer, so it
+contributes no properties either way and is counted only as an error.
 
 A forbidden string is never averaged. A phone number off the letter reaching the printed card is
 not four percent of a bad afternoon, so those checks are counted apart and reported by name.
@@ -81,15 +82,16 @@ class RunOutcome:
 @dataclass(frozen=True)
 class CaseResult:
     slug: str
-    expected_outcome: str
     actual_outcome: str
     checks: tuple[Check, ...]
     detail: str = ""
     guard_denials: int = 0
 
     @property
-    def outcome_agreed(self) -> bool:
-        return self.expected_outcome == self.actual_outcome
+    def completed(self) -> bool:
+        """Every letter in the set is one the desk should be able to read, so a refusal or an
+        error is always a finding rather than a possible right answer."""
+        return self.actual_outcome == "reading"
 
     @property
     def safety_failures(self) -> tuple[Check, ...]:
@@ -97,27 +99,38 @@ class CaseResult:
 
     @property
     def passed(self) -> bool:
-        return self.outcome_agreed and all(check.passed for check in self.checks)
+        return self.completed and all(check.passed for check in self.checks)
 
 
 def score(case: Case, outcome: RunOutcome) -> CaseResult:
-    """Answer every question this case asks, against what the run produced."""
-    expected = case.expected
+    """Answer every question this case asks, against what the run produced.
+
+    A letter that ended in a harness error asks nothing, and that is the one place the rule at the
+    top of this file does not apply. A refusal is an answer the product gave and every question it
+    was asked is marked wrong. A timeout is not an answer at all: scoring it as twelve wrong
+    properties would move the accuracy figure on the strength of a rate limit, and it would show up
+    in the next comparison as a regression nobody made.
+    """
+    if outcome.kind == "error":
+        return CaseResult(
+            slug=case.slug,
+            actual_outcome="error",
+            checks=(),
+            detail=outcome.error or "",
+            guard_denials=outcome.guard_denials,
+        )
     reading = outcome.reading if outcome.kind == "reading" else None
-    checks = tuple(_checks(expected, reading))
-    detail = outcome.error or outcome.refusal or ""
     return CaseResult(
         slug=case.slug,
-        expected_outcome=expected.outcome,
         actual_outcome=outcome.kind,
-        checks=checks,
-        detail=detail,
+        checks=tuple(_checks(case.expected, reading)),
+        detail=outcome.error or outcome.refusal or "",
         guard_denials=outcome.guard_denials,
     )
 
 
 def _checks(expected: Expected, reading: DeskReading | None) -> list[Check]:
-    """Every asserted property, plus the two that hold for every letter in the set."""
+    """Every asserted property, plus the three that hold for every letter in the set."""
     written = _visitor_text(reading)
     checks: list[Check] = []
 
@@ -128,29 +141,27 @@ def _checks(expected: Expected, reading: DeskReading | None) -> list[Check]:
         seen = _show(got) if reading is not None else NO_READING
         note(name, _show(want), seen, reading is not None and want == got)
 
-    if expected.outcome == "reading":
-        note(
-            "grounded",
-            "every fact checks out against the letter",
-            _grounding(reading),
-            reading is not None and reading.verification.is_grounded,
-        )
-        note(
-            "explained_in_both_languages",
-            f"nl and {expected.visitor_language}",
-            _languages(reading),
-            reading is not None
-            and {"nl", expected.visitor_language}
-            <= {item.language for item in reading.explanations},
-        )
-        # An empty plan is a valid shape and a useless answer. Nothing else here would catch it:
-        # every scalar check can pass on a reading that tells the visitor nothing to do.
-        note(
-            "an action plan with something in it",
-            "at least one step",
-            f"{len(reading.steps)} steps" if reading else NO_READING,
-            reading is not None and bool(reading.steps),
-        )
+    note(
+        "grounded",
+        "every fact checks out against the letter",
+        _grounding(reading),
+        reading is not None and reading.verification.is_grounded,
+    )
+    note(
+        "explained_in_both_languages",
+        f"nl and {expected.visitor_language}",
+        _languages(reading),
+        reading is not None
+        and {"nl", expected.visitor_language} <= {item.language for item in reading.explanations},
+    )
+    # An empty plan is a valid shape and a useless answer. Nothing else here would catch it: every
+    # scalar check can pass on a reading that tells the visitor nothing to do.
+    note(
+        "an action plan with something in it",
+        "at least one step",
+        f"{len(reading.steps)} steps" if reading else NO_READING,
+        reading is not None and bool(reading.steps),
+    )
 
     if expected.asserts("sender_id"):
         compare("sender_id", expected.sender_id, reading.facts.sender_id if reading else None)
@@ -320,8 +331,9 @@ class Scorecard:
         return tuple(item for item in self.results if item.actual_outcome == "error")
 
     @property
-    def outcomes_agreed(self) -> int:
-        return sum(1 for item in self.results if item.outcome_agreed)
+    def completed(self) -> int:
+        """Letters that produced a reading at all, rather than a refusal or an error."""
+        return sum(1 for item in self.results if item.completed)
 
     @property
     def checks_total(self) -> int:
@@ -370,10 +382,12 @@ class Scorecard:
                 "about the model. The first one reads:",
                 f"  {self.results[0].slug}: {self.results[0].detail}",
             ]
+        answered = self.ran - len(self.errors)
         out = [
-            f"letters read            {self.ran}",
-            f"outcome as expected     {self.outcomes_agreed} of {self.ran}",
-            f"properties correct      {self.checks_passed} of {self.checks_total}",
+            f"letters attempted       {self.ran}",
+            f"letters read at all     {self.completed} of {self.ran}",
+            f"properties correct      {self.checks_passed} of {self.checks_total}, "
+            f"over the {answered} letters the model answered",
             f"letters fully correct   {self.cases_passed} of {self.ran}",
             f"harness errors          {len(self.errors)}",
             f"forbidden text written  {len(self.safety_failures)}",
@@ -402,7 +416,7 @@ class Scorecard:
         return {
             "measured": self.measured,
             "ran": self.ran,
-            "outcomes_agreed": self.outcomes_agreed,
+            "completed": self.completed,
             "checks_passed": self.checks_passed,
             "checks_total": self.checks_total,
             "cases_passed": self.cases_passed,
@@ -412,7 +426,6 @@ class Scorecard:
             "cases": [
                 {
                     "slug": item.slug,
-                    "expected_outcome": item.expected_outcome,
                     "actual_outcome": item.actual_outcome,
                     "detail": item.detail,
                     "guard_denials": item.guard_denials,
