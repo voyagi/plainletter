@@ -65,6 +65,14 @@ _NUMERIC_DATE = re.compile(r"\b(?P<day>\d{1,2})[-/.](?P<month>\d{1,2})[-/.](?P<y
 # "174.00" and quietly report a hundred and seventy four euro; capturing the whole run lets the
 # separator check below refuse it instead.
 _AMOUNT = re.compile(r"(?:eur|euro|€)?\s*(?P<number>\d[\d.]*(?:,\d{1,2})?)", re.IGNORECASE)
+# The same pattern with the currency required. It is tried first because a label routinely carries a
+# number of its own: "Achterstand juni 2026: EUR 148,75", "Verhoging 50 procent: EUR 140,00",
+# "Zuiveringsheffing 3 vervuilingseenheden: EUR 189,60". Taking the first number in the line reads
+# those as 2026, 50 and 3 euro, and since the reading cites the whole line as the passage the amount
+# came from, the verifier then finds the passage does not carry the value and refuses the letter. A
+# span with no currency marker at all still falls through to the pattern above, which is what
+# "bedrag 2.000" and a bare "165" depend on.
+_MARKED_AMOUNT = re.compile(r"(?:eur|euro|€)\s*(?P<number>\d[\d.]*(?:,\d{1,2})?)", re.IGNORECASE)
 _DOT_GROUPS = re.compile(r"^\d{1,3}(?:\.\d{3})+$")
 
 _BSN_LABELLED = re.compile(
@@ -146,7 +154,7 @@ class DutchLocale:
         return None
 
     def parse_amount_cents(self, text: str) -> int | None:
-        match = _AMOUNT.search(text)
+        match = _MARKED_AMOUNT.search(text) or _AMOUNT.search(text)
         if not match:
             return None
 

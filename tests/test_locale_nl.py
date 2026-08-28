@@ -48,6 +48,25 @@ def test_reads_amounts_in_dutch_notation(text: str, cents: int) -> None:
     assert NL.parse_amount_cents(text) == cents
 
 
+@pytest.mark.parametrize(
+    ("text", "cents"),
+    [
+        ("Achterstand juni 2026: EUR 148,75", 14875),
+        ("Verhoging 50 procent: EUR 140,00", 14000),
+        ("Zuiveringsheffing 3 vervuilingseenheden: EUR 189,60", 18960),
+        ("Openstaande factuur 2026-0881: EUR 134,00", 13400),
+        ("WOZ-waarde peildatum 1 januari 2025: EUR 312.000,00", 31200000),
+        ("3 termijnen van EUR 25,00", 2500),
+    ],
+)
+def test_reads_the_amount_and_not_a_number_in_its_own_label(text: str, cents: int) -> None:
+    # Dutch letters put a year, a percentage or a quantity in the label constantly, and a reading
+    # cites the whole line as the passage the amount came from. Taking the first number in the line
+    # made the passage disagree with the value, which the verifier reads as an ungrounded amount and
+    # refuses the letter over. Every string here is a line from a letter in the eval set.
+    assert NL.parse_amount_cents(text) == cents
+
+
 def test_refuses_a_dot_group_that_is_not_a_thousands_separator() -> None:
     # 174.00 is neither Dutch nor unambiguous, and reading it as 17400 euro would be a hundredfold
     # error on a bill somebody has to pay.
