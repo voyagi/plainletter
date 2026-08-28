@@ -6,6 +6,10 @@ on:
   pull_request:
   push:
     branches: [main]
+  # The Run workflow button, and the reason it exists is the security job below: advisories are
+  # published against versions already installed, so a green history says the code was clean when
+  # it last changed, never that it is clean today. Without this trigger there is no way to ask.
+  workflow_dispatch:
 # Least privilege: `npm ci` and `uv sync` execute third-party install scripts, so the job's
 # GITHUB_TOKEN must not carry write scopes. Nothing in this workflow writes to the repo.
 permissions:

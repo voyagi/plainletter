@@ -97,6 +97,19 @@ every managed host:
 PLAINLETTER_TRUST_PROXY_HEADER=true
 ```
 
+And two more before the console serves a real letter, because the privacy page has to name a real
+person or organisation and the code cannot know which one you are:
+
+```sh
+PLAINLETTER_CONTROLLER_NAME=Taranity
+PLAINLETTER_CONTROLLER_CONTACT=hello@taranity.com
+```
+
+Those are the values for the hosted demo. A library running its own copy is the controller of that
+copy and sets its own name and contact address here. Left unset, the page says the organisation
+running the desk is the controller and tells the visitor to ask at the counter, which is true but is
+not the name and address Article 13 asks for.
+
 The upload route meters each caller by the last hop of `X-Forwarded-For`, and that entry is only
 trustworthy when a proxy really wrote it. Left unset, every caller is counted as one, so the desk
 still works and the ceiling is simply shared. The ceilings themselves are in

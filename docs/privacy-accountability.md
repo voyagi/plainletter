@@ -14,9 +14,12 @@ and amount against the letter itself, explains it in two languages, works out th
 the next steps, and prints a one page card. The letter is the input; almost nothing survives the
 request.
 
-- **Controller.** Whoever runs the deployment. For the hosted demo that is Taranity, reachable at
-  hello@taranity.com, and that is what the privacy page names. A library or advice service running
-  its own copy is the controller of that copy and puts its own name and address on the page.
+- **Controller.** Whoever runs the deployment, which is why the privacy page takes the name and the
+  contact address from that deployment's own environment (`PLAINLETTER_CONTROLLER_NAME` and
+  `PLAINLETTER_CONTROLLER_CONTACT`) rather than from the source. Unset, the page says the
+  organisation running the desk is the controller and tells the visitor to ask at the counter, which
+  is true of every installation. For the hosted demo the two are set to Taranity and
+  hello@taranity.com. A library running its own copy is the controller of that copy and sets its own.
 - **Processors.** Amazon Web Services, for model inference (Amazon Bedrock) and for the runtime and
   the optional case store (Amazon Bedrock AgentCore). The console's host, if the console is hosted.
 - **Data subjects.** The person the letter was sent to, and anybody else named in it. The second
@@ -208,9 +211,11 @@ or removing the volunteer from the picture entirely.
 
 ## Human launch gate
 
-- Controller named: Taranity, hello@taranity.com, on the privacy page and in this file. A registered
-  legal form, address and company number belong here too once the studio has them; a trading name
-  and a working contact address satisfy Article 13(1)(a) and (b) in the meantime.
+- Controller: set per deployment through the environment, and set to Taranity, hello@taranity.com
+  for the hosted demo. A registered legal form, address and company number belong there too once
+  the studio has them; a trading name and a working contact address satisfy Article 13(1)(a) and
+  (b) in the meantime. **Any other operator must set their own before serving anybody**, and an
+  unset deployment says so on the page rather than naming somebody else.
 - **OPEN.** Accepting the AWS data processing addendum on the account the runtime lives in, and
   confirming the model provider terms in the Bedrock console.
 - A legal read of the privacy page before it serves real letters. Everything in it is a description

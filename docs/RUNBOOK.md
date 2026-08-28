@@ -41,10 +41,16 @@ The first move in almost every incident, and the one to reach for before anythin
 PLAINLETTER_MAX_READINGS_PER_DAY=0
 ```
 
-Set it on the runtime and redeploy, or on the console's host if the console is the thing to close.
-Zero is refused before the first model call, so spend stops immediately, the deployment stays up,
-and the pages still serve. Not rehearsed live; the ceiling itself is covered by tests in
-`tests/test_spend.py`.
+**On the runtime, and only there.** That variable is read by the agent (`src/plainletter/settings.py`)
+and by nothing else: setting it on the console's host does nothing at all, because the console's own
+limits are fixed in `web/src/server/limits.ts`. Set it on the runtime and redeploy. Zero is refused
+before the first model call, so spend stops immediately, the deployment stays up, and the pages
+still serve. Not rehearsed live; the ceiling itself is covered by tests in `tests/test_spend.py`.
+
+It closes the reading service everywhere, including through the console, because the console has no
+other way to read a letter than to call the runtime. If what needs closing is the console itself
+(an abusive caller, a broken page), that is an action at its own host: take the deployment down or
+pause it there. There is no environment variable in this repository that switches the console off.
 
 Both counters live in the process that serves the request, and say so in their own code. A restart
 resets them. That is why the account budget alarm exists and is not optional: it is the only

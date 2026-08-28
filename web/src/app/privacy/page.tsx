@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Wordmark } from '@/components/Wordmark';
+import { env } from '@/env';
 
 export const metadata: Metadata = {
   title: 'Privacy',
@@ -10,10 +11,12 @@ export const metadata: Metadata = {
   alternates: { canonical: '/privacy' },
 };
 
-// Who answers for the data depends on who is running the deployment, so both cases are named: the
-// hosted demo, which is this one, and a desk that runs its own copy and is then its own controller.
-const CONTROLLER = 'Taranity';
-const CONTROLLER_CONTACT = 'hello@taranity.com';
+// Who answers for the data is a fact about the deployment, not about the code, so it comes from the
+// deployment's own environment. A library running its own copy is its own controller, and a name
+// hard-coded here would be a false one in front of that library's visitors, at the exact line where
+// Article 13 wants a real one. Unset, the page says what is true of every deployment.
+const CONTROLLER = env.PLAINLETTER_CONTROLLER_NAME;
+const CONTROLLER_CONTACT = env.PLAINLETTER_CONTROLLER_CONTACT;
 
 function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
@@ -53,17 +56,31 @@ export default function Privacy() {
       </p>
 
       <Section heading="Who is responsible">
+        {CONTROLLER ? (
+          <p className="m-0 mb-3 text-[16px] text-ink-2">
+            The data controller for this desk is {CONTROLLER}
+            {CONTROLLER_CONTACT ? (
+              <>
+                , reachable at{' '}
+                <a className="underline underline-offset-2" href={`mailto:${CONTROLLER_CONTACT}`}>
+                  {CONTROLLER_CONTACT}
+                </a>
+              </>
+            ) : null}
+            . The controller decides what this desk does with a letter and answers for it.
+          </p>
+        ) : (
+          <p className="m-0 mb-3 text-[16px] text-ink-2">
+            The data controller is the organisation running this desk. The controller decides what
+            this desk does with a letter and answers for it. Ask the desk for the
+            controller&rsquo;s name and contact address; it is also printed on the privacy notice at
+            the counter.
+          </p>
+        )}
         <p className="m-0 mb-3 text-[16px] text-ink-2">
-          The data controller for this deployment is {CONTROLLER}, reachable at{' '}
-          <a className="underline underline-offset-2" href={`mailto:${CONTROLLER_CONTACT}`}>
-            {CONTROLLER_CONTACT}
-          </a>
-          . The controller decides what this desk does with a letter and answers for it.
-        </p>
-        <p className="m-0 mb-3 text-[16px] text-ink-2">
-          A library or advice service running its own copy of Plainletter is the controller of that
-          copy, not {CONTROLLER}. Ask the desk in front of you for its name and contact address; it
-          is also printed on the privacy notice at the counter.
+          Every desk answers for its own copy. A library or advice service that runs Plainletter
+          itself is the controller of that installation, and its own name belongs here rather than
+          anybody else&rsquo;s.
         </p>
         <p className="m-0 text-[16px] text-ink-2">
           A desk this size has no data protection officer. Questions go to the controller.

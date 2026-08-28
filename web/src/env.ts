@@ -17,6 +17,14 @@ export const env = createEnv({
     // X-Forwarded-For. Left off, every caller is metered as one, which is stricter rather than
     // looser, and a forgotten setting should fail in that direction.
     PLAINLETTER_TRUST_PROXY_HEADER: z.enum(['true', 'false']).default('false'),
+    // Who answers for the data, which is a fact about the deployment and not about the code: a
+    // library running its own copy is its own controller. Left unset, the privacy page says the
+    // operator of that desk is the controller and tells the visitor to ask at the counter, which
+    // is true of every deployment. Set them and it names that operator instead. Naming one
+    // organisation in the source would put a false name in front of every other deployment's
+    // visitors, at the exact line where the law wants a real one.
+    PLAINLETTER_CONTROLLER_NAME: z.string().min(1).optional(),
+    PLAINLETTER_CONTROLLER_CONTACT: z.string().min(1).optional(),
   },
   clientPrefix: 'NEXT_PUBLIC_',
   client: {
@@ -27,6 +35,8 @@ export const env = createEnv({
     PLAINLETTER_AGENT_ENDPOINT: process.env.PLAINLETTER_AGENT_ENDPOINT,
     PLAINLETTER_AGENT_RUNTIME_ARN: process.env.PLAINLETTER_AGENT_RUNTIME_ARN,
     PLAINLETTER_TRUST_PROXY_HEADER: process.env.PLAINLETTER_TRUST_PROXY_HEADER,
+    PLAINLETTER_CONTROLLER_NAME: process.env.PLAINLETTER_CONTROLLER_NAME,
+    PLAINLETTER_CONTROLLER_CONTACT: process.env.PLAINLETTER_CONTROLLER_CONTACT,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   },
   emptyStringAsUndefined: true,
