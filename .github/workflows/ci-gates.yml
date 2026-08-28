@@ -41,3 +41,37 @@ jobs:
         run: node scripts/check-client-secrets.mjs web/.next
       - if: hashFiles('web/package.json') != ''
         run: npm run gate:size --workspace @plainletter/web
+
+  # A letter carries a citizen service number and a bank account, so a vulnerable dependency here
+  # is not an inconvenience. Its own job, so a red scanner is legible next to a red gate rather
+  # than buried in one long chain, and so neither waits for the other.
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      # Reads uv.lock and package-lock.json, so one scanner covers both halves of this repository.
+      # Both the action and the scanner binary are pinned by commit: a tag can be repointed by its
+      # owner, and a supply-chain scanner that can be swapped underneath you is worth nothing.
+      #
+      # Deliberately NOT on a timer. Advisories are published against versions already installed,
+      # so a green history here says the code was clean when it last changed, never that it is
+      # clean today. After a quiet stretch, use the run button rather than reading the last green.
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          # Off by default, and the report still prints a clean table without it: the development
+          # set would go unscanned while the run reads green. These packages execute on the build
+          # machine, which is the machine holding the deploy credentials.
+          TRIVY_INCLUDE_DEV_DEPS: 'true'
+        with:
+          version: v0.74.0
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          # Without this the scanner prints its findings and exits 0, and the job passes red.
+          exit-code: '1'
+          ignore-unfixed: false
+          # Empty today, and wired anyway: the day an advisory with no fix turns this red, the
+          # answer is one dated entry in one reviewable file rather than an argument with the gate.
+          trivyignores: .trivyignore.yaml
