@@ -92,8 +92,9 @@ export default function Privacy() {
           </p>
         ) : (
           <p className="m-0 text-[16px] text-ink-2">
-            This desk has not named a data protection officer, so questions go to the controller. A
-            public body running its own copy has to name one, and names them here.
+            This desk publishes no data protection officer, so questions go to the controller. Most
+            public bodies running their own copy have to appoint one and publish how to reach them,
+            and that address appears here when they do.
           </p>
         )}
       </Section>

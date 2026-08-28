@@ -119,14 +119,20 @@ One more, and it is compulsory rather than optional for some operators:
 PLAINLETTER_DPO_CONTACT=dpo@example.org
 ```
 
-Article 37 makes a data protection officer compulsory for a public authority or body, and Article
-37(7) makes publishing their contact details compulsory with it. **If you are a municipality, a
-public library service or any other public body, this is not optional and the page is not correct
-without it.** The hosted demo leaves it empty, and an empty value makes the page say this desk has
-not named an officer and send questions to the controller, which describes the configuration rather
-than claiming that no officer is required. The assessment behind the demo's own answer is written
-out limb by limb in `docs/privacy-accountability.md`, and it is an assessment about that deployment
-and not about yours.
+Article 37 makes a data protection officer compulsory for a public authority or body, excepting a
+court acting in its judicial capacity, and Article 37(7) makes publishing their contact details
+compulsory with it. **If you are a municipality, a public library service or any other public body
+inside that scope, this is not optional and the page is not correct without it.** It takes the
+contact address rather than a name, since that is what 37(7) requires and what the page turns into
+a link, and it has to be an email address: the console refuses to start on anything else, because
+the alternative is a page offering a link that goes nowhere.
+
+The hosted demo leaves it empty. An empty value makes the page say this desk publishes no officer
+and send questions to the controller, which describes the configuration and is not a finding that
+none is required. **Leaving it empty establishes nothing about your own position**, and the
+assessment behind the demo's answer is written out limb by limb in
+`docs/privacy-accountability.md` for the demo alone. Article 37 applies to you or it does not,
+whatever this file is set to.
 
 The upload route meters each caller by the last hop of `X-Forwarded-For`, and that entry is only
 trustworthy when a proxy really wrote it. Left unset, every caller is counted as one, so the desk
