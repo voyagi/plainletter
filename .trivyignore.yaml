@@ -1,0 +1,34 @@
+# Suppressions for the security job in .github/workflows/ci-gates.yml.
+#
+# Empty on purpose. Nothing is suppressed today, and the file exists so that on the day something
+# has to be, the shape and the rules are already here instead of being invented in a hurry.
+#
+# The job fails on any HIGH or CRITICAL finding and does not skip a vulnerability that has no fix
+# published yet. That is the right default and it stays. It also means an advisory filed against a
+# version already installed can turn this red on a day when there is nothing to upgrade to.
+#
+# When that happens, add one entry rather than loosening the gate:
+#
+#   vulnerabilities:
+#     - id: CVE-2026-00000
+#       statement: no fixed version published, reached only by the test runner
+#       expired_at: 2026-09-30
+#
+#   misconfigurations:
+#     - id: AVD-DS-0001
+#       statement: why this one is accepted
+#       expired_at: 2026-09-30
+#
+# Field names and behaviour are Trivy's own, read from the v0.74 filtering documentation on
+# 2026-08-28: `id` is required, `statement` records the reason and is not used for filtering, and
+# an entry with no `expired_at` is valid forever.
+#
+# Three rules for an entry, none of them optional.
+#
+# 1. Every entry carries an `expired_at`. Past that date the entry stops applying and the finding
+#    returns by itself. That is what stops a suppression from quietly becoming permanent.
+# 2. Every entry carries a `statement` written for somebody reading it in a month with no memory
+#    of the day it was added.
+# 3. Never suppress a secret finding. A credential in the source is not a risk to be accepted. It
+#    is a credential to be rotated and taken out of the history, and this product handles letters
+#    carrying citizen service numbers and bank accounts.

@@ -126,6 +126,12 @@ const MUTATIONS = [
   { name: 'fake-value suppressor (else a vendored SDK doc comment is flagged)', expect: 'a documentation example value is NOT flagged', find: 'if (d.unlessValue.test(hit[1])) continue;', repl: 'if (false) continue;' },
   { name: 'value-aware rules try EVERY match (else a decoy launders a real credential)', expect: 'a decoy example does NOT launder a real credential in the same file', find: 'while ((hit = every.exec(body)) !== null) {', repl: 'if ((hit = every.exec(body)) !== null) {' },
   { name: 're-derives the restriction while descending (else a NESTED .next/server is unrestricted)', expect: 'a .next/server NESTED under the scanned dir is restricted too', find: 'walk(p, out, seen, only || onlyFor(p));', repl: 'walk(p, out, seen, only);' },
+  { name: '.next/cache is skipped (else the bundler cache reads as a client bundle)', expect: 'a key in .next/cache or .next/dev is not a shipped key', find: '{ dir: /(^|\\/)\\.next\\/cache(\\/|$)/i,', repl: '{ dir: /ZZNEVERMATCHES/i,' },
+  { name: '.next/dev is skipped (else dev-server output reads as a client bundle)', expect: 'a key in .next/cache or .next/dev is not a shipped key', find: '{ dir: /(^|\\/)\\.next\\/dev(\\/|$)/i,', repl: '{ dir: /ZZNEVERMATCHES/i,' },
+  // The same FALSE CLEAN trap as the `.next` mutation above, now reachable through a skip rule:
+  // widen one to `.next` and the empty allowlist takes the client chunks with it, so the scan finds
+  // nothing at all and reports unknown where it should report a leak.
+  { name: 'a skip rule widened to .next itself is caught (a FALSE CLEAN)', expect: 'a key in .next/static is still caught beside those skips', find: '{ dir: /(^|\\/)\\.next\\/cache(\\/|$)/i,', repl: '{ dir: /(^|\\/)\\.next(\\/|$)/i,' },
 ];
 
 // A MUTANT THAT DOES NOT PARSE IS NOT A MUTATION TEST, and nothing downstream can tell the two

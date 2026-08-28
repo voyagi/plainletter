@@ -98,23 +98,51 @@ def test_erasing_reads_no_letter_and_calls_no_model(monkeypatch: pytest.MonkeyPa
     assert read_letter({"forget": CASE})["erased"] == 0
 
 
+class PagedSessionManager:
+    """A store that hands back one page at a time and really removes what is deleted.
+
+    The page limit is the point. A fake that returns everything at once can never tell a paged
+    erasure from a single-page one, and a fake that ignores its own deletions cannot tell an
+    erasure that finishes from one that loops.
+    """
+
+    def __init__(self, events: list[dict[str, Any]]) -> None:
+        self.events = list(events)
+        self.deleted: list[str] = []
+
+    def list_events(self, **kwargs: Any) -> list[dict[str, Any]]:
+        return list(self.events)[: kwargs.get("max_results", 100)]
+
+    def delete_event(self, actor_id: str, session_id: str, event_id: str) -> None:
+        self.deleted.append(event_id)
+        self.events = [event for event in self.events if event.get("eventId") != event_id]
+
+
 def test_the_agentcore_store_deletes_every_event_under_the_case() -> None:
-    class FakeSessionManager:
-        def __init__(self) -> None:
-            self.events = [{"eventId": "e1"}, {"eventId": "e2"}, {"no_id": True}]
-            self.deleted: list[str] = []
-
-        def list_events(self, **kwargs: Any) -> list[dict[str, Any]]:
-            return self.events
-
-        def delete_event(self, actor_id: str, session_id: str, event_id: str) -> None:
-            self.deleted.append(event_id)
-
     store = AgentCoreCaseMemory.__new__(AgentCoreCaseMemory)
-    store._store = FakeSessionManager()
+    store._store = PagedSessionManager([{"eventId": "e1"}, {"eventId": "e2"}, {"no_id": True}])
 
     assert store.forget(CASE) == 2
     assert store._store.deleted == ["e1", "e2"]
+
+
+def test_erasure_does_not_stop_at_the_first_page() -> None:
+    """A case with more readings than one page held the rest and still answered "erased"."""
+    store = AgentCoreCaseMemory.__new__(AgentCoreCaseMemory)
+    store._store = PagedSessionManager([{"eventId": f"e{n}"} for n in range(250)])
+
+    assert store.forget(CASE) == 250
+    assert store._store.events == []
+    assert len(store._store.deleted) == 250
+
+
+def test_erasure_ends_rather_than_looping_on_events_it_cannot_delete() -> None:
+    """The drain loop's own failure mode: a page it can never empty must end it, not repeat it."""
+    store = AgentCoreCaseMemory.__new__(AgentCoreCaseMemory)
+    store._store = PagedSessionManager([{"no_id": True}, {"also_no_id": True}])
+
+    assert store.forget(CASE) == 0
+    assert store._store.deleted == []
 
 
 def test_a_desk_with_no_store_answers_zero_rather_than_pretending() -> None:
