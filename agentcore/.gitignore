@@ -11,7 +11,11 @@ cdk/dist/
 *.zip
 plainletter/
 
-# CLI internals, except the deployed state the CLI expects to find
-.cli/*
-!.cli/deployed-state.json
+# CLI internals. The scaffold tracks .cli/deployed-state.json and that is right for a private
+# repository, wrong for this one: the moment a deploy runs, the CLI fills it with four ARNs and
+# every one of them carries the AWS account id. This repository goes public at submission, and the
+# build spec's deploy decision is that the account id stays out of git, which is also why
+# aws-targets.json is ignored above. The CLI rebuilds this file from the stack whenever it is
+# missing, so nothing is lost by keeping it local.
+.cli/
 .cache/*
