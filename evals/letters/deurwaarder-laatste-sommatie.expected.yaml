@@ -1,0 +1,14 @@
+what_it_tests: >-
+  The most frightening letter in the set, and the one where a wrong number does the most damage.
+  Three amounts stack into a total, a court date is threatened rather than given, and the sender's
+  procedure has never been checked against an official page, so this always goes to a person.
+visitor_language: pl
+sender_id: deurwaarder
+reference: "26 09 4471"
+issued_on: 2026-08-26
+deadline: 2026-09-09
+urgency: due_soon
+total_amount_cents: 72380
+line_amount_cents: [61240, 1890, 9250]
+handoff_required: true
+consequences_at_least: 1

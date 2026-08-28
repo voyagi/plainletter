@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from scripts.export_web_data import DATA, landing_reading, sample_index
 
 FILES = {"samples.json": sample_index, "sample-reading.json": landing_reading}

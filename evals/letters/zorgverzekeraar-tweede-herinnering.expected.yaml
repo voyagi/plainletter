@@ -1,0 +1,15 @@
+what_it_tests: >-
+  A letter with no objection route printed on it, where the right reply is a request for a payment
+  plan rather than a protest. Two identical monthly arrears sit above their sum, so a reading that
+  collapses them loses half the debt.
+visitor_language: tr
+sender_id: zorgverzekeraar
+reference: "55 220 8841"
+issued_on: 2026-08-22
+deadline: 2026-09-12
+urgency: due_soon
+total_amount_cents: 29750
+line_amount_cents: [14875, 14875]
+handoff_required: true
+draft: some
+consequences_at_least: 1

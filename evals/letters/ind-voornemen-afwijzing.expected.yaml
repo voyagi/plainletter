@@ -1,0 +1,15 @@
+what_it_tests: >-
+  Two load-bearing dates that are not the same date. The permit runs out on 31 October and the
+  written response is due on 9 September, and a reading that keeps only one of them drops the half
+  the visitor is about to be caught by. No money on the page at all.
+visitor_language: uk
+sender_id: ind
+reference: "2790 118 3345"
+issued_on: 2026-08-19
+deadline: 2026-09-09
+urgency: due_soon
+total_amount_cents: null
+handoff_required: true
+consequences_at_least: 1
+must_appear:
+  - "31 oktober 2026"

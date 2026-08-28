@@ -1,0 +1,11 @@
+what_it_tests: >-
+  A yearly statement, kept for the tax return and nothing else. No deadline, no payment, no reply.
+  The letter also carries no consequence paragraph, which is why none is expected here: a reading
+  that produces one has written it rather than read it.
+visitor_language: pl
+sender_id: svb
+reference: "SVB 2244 9017"
+issued_on: 2026-08-11
+deadline: null
+handoff_required: true
+draft: none

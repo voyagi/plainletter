@@ -1,0 +1,17 @@
+what_it_tests: >-
+  The deadline is on the second page and the amounts are on the first, in the shape a transcription
+  hands the pipeline. The number to pay back is also the smallest of the three: a reading that
+  reports what was received rather than what is owed is out by four times. Line amounts are not
+  asserted, because the two figures above the total are the working of the calculation and a
+  reading may reasonably carry them or leave them.
+visitor_language: uk
+sender_id: belastingdienst
+reference: "9903 5518 T 44"
+issued_on: 2026-08-08
+deadline: 2026-10-20
+urgency: ample
+total_amount_cents: 81200
+handoff_required: false
+consequences_at_least: 1
+must_appear:
+  - "EUR 812,00"

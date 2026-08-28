@@ -1,0 +1,16 @@
+what_it_tests: >-
+  A sender the knowledge base has never heard of. A private collection agency is not a court
+  bailiff, and the letter says so itself by threatening to hand the file to one, so the sender field
+  belongs empty. Empty is what earns this letter no official routes and a person to take it over,
+  and a reading that reaches for the nearest familiar id instead hands out a procedure from the
+  wrong body.
+visitor_language: uk
+sender_id: null
+reference: "KH 2026 33710"
+issued_on: 2026-08-23
+deadline: 2026-09-06
+urgency: due_soon
+total_amount_cents: 17400
+line_amount_cents: [13400, 4000]
+handoff_required: true
+consequences_at_least: 1

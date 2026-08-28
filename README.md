@@ -128,6 +128,24 @@ npm run verify:ship
 
 is the single gate: types, the full test suite, whole-repo lint, and the committed floors.
 
+## Measure a change to a prompt
+
+Five prompts decide what the agent says, and a sentence added to one of them can make readings
+better or worse without anybody being able to tell which. `evals/` is twenty-two letters with the
+properties a correct reading of each one has to show, so the question has an answer:
+
+```sh
+PLAINLETTER_EVAL=1 uv run python -m evals.run --json out/before.json
+# change a prompt, run it again into out/after.json
+uv run python -m evals.run --compare out/before.json out/after.json
+```
+
+The run reads every letter with the real model and costs money, so it does not start without the
+variable. The comparison names the letters that changed side rather than the difference between two
+scores, and it counts how often the grounding guard had to send an answer back to be written again,
+which is the number that moves first when a prompt starts to drift.
+[evals/README.md](evals/README.md) says what a score does and does not mean.
+
 ## Deploy it
 
 The deployed agent is the same `src/` directory zipped with its dependencies and run by Amazon
@@ -200,6 +218,7 @@ renderer. That is the whole point of the boundary, and it is why the boundary is
 | `src/plainletter/locales/` | Everything that depends on which country the letter came from |
 | `src/plainletter/senders/` | The curated sender knowledge base, one file per sender, sourced and dated |
 | `src/plainletter/samples/` | Synthetic sample letters for the demo and the tests (no real people, no real data) |
+| `evals/` | The evaluation set: letters with expected properties, and the scorecard that reads them |
 | `web/` | The desk console and the public landing page |
 | `agentcore/` | The AgentCore project: runtime, memory store and the CDK app that deploys them |
 | `design/` | The committed art direction and the mockups every page derives from |

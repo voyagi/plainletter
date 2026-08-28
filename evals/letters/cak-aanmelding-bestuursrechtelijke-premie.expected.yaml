@@ -1,0 +1,13 @@
+what_it_tests: >-
+  A start date wearing a deadline's clothes. Nothing on this page has to be paid by a day: from
+  1 October the premium is taken from the visitor's wages whether they act or not. A reading that
+  files that date as the deadline tells someone to pay by a day on which nothing is owed.
+visitor_language: pl
+sender_id: cak
+reference: "CAK 4471 9930"
+issued_on: 2026-08-25
+deadline: null
+handoff_required: true
+consequences_at_least: 1
+must_appear:
+  - "EUR 172,85"

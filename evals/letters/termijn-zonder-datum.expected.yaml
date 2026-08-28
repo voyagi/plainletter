@@ -1,0 +1,14 @@
+what_it_tests: >-
+  A deadline expressed only as fourteen days from the date of the letter. The arithmetic is easy and
+  doing it is wrong: the day the letter was posted is not the day it was dated, and a date the desk
+  calculated is not a date the visitor can point at on the page. The correct reading carries no
+  deadline and says the letter gives a period instead. This is also the case most likely to end in a
+  refusal, because a computed date is exactly what the grounding check throws out.
+visitor_language: pl
+sender_id: uwv
+reference: "WIA 4409 8827 13"
+issued_on: 2026-08-18
+deadline: null
+total_amount_cents: null
+handoff_required: true
+consequences_at_least: 1

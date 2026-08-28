@@ -16,7 +16,7 @@
     "gate:dup": "jscpd .",
     "gate:py:lint": "uv run ruff check .",
     "gate:py:format": "uv run ruff format --check .",
-    "gate:py:security": "uv run bandit -q -r src",
+    "gate:py:security": "uv run bandit -q -r src evals",
     "gate:py:types": "uv run mypy",
     "gate:web:types": "npm run typecheck --workspace @plainletter/web",
     "gate:web:lint": "npm run lint --workspace @plainletter/web",

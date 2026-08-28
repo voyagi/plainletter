@@ -1,0 +1,13 @@
+what_it_tests: >-
+  The ordinary case, and the floor everything else is measured against: a verified sender, a plain
+  payment deadline months away, and two amounts that add up to the total printed under them.
+visitor_language: pl
+sender_id: belastingdienst
+reference: "2731 9948 H 62"
+issued_on: 2026-08-12
+deadline: 2026-11-30
+urgency: ample
+total_amount_cents: 133000
+line_amount_cents: [128400, 4600]
+handoff_required: false
+consequences_at_least: 1
