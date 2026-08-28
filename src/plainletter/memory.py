@@ -164,18 +164,32 @@ class AgentCoreCaseMemory:
 
         The case id is the only key a visitor has, and it is the only key this store has, so
         erasure is exactly "delete everything filed under it". Deleting each event by its own id
-        rather than the whole actor is deliberate: the deletion is a list of the same events a
-        recall would have returned, so what was erased is what the visitor was shown.
+        rather than the whole actor is deliberate: erasure is then a list of events, and the same
+        list a recall walks.
+
+        It reads a page, deletes it, and reads again until a page yields nothing to delete, rather
+        than reading one page and stopping. A single page was a quiet limit on a promise that has
+        none: a case with more readings than fit in one page kept the rest, and the answer still
+        said the case had been erased. Draining rather than following a page token also means this
+        holds whatever the store's pagination looks like, since deleting a page is what makes the
+        next one arrive.
+
+        The loop ends on a page that deletes nothing, so a page of events with no id ends it rather
+        than repeating forever.
         """
-        events = self._store.list_events(actor_id=case_id, session_id=case_id, max_results=100)
         erased = 0
-        for event in events:
-            event_id = event.get("eventId") if hasattr(event, "get") else None
-            if not event_id:
-                continue
-            self._store.delete_event(actor_id=case_id, session_id=case_id, event_id=event_id)
-            erased += 1
-        return erased
+        while True:
+            events = self._store.list_events(actor_id=case_id, session_id=case_id, max_results=100)
+            erased_this_page = 0
+            for event in events:
+                event_id = event.get("eventId") if hasattr(event, "get") else None
+                if not event_id:
+                    continue
+                self._store.delete_event(actor_id=case_id, session_id=case_id, event_id=event_id)
+                erased_this_page += 1
+            if erased_this_page == 0:
+                return erased
+            erased += erased_this_page
 
 
 def new_case_id() -> str:

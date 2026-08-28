@@ -11,13 +11,15 @@ holding the pager than a confident page would be.
 
 ## What it rests on
 
-If one of these is down or wrong, the desk stops. Nothing here has a fallback, which is a scope
-decision rather than an oversight.
+Nothing here has a fallback, which is a scope decision rather than an oversight. They do not all
+fail the same way, and the column on the right is the one to read during an incident: losing the
+model or the runtime stops every reading, while losing the memory store costs only case recall and
+readings carry on.
 
 | It depends on | Where | What breaks without it | Owned by |
 | --- | --- | --- | --- |
 | Amazon Bedrock, `eu.anthropic.claude-sonnet-4-6` | EU inference profile, sourced from `eu-central-1` | Every reading. This is the model that transcribes, reads, explains, plans and drafts | AWS |
-| Amazon Bedrock, `eu.anthropic.claude-haiku-4-5` | Same | The cheaper turns only. Configured, and the deploy guide asks for both to be enabled | AWS |
+| Amazon Bedrock, `eu.anthropic.claude-haiku-4-5` | Same | **Nothing today.** No code path calls it: drafting was its job until the first live letter and moved to Sonnet. The runtime's IAM policy still allows it so that moving a stage back is a settings change rather than a redeploy | AWS |
 | AgentCore Runtime | `eu-central-1` | Everything. The agent is the deployment | AWS |
 | AgentCore Memory | `eu-central-1` | Consented cases only. A visitor cannot bring a case number back. A reading itself still works and says so | AWS |
 | AgentCore Observability, through CloudWatch Transaction Search | `eu-central-1` | Traces. Readings continue and nobody can see how they went | AWS |

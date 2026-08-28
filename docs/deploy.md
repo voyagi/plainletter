@@ -24,8 +24,10 @@ profiles, which are sourced from Frankfurt and stay within EU regions.
    the path.
 2. Sign in to AWS in your terminal (`aws login`, or a profile in `~/.aws`). The CLI deploys with
    whatever credentials boto3 and the AWS SDK find.
-3. Make sure the two models are enabled for the account in the Bedrock console:
-   `anthropic.claude-sonnet-4-6` and `anthropic.claude-haiku-4-5`.
+3. Enable `anthropic.claude-sonnet-4-6` for the account in the Bedrock console. That is the one the
+   product calls, for every stage. `anthropic.claude-haiku-4-5` is in the runtime's IAM policy and
+   is called by nothing today, so enabling it is optional: do it only if you intend to point
+   `PLAINLETTER_DRAFTING_MODEL` back at it.
 4. Copy the deployment target and fill in the account id:
 
    ```sh

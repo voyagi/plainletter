@@ -20,6 +20,17 @@ request.
   organisation running the desk is the controller and tells the visitor to ask at the counter, which
   is true of every installation. For the hosted demo the two are set to Taranity and
   hello@taranity.com. A library running its own copy is the controller of that copy and sets its own.
+- **Data protection officer (Article 37).** Not required for the hosted demo, and that is a
+  determination rather than an assumption about size. 37(1)(a) does not apply: Taranity is not a
+  public authority or body. 37(1)(b) does not apply: the core activity is reading one document a
+  person hands over at their own request, which is neither regular nor systematic monitoring of data
+  subjects, and nothing here observes anybody over time. 37(1)(c) does not apply: no Article 9
+  special category or Article 10 criminal-offence data is processed as a core activity, and a
+  letter's own content is incidental to a single request rather than a category the service is built
+  on. **This determination belongs to the deployment, not to the code.** A municipality or another
+  public body running its own copy is caught by 37(1)(a) and has to name its DPO on the page, which
+  is one more reason the controller block is deployment-configured. Article 13(1)(b) applies only
+  where a DPO exists, so an unset deployment satisfies 13(1) with 13(1)(a) alone.
 - **Processors.** Amazon Web Services, for model inference (Amazon Bedrock) and for the runtime and
   the optional case store (Amazon Bedrock AgentCore). The console's host, if the console is hosted.
 - **Data subjects.** The person the letter was sent to, and anybody else named in it. The second
@@ -213,9 +224,9 @@ or removing the volunteer from the picture entirely.
 
 - Controller: set per deployment through the environment, and set to Taranity, hello@taranity.com
   for the hosted demo. A registered legal form, address and company number belong there too once
-  the studio has them; a trading name and a working contact address satisfy Article 13(1)(a) and
-  (b) in the meantime. **Any other operator must set their own before serving anybody**, and an
-  unset deployment says so on the page rather than naming somebody else.
+  the studio has them; a trading name and a working contact address are what Article 13(1)(a) asks
+  for. **Any other operator must set their own before serving anybody**, and an unset deployment
+  says so on the page rather than naming somebody else.
 - **OPEN.** Accepting the AWS data processing addendum on the account the runtime lives in, and
   confirming the model provider terms in the Bedrock console.
 - A legal read of the privacy page before it serves real letters. Everything in it is a description

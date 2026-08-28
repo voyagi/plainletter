@@ -83,7 +83,8 @@ export default function Privacy() {
           anybody else&rsquo;s.
         </p>
         <p className="m-0 text-[16px] text-ink-2">
-          A desk this size has no data protection officer. Questions go to the controller.
+          This desk has no data protection officer, because none is required of it. A public body
+          running its own copy does need one and names them here. Questions go to the controller.
         </p>
       </Section>
 
