@@ -25,6 +25,19 @@ export const env = createEnv({
     // visitors, at the exact line where the law wants a real one.
     PLAINLETTER_CONTROLLER_NAME: z.string().min(1).optional(),
     PLAINLETTER_CONTROLLER_CONTACT: z.string().min(1).optional(),
+    // Article 37 makes a data protection officer compulsory for a public authority or body, except
+    // a court acting in its judicial capacity, and Article 37(7) makes publishing their contact
+    // details compulsory with it. Whether it applies is a fact about the operator, so it is
+    // configured here for the same reason the controller is: a municipality running its own copy
+    // would otherwise publish a page saying it has not named one.
+    //
+    // An email address, and checked as one, because the page turns it into a link somebody clicks.
+    // Any non-empty string would pass validation and then be written into a `mailto:`, so a phone
+    // number or a contact-page address would render as a link that goes nowhere while the page said
+    // the officer could be reached there, which is worse than saying nothing. An operator whose
+    // officer publishes something other than an email should point this at a mailbox that reaches
+    // them.
+    PLAINLETTER_DPO_CONTACT: z.email().optional(),
   },
   clientPrefix: 'NEXT_PUBLIC_',
   client: {
@@ -37,6 +50,7 @@ export const env = createEnv({
     PLAINLETTER_TRUST_PROXY_HEADER: process.env.PLAINLETTER_TRUST_PROXY_HEADER,
     PLAINLETTER_CONTROLLER_NAME: process.env.PLAINLETTER_CONTROLLER_NAME,
     PLAINLETTER_CONTROLLER_CONTACT: process.env.PLAINLETTER_CONTROLLER_CONTACT,
+    PLAINLETTER_DPO_CONTACT: process.env.PLAINLETTER_DPO_CONTACT,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   },
   emptyStringAsUndefined: true,

@@ -110,7 +110,29 @@ PLAINLETTER_CONTROLLER_CONTACT=hello@taranity.com
 Those are the values for the hosted demo. A library running its own copy is the controller of that
 copy and sets its own name and contact address here. Left unset, the page says the organisation
 running the desk is the controller and tells the visitor to ask at the counter, which is true but is
-not the name and address Article 13 asks for.
+not the name and address Article 13 asks for. They are a pair: the console refuses to start with one
+of them set and the other empty, because a name nobody can write to is not a disclosure.
+
+One more, and it is compulsory rather than optional for some operators:
+
+```sh
+PLAINLETTER_DPO_CONTACT=dpo@example.org
+```
+
+Article 37 makes a data protection officer compulsory for a public authority or body, excepting a
+court acting in its judicial capacity, and Article 37(7) makes publishing their contact details
+compulsory with it. **If you are a municipality, a public library service or any other public body
+inside that scope, this is not optional and the page is not correct without it.** It takes the
+contact address rather than a name, since that is what 37(7) requires and what the page turns into
+a link, and it has to be an email address: the console refuses to start on anything else, because
+the alternative is a page offering a link that goes nowhere.
+
+The hosted demo leaves it empty. An empty value makes the page say this desk publishes no officer
+and send questions to the controller, which describes the configuration and is not a finding that
+none is required. **Leaving it empty establishes nothing about your own position**, and the
+assessment behind the demo's answer is written out limb by limb in
+`docs/privacy-accountability.md` for the demo alone. Article 37 applies to you or it does not,
+whatever this file is set to.
 
 The upload route meters each caller by the last hop of `X-Forwarded-For`, and that entry is only
 trustworthy when a proxy really wrote it. Left unset, every caller is counted as one, so the desk

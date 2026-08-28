@@ -27,10 +27,20 @@ request.
   subjects, and nothing here observes anybody over time. 37(1)(c) does not apply: no Article 9
   special category or Article 10 criminal-offence data is processed as a core activity, and a
   letter's own content is incidental to a single request rather than a category the service is built
-  on. **This determination belongs to the deployment, not to the code.** A municipality or another
-  public body running its own copy is caught by 37(1)(a) and has to name its DPO on the page, which
-  is one more reason the controller block is deployment-configured. Article 13(1)(b) applies only
-  where a DPO exists, so an unset deployment satisfies 13(1) with 13(1)(a) alone.
+  on. **This determination belongs to the deployment, not to the code, and it is enforced rather
+  than requested.** A municipality or another public body running its own copy is caught by
+  37(1)(a) unless it is a court acting in its judicial capacity, which the article excepts by name,
+  and where it is caught it has to designate an officer and publish their contact details under
+  37(7). That is `PLAINLETTER_DPO_CONTACT` in the console's environment, documented in
+  `docs/deploy.md` alongside `PLAINLETTER_CONTROLLER_NAME` and `PLAINLETTER_CONTROLLER_CONTACT`.
+  It carries the contact address rather than a name, because 37(7) requires the contact details
+  and the page turns the address into a link. Set, the page publishes it. Unset, the page says this
+  desk publishes no officer and sends questions to the controller, which describes the
+  configuration and is not a finding that none is required: the assessment above is about this
+  deployment and cannot be made on anybody else's behalf, and an unset variable proves nothing
+  about an operator's own Article 37 position. Article 13(1)(b) applies only where an officer
+  exists, so a deployment that has correctly established it has none satisfies 13(1) with 13(1)(a)
+  alone. A deployment that simply left the variable empty has established nothing.
 - **Processors.** Amazon Web Services, for model inference (Amazon Bedrock) and for the runtime and
   the optional case store (Amazon Bedrock AgentCore). The console's host, if the console is hosted.
 - **Data subjects.** The person the letter was sent to, and anybody else named in it. The second
