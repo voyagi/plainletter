@@ -80,8 +80,23 @@ const DEFAULT_DIRS = ['dist', 'build', 'out', '.next/static', '.next/server/page
 //
 // Case-insensitive and separator-collapsing because `.NEXT/server/pages`, `.next/Server/pages` and
 // `.next//server/pages` all name the SAME directory on Windows, and each one flagged before.
+//
+// `.next/cache` and `.next/dev` reach a browser by NO extension, so their allowlist is empty. The
+// cache is the bundler's own store (Turbopack writes `.sst` tables holding compiled module text)
+// and `dev` is what `next dev` leaves behind; a production deploy serves neither, and both were
+// being read in full. That cost two false positives on real runs: a turbopack cache table on CI
+// and four dev-server chunks locally, on a tree with no secret in it. Crying wolf switches a gate
+// off as surely as missing a leak does.
+//
+// Nothing is lost by it, which is the test a skip has to pass. Any client module in either tree is
+// compiled from the same source as the client chunks under `.next/static`, and those are still
+// read in full. A real key would be caught there. If one of these is passed on its own the whole
+// scan finds nothing and the verdict is UNKNOWN, never clean.
+const NOTHING_A_BROWSER_RECEIVES = /$^/; // an allowlist that admits no extension, so the tree is skipped
 const BROWSER_SHIPPED_ONLY = [
   { dir: /(^|\/)\.next\/server(\/|$)/i, only: /\.(html?|rsc|json|body)$/i },
+  { dir: /(^|\/)\.next\/cache(\/|$)/i, only: NOTHING_A_BROWSER_RECEIVES },
+  { dir: /(^|\/)\.next\/dev(\/|$)/i, only: NOTHING_A_BROWSER_RECEIVES },
 ];
 function onlyFor(dir) {
   const norm = String(dir).replace(/\\/g, '/').replace(/\/+/g, '/').replace(/\/+$/, '');
@@ -900,6 +915,29 @@ function runSelftest() {
     const staticStillScanned = verdictOf([dotNext]);
     if (staticStillScanned !== 'fail') failures++;
     console.log(`  ${staticStillScanned === 'fail' ? 'ok  ' : 'FAIL'}  a key in .next/static is STILL caught when .next is passed  (expected fail, got ${staticStillScanned})`);
+
+    // The bundler's own trees. Both of these flagged on a real tree with no secret in it: a
+    // Turbopack cache table on CI and four dev-server chunks locally. Its own root, because the
+    // control just above deliberately leaves a leak in the shared one.
+    const bundlerRoot = mkdtempSync(join(tmpdir(), 'client-secrets-bundler-'));
+    roots.push(bundlerRoot);
+    const bundlerNext = join(bundlerRoot, '.next');
+    mkdirSync(join(bundlerNext, 'static', 'chunks'), { recursive: true });
+    mkdirSync(join(bundlerNext, 'cache', 'turbopack'), { recursive: true });
+    mkdirSync(join(bundlerNext, 'dev', 'server', 'chunks'), { recursive: true });
+    writeFileSync(join(bundlerNext, 'static', 'chunks', 'main.js'), publicKeys);
+    writeFileSync(join(bundlerNext, 'cache', 'turbopack', '00000004.sst'), `const S="${STRIPE_SK}";\n`);
+    writeFileSync(join(bundlerNext, 'dev', 'server', 'chunks', 'node_modules.js'), `const S="${STRIPE_SK}";\n`);
+    const bundlerTrees = verdictOf([bundlerNext]);
+    if (bundlerTrees !== 'clean') failures++;
+    console.log(`  ${bundlerTrees === 'clean' ? 'ok  ' : 'FAIL'}  a key in .next/cache or .next/dev is not a shipped key  (expected clean, got ${bundlerTrees})`);
+
+    // The same trap guard, for the same reason: skipping those two must not have taken the client
+    // chunks with them. Without this control the skip above could widen into a false clean.
+    writeFileSync(join(bundlerNext, 'static', 'chunks', 'leak.js'), `const S="${STRIPE_SK}";\n`);
+    const staticPastBundlerSkips = verdictOf([bundlerNext]);
+    if (staticPastBundlerSkips !== 'fail') failures++;
+    console.log(`  ${staticPastBundlerSkips === 'fail' ? 'ok  ' : 'FAIL'}  a key in .next/static is still caught beside those skips  (expected fail, got ${staticPastBundlerSkips})`);
 
     // Same directory, differently spelled. Created literally as `.NEXT` so the control does not
     // depend on the host filesystem being case-insensitive, which would make it Windows-only.
