@@ -5,7 +5,7 @@ processed, why it is lawful, what could go wrong for the person the letter belon
 product does about it. The privacy page at `/privacy` is the short version written for a visitor;
 this file is the version an operator, a library, or a supervisory authority would ask for.
 
-Two things in here are not settled and are marked **OPEN**. Both need the operator, not the code.
+One thing in here is not settled and is marked **OPEN**. It needs the operator, not the code.
 
 ## What this product is, in data protection terms
 
@@ -14,8 +14,9 @@ and amount against the letter itself, explains it in two languages, works out th
 the next steps, and prints a one page card. The letter is the input; almost nothing survives the
 request.
 
-- **Controller.** OPEN. The natural or legal person running the deployment is the controller. The
-  name and contact address go on the privacy page before it serves anybody.
+- **Controller.** Whoever runs the deployment. For the hosted demo that is Taranity, reachable at
+  hello@taranity.com, and that is what the privacy page names. A library or advice service running
+  its own copy is the controller of that copy and puts its own name and address on the page.
 - **Processors.** Amazon Web Services, for model inference (Amazon Bedrock) and for the runtime and
   the optional case store (Amazon Bedrock AgentCore). The console's host, if the console is hosted.
 - **Data subjects.** The person the letter was sent to, and anybody else named in it. The second
@@ -207,7 +208,9 @@ or removing the volunteer from the picture entirely.
 
 ## Human launch gate
 
-- **OPEN.** The controller's legal name and contact address, for the privacy page and for this file.
+- Controller named: Taranity, hello@taranity.com, on the privacy page and in this file. A registered
+  legal form, address and company number belong here too once the studio has them; a trading name
+  and a working contact address satisfy Article 13(1)(a) and (b) in the meantime.
 - **OPEN.** Accepting the AWS data processing addendum on the account the runtime lives in, and
   confirming the model provider terms in the Bedrock console.
 - A legal read of the privacy page before it serves real letters. Everything in it is a description
