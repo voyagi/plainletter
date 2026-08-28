@@ -44,7 +44,7 @@ from .reading_model import (
 )
 from .schemas import ActionStep, DeadlineView, DraftLetter, Explanation, LetterFacts
 from .spend import MAX_OUTPUT_TOKENS, transcription_tokens
-from .telemetry import mask_model_content_in_traces
+from .telemetry import keep_letters_out_of_traces
 from .tools import official_routes
 
 # The whole published id, read off the model's own Bedrock card on 2026-08-25:
@@ -235,8 +235,9 @@ class BedrockReadingModel:
         tools: list[Any] | None = None,
         max_tokens: int = MAX_OUTPUT_TOKENS,
     ) -> Agent:
-        # The tracer is built by the first Agent in the process and reads its policy then.
-        mask_model_content_in_traces()
+        # The tracer is built by the first Agent in the process and reads its policy then, and the
+        # distro's capture switch is read on every Bedrock call, so both are re-pinned here.
+        keep_letters_out_of_traces()
         return Agent(
             model=self.make_model(model_id, self.region, max_tokens),
             system_prompt=system_prompt,

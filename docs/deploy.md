@@ -19,9 +19,23 @@ profiles, which are sourced from Frankfurt and stay within EU regions.
 
 ## Before the first deploy
 
-1. Install the tools: Node 20 or later, `uv`, and the AgentCore CLI with
-   `npm install -g @aws/agentcore`. The CLI packages the Python code with `uv`, so `uv` must be on
-   the path.
+1. Install the tools: Node 20 or later, `uv`, and the AgentCore CLI. The CLI packages the Python
+   code with `uv`, so `uv` must be on the path.
+
+   ```sh
+   npm install -g @aws/agentcore@0.27.1
+   cd agentcore/cdk && npm install && cd ../..
+   ```
+
+   **The CLI version is pinned on purpose, and moving it breaks the build.** From 0.28.0 the CLI
+   rewrites `@aws/agentcore-cdk` in `agentcore/cdk/package.json` to alpha.49 every time it deploys,
+   and alpha.49 renamed the payment connector's properties, so the generated stack in
+   `agentcore/cdk/lib/cdk-stack.ts` stops compiling. This project declares no payments, so that
+   code never runs; it still has to type-check. Until the scaffold is regenerated, stay on 0.27.1
+   and ignore the CLI's own update notice.
+
+   The second line is easy to miss and its failure is confusing: without it the build reports a
+   dozen "Cannot find module" errors that look like a broken checkout.
 2. Sign in to AWS in your terminal (`aws login`, or a profile in `~/.aws`). The CLI deploys with
    whatever credentials boto3 and the AWS SDK find.
 3. Enable `anthropic.claude-sonnet-4-6` for the account in the Bedrock console. That is the one the
@@ -45,8 +59,15 @@ profiles, which are sourced from Frankfurt and stay within EU regions.
 ```sh
 agentcore validate
 agentcore package
-agentcore deploy
+agentcore deploy --target default --yes
 ```
+
+`deploy` asks questions when it is given no flags and refuses to run at all where there is no
+interactive terminal, so the flags above are the form to use from a script. `--yes` also lets it
+CDK-bootstrap the account and region, which the very first deploy needs: bootstrapping creates the
+one-time `CDKToolkit` stack, an assets bucket, an ECR repository and five IAM roles, and the
+CloudFormation execution role among them is broadly permissioned by CDK's own default. That is
+standard, it happens once, and it is worth knowing before it happens rather than after.
 
 `package` builds `agentcore/plainletter.zip` without touching AWS and is the fast way to see a
 packaging problem. `deploy` synthesises a CloudFormation stack with the CDK app in
@@ -68,11 +89,28 @@ Try it once from the command line, with a sample letter, before wiring the conso
 
 ```sh
 agentcore invoke cjib-verkeersboete
-agentcore invoke '{"sample": "cjib-verkeersboete", "today": "2026-08-22", "consent": true}'
 ```
 
-A bare word is a sample name and a JSON object is the full request. The answer is the finished
-reading with the printable card and the calendar reminder in it.
+**That proves the runtime and not the model.** A request naming a `sample` is answered from the
+recorded reading beside that letter, and no model is called at all. To exercise Bedrock the request
+has to carry a `letter`, which is easiest from a file:
+
+```sh
+agentcore invoke --prompt-file request.json
+```
+
+where `request.json` holds the real request, and a JSON object sent any other way is the same thing:
+
+```json
+{
+  "letter": { "filename": "letter.txt", "text": "Centraal Justitieel Incassobureau\n..." },
+  "visitor_language": "tr",
+  "today": "2026-09-01",
+  "consent": true
+}
+```
+
+The answer is the finished reading with the printable card and the calendar reminder in it.
 
 ## Wire the console to the deployed agent
 
@@ -152,8 +190,26 @@ it, and `agentcore status` shows the memory store holding one event under that i
 back on a second reading and the console opens with the earlier reading on its first line. Events
 expire after thirty days, as the privacy page says.
 
-**No letter reaches a trace or a log.** Open CloudWatch, Application Signals, Transaction Search,
-and find the trace of a reading. The Strands spans (`invoke_agent`, `chat`, `execute_tool`) show
+**No letter reaches a trace or a log.** Check it rather than assume it, because there are two
+channels here and closing the obvious one is not enough. Download a trace and search it:
+
+```sh
+agentcore traces list --json --limit 5
+agentcore traces get <traceId>
+```
+
+The first deployed run of this agent put all sixteen lines of a letter into CloudWatch, with the
+visitor's name, street, reference number and every amount, while Strands' own redaction was working
+perfectly and marking 49 places `[REDACTED]`. The leak was a second channel: the AWS OpenTelemetry
+distro instruments botocore directly and emits the Bedrock request body as a `gen_ai.user.message`
+log record, and it opts you in by running
+`setdefault("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true")` before any of this
+project's code runs. That variable is now set to `false` in `agentcore.json` and written again in
+`src/plainletter/telemetry.py`, and a fresh trace of the same letter carries none of it. **If a
+future upgrade changes that variable's name, the leak comes back silently**, so this check is worth
+repeating after any change to the distro.
+
+The rest of the check is what the console shows. The Strands spans (`invoke_agent`, `chat`, `execute_tool`) show
 `[REDACTED]` where a prompt, an answer or a tool argument would be: the agent pins that policy in
 code (`src/plainletter/telemetry.py`) and the deployment repeats it in `agentcore.json`. The span
 named `plainletter.reading` carries counts and outcomes only: how many facts were grounded, whether
