@@ -36,6 +36,13 @@ profiles, which are sourced from Frankfurt and stay within EU regions.
 
    The second line is easy to miss and its failure is confusing: without it the build reports a
    dozen "Cannot find module" errors that look like a broken checkout.
+
+   That install writes `agentcore/cdk/package-lock.json`, which is deliberately not committed.
+   `aws-cdk-lib` bundles its own dependencies, including a `brace-expansion` carrying three HIGH
+   denial-of-service advisories, and a bundled dependency cannot be replaced by an npm override
+   because it ships inside the published tarball. It runs on the machine synthesising the stack, is
+   never part of the Python code that is deployed, and sees only paths the operator wrote. Worth
+   knowing about, not worth failing the repository's security job over.
 2. Sign in to AWS in your terminal (`aws login`, or a profile in `~/.aws`). The CLI deploys with
    whatever credentials boto3 and the AWS SDK find.
 3. Enable `anthropic.claude-sonnet-4-6` for the account in the Bedrock console. That is the one the
