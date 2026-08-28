@@ -39,15 +39,24 @@ credentials or no network, and is reported without being called a failure.
 
 The first move in almost every incident, and the one to reach for before anything clever.
 
+Set `PLAINLETTER_MAX_READINGS_PER_DAY` to `0` in the `envVars` list in `agentcore/agentcore.json`,
+then redeploy:
+
 ```sh
-PLAINLETTER_MAX_READINGS_PER_DAY=0
+agentcore deploy
 ```
 
-**On the runtime, and only there.** That variable is read by the agent (`src/plainletter/settings.py`)
-and by nothing else: setting it on the console's host does nothing at all, because the console's own
-limits are fixed in `web/src/server/limits.ts`. Set it on the runtime and redeploy. Zero is refused
-before the first model call, so spend stops immediately, the deployment stays up, and the pages
-still serve. Not rehearsed live; the ceiling itself is covered by tests in `tests/test_spend.py`.
+**It has to be that file, not a shell.** Exporting the variable in a terminal sets it on your own
+machine and reaches nothing: the runtime's environment is the `envVars` list that
+`agentcore deploy` hands to the deployment, which is why the variable is written there with its
+default. It is read by the agent (`src/plainletter/settings.py`) and by nothing else, so setting it
+on the console's host also does nothing, the console's limits being fixed in
+`web/src/server/limits.ts`.
+
+Zero is refused before the first model call. New readings stop once the redeploy has reached every
+runtime instance, and a request already admitted may finish, so the last few readings can still
+cost money after the change. The deployment stays up and the pages still serve. Not rehearsed live;
+the ceiling itself is covered by tests in `tests/test_spend.py`.
 
 It closes the reading service everywhere, including through the console, because the console has no
 other way to read a letter than to call the runtime. If what needs closing is the console itself

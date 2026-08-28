@@ -15,8 +15,12 @@ export const metadata: Metadata = {
 // deployment's own environment. A library running its own copy is its own controller, and a name
 // hard-coded here would be a false one in front of that library's visitors, at the exact line where
 // Article 13 wants a real one. Unset, the page says what is true of every deployment.
+// Both or neither. `env.ts` refuses to boot on half a pair, and this reads both anyway rather than
+// trusting that: the page is what a visitor actually sees, and a name with no contact address is
+// not a disclosure.
 const CONTROLLER = env.PLAINLETTER_CONTROLLER_NAME;
 const CONTROLLER_CONTACT = env.PLAINLETTER_CONTROLLER_CONTACT;
+const CONTROLLER_NAMED = Boolean(CONTROLLER) && Boolean(CONTROLLER_CONTACT);
 
 function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
@@ -56,17 +60,12 @@ export default function Privacy() {
       </p>
 
       <Section heading="Who is responsible">
-        {CONTROLLER ? (
+        {CONTROLLER_NAMED ? (
           <p className="m-0 mb-3 text-[16px] text-ink-2">
-            The data controller for this desk is {CONTROLLER}
-            {CONTROLLER_CONTACT ? (
-              <>
-                , reachable at{' '}
-                <a className="underline underline-offset-2" href={`mailto:${CONTROLLER_CONTACT}`}>
-                  {CONTROLLER_CONTACT}
-                </a>
-              </>
-            ) : null}
+            The data controller for this desk is {CONTROLLER}, reachable at{' '}
+            <a className="underline underline-offset-2" href={`mailto:${CONTROLLER_CONTACT}`}>
+              {CONTROLLER_CONTACT}
+            </a>
             . The controller decides what this desk does with a letter and answers for it.
           </p>
         ) : (

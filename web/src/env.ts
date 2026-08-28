@@ -41,3 +41,15 @@ export const env = createEnv({
   },
   emptyStringAsUndefined: true,
 });
+
+// The two controller values are one disclosure, and half of one is not a smaller version of it.
+// Article 13(1)(a) asks for the identity AND the contact details together: a name with no way to
+// reach it leaves a visitor knowing who holds their letter and unable to ask anything, and a
+// contact address with no name would have been dropped on the floor by the page. Either both or
+// neither, found out here at boot rather than by somebody reading half a sentence at a desk.
+if (Boolean(env.PLAINLETTER_CONTROLLER_NAME) !== Boolean(env.PLAINLETTER_CONTROLLER_CONTACT)) {
+  throw new Error(
+    'PLAINLETTER_CONTROLLER_NAME and PLAINLETTER_CONTROLLER_CONTACT must be set together, or ' +
+      'both left unset. The privacy page names a controller only when it has both.',
+  );
+}
