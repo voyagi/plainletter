@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -58,6 +60,22 @@ def test_the_policy_is_pinned_in_the_environment_before_any_agent_exists() -> No
     assert MASK_EVERYTHING in os.environ[OPT_IN_VARIABLE].split(",")
 
 
+def test_the_restrictive_values_are_what_they_are_spelled_out_here() -> None:
+    """Written out, not imported, because every other assertion here imports them.
+
+    A test that compares the environment against the constant it came from passes just as happily
+    when both are changed to something permissive. These two strings are the ones the AWS distro and
+    the Strands tracer actually read, so this is the assertion that would notice.
+    """
+    assert CAPTURE_NOTHING == "false"
+    assert MASK_EVERYTHING == "gen_ai_unredacted_attributes="
+    assert CAPTURE_VARIABLE == "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
+    assert OPT_IN_VARIABLE == "OTEL_SEMCONV_STABILITY_OPT_IN"
+
+    assert os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] == "false"
+    assert "gen_ai_unredacted_attributes=" in os.environ["OTEL_SEMCONV_STABILITY_OPT_IN"].split(",")
+
+
 def test_the_distros_own_capture_switch_is_pinned_shut_too() -> None:
     """The second channel, and the one that actually leaked on the deployed runtime.
 
@@ -67,39 +85,45 @@ def test_the_distros_own_capture_switch_is_pinned_shut_too() -> None:
     assert os.environ[CAPTURE_VARIABLE] == CAPTURE_NOTHING
 
 
+@contextmanager
+def restored(*names: str) -> Iterator[None]:
+    """Put every named environment variable back, whether it was set before or absent."""
+    before = {name: os.environ.get(name) for name in names}
+    try:
+        yield
+    finally:
+        for name, value in before.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+
 def test_the_distro_turning_capture_on_is_overwritten_not_defaulted() -> None:
     """`aws_opentelemetry_distro` runs `setdefault(CAPTURE, "true")` before any of our code.
 
     A value that merely defaulted would lose that race every time, so this one has to overwrite.
     """
-    original = os.environ.get(CAPTURE_VARIABLE)
-    try:
+    with restored(CAPTURE_VARIABLE):
         os.environ[CAPTURE_VARIABLE] = "true"
         assert stop_capturing_message_content() == CAPTURE_NOTHING
         assert os.environ[CAPTURE_VARIABLE] == CAPTURE_NOTHING
-    finally:
-        if original is None:
-            del os.environ[CAPTURE_VARIABLE]
-        else:
-            os.environ[CAPTURE_VARIABLE] = original
 
 
 def test_closing_one_channel_is_not_closing_both() -> None:
     # The lesson from the live run, kept as a test: whoever adds a third channel should have to
     # delete an assertion rather than merely forget one.
-    original = os.environ.get(CAPTURE_VARIABLE)
-    try:
+    #
+    # Both variables are restored, not just the one this test sets. The calls below write to the
+    # opt-in variable as well, and a test that leaves the environment changed makes the next one
+    # depend on the order they happened to run in.
+    with restored(CAPTURE_VARIABLE, OPT_IN_VARIABLE):
         os.environ[CAPTURE_VARIABLE] = "true"
         mask_model_content_in_traces()
         assert os.environ[CAPTURE_VARIABLE] == "true", "masking spans must not touch the distro"
         keep_letters_out_of_traces()
         assert os.environ[CAPTURE_VARIABLE] == CAPTURE_NOTHING
         assert MASK_EVERYTHING in os.environ[OPT_IN_VARIABLE].split(",")
-    finally:
-        if original is None:
-            del os.environ[CAPTURE_VARIABLE]
-        else:
-            os.environ[CAPTURE_VARIABLE] = original
 
 
 def test_the_deployment_carries_both_switches_as_well_as_the_code() -> None:
