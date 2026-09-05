@@ -184,3 +184,64 @@ def test_an_unreadable_field_the_letter_never_names_still_reaches_the_desk() -> 
     marked = mark_letter("Een korte brief.", facts, VerificationResult())
     assert marked.gaps[0].field == "handtekening"
     assert not any(line.gap for line in marked.lines)
+
+
+OVERLAP_LETTER = "Betaal voor 15 september 2026 het bedrag van EUR 174,00 aan het CJIB.\n"
+
+
+def two_grounded(first: str, second: str):
+    return VerificationResult(
+        grounded=(
+            GroundedFact(
+                name="deadline",
+                display="15 september 2026",
+                span=SourceSpan(page=1, text=first),
+            ),
+            GroundedFact(
+                name="total_amount",
+                display="EUR 174,00",
+                span=SourceSpan(page=1, text=second),
+            ),
+        )
+    )
+
+
+def washed(marked) -> str:
+    return "".join(run.text for line in marked.lines for run in line.runs if run.mark is not None)
+
+
+@pytest.mark.parametrize(
+    ("label", "first", "second"),
+    [
+        ("apart", "Betaal voor 15 september 2026", "EUR 174,00 aan het CJIB"),
+        (
+            "nested",
+            "Betaal voor 15 september 2026 het bedrag van EUR 174,00",
+            "15 september 2026",
+        ),
+        (
+            "overlapping",
+            "Betaal voor 15 september 2026 het bedrag",
+            "2026 het bedrag van EUR 174,00",
+        ),
+    ],
+)
+def test_every_fact_under_a_numeral_is_really_inside_the_words_it_marks(
+    label: str, first: str, second: str
+) -> None:
+    # The key tells a volunteer "number four is where this came from", so the words under that
+    # numeral have to contain the value. Two spans that merely overlap used to keep only the
+    # first one's end, leaving the second value outside the wash with its name still listed
+    # under the numeral, and unplaced stayed empty because the passage had been found.
+    marked = mark_letter(OVERLAP_LETTER, LetterFacts(), two_grounded(first, second))
+    assert marked.unplaced == ()
+    text = washed(marked)
+    assert "15 september 2026" in text, label
+    assert "EUR 174,00" in text, label
+
+    named = {name for key in marked.keys for name in key.facts}
+    assert named == {"deadline", "total_amount"}, label
+    for key in marked.keys:
+        for name, value in (("deadline", "15 september 2026"), ("total_amount", "EUR 174,00")):
+            if name in key.facts:
+                assert value in key.text, f"{label}: {name} not in the key text it is filed under"

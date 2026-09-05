@@ -176,7 +176,7 @@ def _events(
     try:
         memory = case_memory()
         with within(span):
-            earlier = memory.recall(request.case_id) if request.case_id else ()
+            earlier = _recalled(span, memory, request.case_id)
         if earlier:
             yield {"stage": "case", "case": _case_event(request.case_id, earlier)}
 
@@ -217,7 +217,7 @@ def _events(
         # base's own id or nothing, never a string the model wrote.
         span.set_attribute("plainletter.sender", known_sender_id(reading) or "unknown")
         with within(span):
-            case = _remember(request, reading, today, memory, earlier)
+            case = _remembered(span, request, reading, today, memory, earlier)
         span.set_attribute("plainletter.remembered", bool(case and case["remembered"]))
         yield _completed(request, letter, reading, today, case)
     finally:
@@ -247,6 +247,57 @@ def model_audit(model: ReadingModel) -> list[str]:
     audit = getattr(model, "audit", None)
     entries = getattr(audit, "entries", None)
     return list(entries) if isinstance(entries, list) else []
+
+
+MEMORY_UNAVAILABLE = (
+    "The case store could not be reached, so nothing was kept and nothing earlier could be shown. "
+    "The reading itself is unaffected."
+)
+
+
+def _recalled(span: Any, memory: CaseMemory, case_id: str | None) -> tuple[CaseRecord, ...]:
+    """Earlier readings under this case, or none when the store cannot be reached.
+
+    Recalling is a convenience and reading the letter is the product, so a store that is down must
+    not stop a visitor having their letter read. Before this, a case id on the card plus an
+    unreachable store meant no reading at all.
+    """
+    if case_id is None:
+        return ()
+    try:
+        return memory.recall(case_id)
+    except Exception as failure:
+        _note_memory_failure(span, "recall", failure)
+        return ()
+
+
+def _remembered(
+    span: Any,
+    request: ReadRequest,
+    reading: DeskReading,
+    today: date,
+    memory: CaseMemory,
+    earlier: tuple[CaseRecord, ...],
+) -> dict[str, Any] | None:
+    """Keep the reading, and say so honestly when keeping it did not work.
+
+    This runs after the whole pipeline has succeeded. A store that raises here used to take a
+    finished, checked reading down with it, so the desk lost the card and the calendar file for a
+    letter that had been read correctly. Consent that could not be honoured is reported as such.
+    """
+    try:
+        return _remember(request, reading, today, memory, earlier)
+    except Exception as failure:
+        _note_memory_failure(span, "remember", failure)
+        event = _case_event(request.case_id, earlier)
+        event["note"] = MEMORY_UNAVAILABLE
+        return event
+
+
+def _note_memory_failure(span: Any, what: str, failure: Exception) -> None:
+    """The type only, for the same reason the reading path logs only the type."""
+    span.set_attribute(f"plainletter.memory_{what}_failed", type(failure).__name__)
+    logger.error("plainletter.memory %s failed with %s", what, type(failure).__name__)
 
 
 def _remember(
