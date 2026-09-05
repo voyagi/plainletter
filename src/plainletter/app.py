@@ -135,7 +135,7 @@ def read_letter(payload: dict[str, Any]) -> dict[str, Any] | Iterator[dict[str, 
     try:
         request = ReadRequest.model_validate(_unwrapped(payload))
     except ValidationError as invalid:
-        return _error("payload", str(invalid))
+        return _error("payload", _why_invalid(invalid))
 
     if request.forget is not None:
         return _forgotten(request.forget)
@@ -419,6 +419,21 @@ def _unwrapped(payload: dict[str, Any]) -> dict[str, Any]:
     except json.JSONDecodeError:
         return payload
     return parsed if isinstance(parsed, dict) else payload
+
+
+def _why_invalid(invalid: ValidationError) -> str:
+    """Which field was wrong and why, never the value that was wrong.
+
+    `str(ValidationError)` quotes the input it refused. The refused input here is the letter, so
+    the whole reason the reading path logs only an exception type applies to this line too: the
+    detail travels to the browser and into whatever logs the response. The field name and the
+    rule it broke are all a caller needs to fix the request.
+    """
+    problems = [
+        f"{'.'.join(str(part) for part in problem['loc']) or 'payload'}: {problem['msg']}"
+        for problem in invalid.errors(include_url=False)
+    ]
+    return "; ".join(problems) or "the payload did not match what one reading may carry"
 
 
 def _error(kind: str, detail: str) -> dict[str, Any]:

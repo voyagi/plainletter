@@ -179,3 +179,20 @@ def test_an_uploaded_letter_arrives_with_its_own_words_intact() -> None:
     assert letter.kind == "text"
     assert letter.text is not None
     assert "Betaal voor 15 september 2026." in letter.text
+
+
+def test_a_refused_payload_names_the_field_and_never_quotes_the_letter() -> None:
+    # str(ValidationError) quotes the input it refused, and the refused input here is the letter.
+    # web/src/server/agent.ts forwards this detail to the browser, so the same reasoning that
+    # keeps the reading path logging only an exception type applies to this line.
+    opening = "Uw burgerservicenummer is 111222333. "
+    answer = read_letter(
+        {"letter": {"filename": "brief.txt", "text": opening + "x" * MAX_UPLOAD_BYTES}}
+    )
+    detail = answer["error"]["detail"]
+    assert answer["error"]["kind"] == "payload"
+    assert "burgerservicenummer" not in detail
+    assert "111222333" not in detail
+    # Still useful: it says which field and which rule.
+    assert "letter.text" in detail
+    assert "at most" in detail
