@@ -166,10 +166,45 @@ _CURRENCY = r"eur|euros?|€|евро|євро|avro"
 # straight after the digits, and letting the number run over it leaves the pattern looking for a
 # currency word across the sentence break. The next sentence in a plan opened with one, which read
 # a customer number as three thousand euro and refused a sample letter that was correct.
+#
 # An ordinary space or a non-breaking one, the latter written as its codepoint: a rule that
 # turns on a character nobody can see in an editor is a rule nobody can review.
 _SPACE = f"[ {chr(0x00A0)}]"
-_NUMBER = rf"\d{{1,3}}(?:{_SPACE}\d{{3}})+(?:,\d{{1,2}})?|\d(?:[\d.]*\d)?(?:,\d{{1,2}})?"
+_GROUPED = rf"\d{{1,3}}(?:{_SPACE}\d{{3}})+"
+_PLAIN = r"\d(?:[\d.]*\d)?"
+_CENTS = r",\d{1,2}"
+
+# Whatever the number is, it has to be the WHOLE number. A match that stops inside a longer run of
+# digits invents a value nobody wrote, and that cuts both ways: `EUR 123 456 7890` used to report
+# `EUR 123.456.789,00`, which is a wrong refusal, and `EUR 123 4567` used to report
+# `EUR 123.456,00`, which is worse, because a mistyped amount whose truncation happens to equal a
+# grounded one would have been waved through as allowed.
+#
+# So each form carries its own continuation guard, and they differ. After the cents, only a digit
+# glued straight on can be a continuation, because "EUR 1 234,56 7 dagen" is an amount followed by
+# a separate number and reading it as one would lose the amount. Without cents, a separator and a
+# digit after it are a continuation too, because that is exactly what another thousands group
+# looks like.
+_CONTINUES = rf"(?!\d)(?!{_SPACE}\d)"
+
+# The grouped form also has to START clean, and only the grouped form does. Reading a space as a
+# separator is what makes "in 2026 450 euro" ambiguous: `26 450` is a perfectly good grouped
+# number and a perfectly good year-then-amount, and the first reading turns an ordinary Dutch
+# sentence into a claim of twenty-six thousand euro that the letter never made. Refusing to start
+# a group straight after a digit leaves that sentence to the plain form, which reads `450 euro`,
+# the amount actually written.
+#
+# The plain form carries no such guard on purpose. It never crosses a space, so nothing before it
+# can change what it reads, and adding one there would lose amounts rather than protect them.
+_STARTS_CLEAN = rf"(?<!\d)(?<!\d{_SPACE})"
+_NUMBER = "|".join(
+    (
+        rf"{_STARTS_CLEAN}{_GROUPED}{_CENTS}(?!\d)",
+        rf"{_STARTS_CLEAN}{_GROUPED}{_CONTINUES}",
+        rf"{_PLAIN}{_CENTS}(?!\d)",
+        rf"{_PLAIN}{_CONTINUES}",
+    )
+)
 
 # An amount is a currency marker and a number, in either order. Both orders matter and only one
 # of them used to be read: the letter prints "EUR 174,00" and prose in every one of these

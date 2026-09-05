@@ -196,6 +196,64 @@ def test_a_thousands_group_is_read_whichever_separator_is_printed(sentence: str)
     assert numeric_claims(sentence) == {"EUR 1.234,56"}
 
 
+@pytest.mark.parametrize(
+    "malformed",
+    ["EUR 123 456 7890", "EUR 1 234 5678", "EUR 123 4567", "EUR 12 3456 789"],
+)
+def test_a_number_that_is_not_a_whole_number_is_no_claim_at_all(malformed: str) -> None:
+    # A match that stops inside a longer run of digits invents a value nobody wrote, and it cuts
+    # both ways. "EUR 123 456 7890" reported EUR 123.456.789,00, which refuses a reading over a
+    # number that is not in it. "EUR 123 4567" reported EUR 123.456,00, which is worse: a mistyped
+    # amount whose truncation happens to equal a grounded one would be waved through as allowed.
+    assert numeric_claims(malformed) == set()
+
+
+@pytest.mark.parametrize(
+    ("sentence", "expected"),
+    [
+        ("EUR 1 234 567", "EUR 1.234.567,00"),
+        ("EUR 123 456", "EUR 123.456,00"),
+        # The amount ends at its cents, so the number after it is a different number. A guard that
+        # treated any following digit as a continuation would lose the amount entirely.
+        ("U betaalt EUR 1 234,56 7 dagen lang.", "EUR 1.234,56"),
+        ("EUR 1 234 en meer", "EUR 1.234,00"),
+    ],
+)
+def test_control_a_whole_grouped_number_is_still_read(sentence: str, expected: str) -> None:
+    assert numeric_claims(sentence) == {expected}
+
+
+@pytest.mark.parametrize(
+    ("sentence", "expected"),
+    [
+        ("U moet in 2026 450 euro betalen.", "EUR 450,00"),
+        ("Bel met klantnummer 6512 3387 euro.", "EUR 3.387,00"),
+        ("Sinds 2025 120 euro per maand.", "EUR 120,00"),
+    ],
+)
+def test_a_number_before_an_amount_does_not_get_absorbed_into_it(
+    sentence: str, expected: str
+) -> None:
+    # A space read as a thousands separator makes an ordinary sentence ambiguous: in "in 2026 450
+    # euro", `26 450` is a perfectly good grouped number and a perfectly good year-then-amount,
+    # and the first reading claims twenty-six thousand euro the letter never mentioned. A grouped
+    # number may not start straight after a digit, which leaves that sentence to the plain form
+    # and the amount actually written.
+    assert numeric_claims(sentence) == {expected}
+
+
+def test_the_two_forms_guard_different_ends_and_that_is_deliberate() -> None:
+    # With the currency first, the number's START is known, so the pattern insists it ENDS
+    # cleanly and refuses a run that continues past it. With the currency last, only the END is
+    # known, so it reads back to the nearest boundary.
+    #
+    # Pinned so nobody flattens it into symmetry later: making the trailing form refuse a
+    # preceding digit outright would also throw away the amount in every sentence above, and a
+    # missed claim is the direction that lets an invented number reach a visitor.
+    assert numeric_claims("EUR 1 234 5678") == set()
+    assert numeric_claims("1 234 5678 euro") == {"EUR 5.678,00"}
+
+
 def test_a_space_between_digits_is_only_a_separator_in_groups_of_three() -> None:
     # The control for the line above, and the reason the group is exactly three digits: a customer
     # number is also digits with a space in it, and 6512 is not a thousands group.
