@@ -250,6 +250,12 @@ def numeric_claims(text: str) -> frozenset[str]:
 
 
 def _safe_date(year: int, month: int, day: int) -> date | None:
+    """A date, or None when those three numbers are not one. Never raises on nonsense input.
+
+    A model writes 31 February and 2026-13-45 as readily as it writes a real date, and this runs
+    over every sentence a model produces, so an impossible date has to be no claim rather than an
+    exception on the reading path.
+    """
     try:
         return date(year, month, day)
     except ValueError:
