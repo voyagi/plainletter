@@ -143,17 +143,38 @@ def test_the_card_masks_exactly_what_the_response_masks() -> None:
     assert "8194 5523 7761" in desk_card_html(whole, TODAY)
 
 
-def test_the_visitor_column_is_tagged_with_the_language_actually_printed_in_it() -> None:
-    # A model asked for "nl, uk" can answer "uk-UA". The card then falls back to the Dutch text
-    # for the visitor column, and tagging that Dutch sentence lang="uk" tells a screen reader and
-    # a visitor something untrue about it.
+def explanation_tags(card: str) -> set[str]:
+    """The lang attributes on the explanation rows only."""
+    return {
+        match.group(1)
+        for row in re.findall(r'<div class="prow">.*?</div>', card, re.S)
+        for match in re.finditer(r'lang="([^"]+)"', row)
+    }
+
+
+def step_tags(card: str) -> set[str]:
+    """The lang attributes on the action steps only."""
+    return {
+        match.group(1)
+        for item in re.findall(r"<li>.*?</li>", card, re.S)
+        for match in re.finditer(r'lang="([^"]+)"', item)
+    }
+
+
+def test_each_half_of_the_card_is_tagged_with_the_language_actually_printed_in_it() -> None:
+    # Two languages can end up on the right-hand side of one card. A model asked for "nl, uk" can
+    # answer "uk-UA", so the explanation rows fall back to the Dutch text while the planner, which
+    # was handed the requested language, still wrote its steps in Ukrainian. Tagging both from
+    # either one mislabels the other, and for a right-to-left language it also reverses it.
     whole = reading()
     dutch_only = whole.model_copy(
         update={"explanations": tuple(e for e in whole.explanations if e.language == "nl")}
     )
     card = desk_card_html(dutch_only, TODAY)
-    assert 'lang="uk"' not in card
-    assert 'lang="nl"' in card
+    assert explanation_tags(card) == {"nl"}, "the fallback rows are Dutch and must say so"
+    assert step_tags(card) == {"uk"}, "the steps were written in the requested language"
 
-    # The control: when the visitor's own explanation is there, the column says so.
-    assert 'lang="uk"' in desk_card_html(whole, TODAY)
+    # The control: when the visitor's own explanation is there, both halves say the same thing.
+    together = desk_card_html(whole, TODAY)
+    assert explanation_tags(together) == {"uk"}
+    assert step_tags(together) == {"uk"}

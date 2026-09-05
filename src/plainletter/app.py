@@ -31,10 +31,10 @@ import logging
 from collections.abc import Iterator
 from datetime import date
 from functools import lru_cache
-from typing import Any
+from typing import Annotated, Any
 
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
 from . import intake
 from .bedrock import VERIFIED_MODEL_IDS, VERIFIED_ON, BedrockReadingModel, probe_models
@@ -70,6 +70,18 @@ MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 # accepted by the browser and refused here for being too large.
 MAX_UPLOAD_CHARS = (MAX_UPLOAD_BYTES + 2) // 3 * 4
 
+
+def _within_the_ceiling(text: str) -> str:
+    """The letter's size as the wire carries it, which is bytes rather than characters."""
+    if len(text.encode("utf-8")) > MAX_UPLOAD_BYTES:
+        raise ValueError(f"a letter may be at most {MAX_UPLOAD_BYTES} bytes of text")
+    return text
+
+
+LetterText = Annotated[str, AfterValidator(_within_the_ceiling)]
+
+TOO_LARGE = "that file is too large to be a letter. Send the pages one at a time."
+
 DEFAULT_LANGUAGE = "en"
 
 app = BedrockAgentCoreApp()
@@ -96,7 +108,12 @@ class LetterUpload(BaseModel):
     # Both fields carry a letter, so both are bounded. Only the encoded one used to be, which left
     # the text field as an unbounded way into a metered service. The encoded one keeps its bound in
     # `_decode` instead of here, because that is where the refusal can say what to do about it.
-    text: str | None = Field(default=None, max_length=MAX_UPLOAD_BYTES)
+    #
+    # Bounded in bytes rather than in characters. Pydantic's own `max_length` counts characters,
+    # and the visitors this desk serves write in Cyrillic and Arabic, where a character is two
+    # bytes or three: a character bound is twice the ceiling it was written to be, for exactly the
+    # letters this product exists for.
+    text: LetterText | None = None
     content_base64: str | None = None
 
 
@@ -393,11 +410,16 @@ def _decode(upload: LetterUpload) -> LetterInput:
     if upload.content_base64 is None:
         raise ValueError("a letter needs either text or content_base64")
     if len(upload.content_base64) > MAX_UPLOAD_CHARS:
-        raise IntakeError("that file is too large to be a letter. Send the pages one at a time.")
+        raise IntakeError(TOO_LARGE)
     try:
         data = base64.b64decode(upload.content_base64, validate=True)
     except (binascii.Error, ValueError) as broken:
         raise IntakeError(f"the upload was not valid base64 ({broken})") from broken
+    # The character bound above is the cheap check, made before decoding, and it rounds up to the
+    # next whole base64 quantum: a string of exactly that length with no padding decodes to two
+    # bytes past the ceiling. The ceiling is a number of bytes, so it is also checked in bytes.
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise IntakeError(TOO_LARGE)
     return intake.from_bytes(data, filename=upload.filename)
 
 

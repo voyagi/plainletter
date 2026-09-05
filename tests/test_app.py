@@ -103,17 +103,38 @@ def test_the_size_limit_counts_the_bytes_of_the_file_not_the_characters_of_the_e
     # The page that uploads the file refuses at 25 MiB of file. Base64 is a third longer than what
     # it encodes, so comparing the encoded string against the byte figure refused every file over
     # 18.75 MiB: accepted by the browser, refused here, with no way for the volunteer to tell why.
-    encoded_at_the_limit = "A" * MAX_UPLOAD_CHARS
-    assert len(encoded_at_the_limit) > MAX_UPLOAD_BYTES
-    answer = read_letter({"letter": {"filename": "a.pdf", "content_base64": encoded_at_the_limit}})
-    # Refused for being unreadable rather than for being too large, which is the point.
+    # A file of exactly the ceiling has to get past the size check and be refused for what it is.
+    at_the_limit = base64.b64encode(b"\x00" * MAX_UPLOAD_BYTES).decode()
+    assert len(at_the_limit) > MAX_UPLOAD_BYTES
+    answer = read_letter({"letter": {"filename": "a.pdf", "content_base64": at_the_limit}})
     assert answer["error"]["kind"] == "upload"
     assert "too large" not in answer["error"]["detail"]
 
 
-def test_a_letter_sent_as_text_is_bounded_too() -> None:
-    huge = {"filename": "a.txt", "text": "x" * (MAX_UPLOAD_BYTES + 1)}
-    assert read_letter({"letter": huge})["error"]["kind"] == "payload"
+def test_a_file_one_byte_over_the_ceiling_is_refused_for_being_too_large() -> None:
+    # The character bound rounds up to the next base64 quantum, so a string of exactly that length
+    # decodes to two bytes past the ceiling. The ceiling is a number of bytes.
+    over = base64.b64encode(b"\x00" * (MAX_UPLOAD_BYTES + 1)).decode()
+    answer = read_letter({"letter": {"filename": "a.pdf", "content_base64": over}})
+    assert answer["error"]["kind"] == "upload"
+    assert "too large" in answer["error"]["detail"]
+
+
+def test_a_letter_sent_as_text_is_bounded_in_bytes_not_in_characters() -> None:
+    # Pydantic's own max_length counts characters. The visitors this desk serves write in Cyrillic
+    # and Arabic, where a character is two bytes or three, so a character bound is twice the
+    # ceiling it was written to be for exactly the letters this product exists for.
+    cyrillic = "я" * (MAX_UPLOAD_BYTES // 2 + 1)
+    assert len(cyrillic) < MAX_UPLOAD_BYTES
+    assert len(cyrillic.encode("utf-8")) > MAX_UPLOAD_BYTES
+    refused = read_letter({"letter": {"filename": "a.txt", "text": cyrillic}})
+    assert refused["error"]["kind"] == "payload"
+
+    # The control: the same number of BYTES in Latin letters is inside the ceiling and validates.
+    # Validation only, because reading it would be a real model call.
+    latin = "x" * MAX_UPLOAD_BYTES
+    assert len(latin.encode("utf-8")) == MAX_UPLOAD_BYTES
+    assert LetterUpload(filename="a.txt", text=latin).text == latin
 
 
 @pytest.mark.parametrize(

@@ -35,6 +35,11 @@ def _urgency_word(words: DeskWords, urgency: Urgency) -> str:
     }[urgency]
 
 
+def _tagged(language: str) -> tuple[str, str]:
+    """A language and the direction it is written in, so the two can never be set apart."""
+    return language, "rtl" if is_rtl(language) else "ltr"
+
+
 def is_rtl(language: str) -> bool:
     return language.split("-")[0].lower() in RTL_LANGUAGES
 
@@ -47,12 +52,19 @@ def desk_card_html(reading: DeskReading, today: date, *, case_id: str | None = N
     """
     words = active().words
     official, other = _explanations(reading, words.language)
-    # The column is tagged with the language of the words actually printed in it, which is not
-    # always the visitor's. A model asked for "nl, uk" can answer "uk-UA", and the fallback below
-    # then puts the official-language text in the visitor's column: tagging that Dutch sentence
-    # `lang="uk" dir="rtl"` tells a screen reader and a visitor something untrue about it.
-    visitor = other.language
-    direction = "rtl" if is_rtl(visitor) else "ltr"
+    # Two languages on the right-hand side of this card, and they are not always the same one.
+    #
+    # Every section is tagged with the language of the words actually in it. The explanation rows
+    # take theirs from the explanation that was found: a model asked for "nl, uk" can answer
+    # "uk-UA", the lookup below then falls back to the official-language text, and tagging that
+    # sentence `lang="uk" dir="rtl"` tells a screen reader and a visitor something untrue.
+    #
+    # The steps do not share that fate. The planning stage is handed the requested language and
+    # writes `step.visitor` in it whatever the explanation stage answered, so tagging the steps
+    # from the explanation would mislabel them in the other direction and print a right-to-left
+    # plan left-to-right.
+    explained, explained_direction = _tagged(other.language)
+    visitor, direction = _tagged(reading.visitor_language)
     # Every model-written string on this page goes through the mask, the two in the band as much
     # as the ones in the rows. The runtime masks the whole response, so a string left unmasked
     # here is one the card prints and the console does not.
@@ -65,7 +77,7 @@ def desk_card_html(reading: DeskReading, today: date, *, case_id: str | None = N
     )
 
     rows = "\n".join(
-        _pair_row(question, official_text, visitor_text, visitor, direction)
+        _pair_row(question, official_text, visitor_text, explained, explained_direction)
         for question, official_text, visitor_text in (
             (words.question_what, official.what_is_this, other.what_is_this),
             (

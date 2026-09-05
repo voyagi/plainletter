@@ -165,6 +165,43 @@ def test_an_impossible_iso_date_is_not_a_claim() -> None:
     assert numeric_claims('{"send_before": "2026-13-45"}') == set()
 
 
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "de kleur 20 is anders",
+        "Debiteur 12345 heeft betaald",
+        "Chauffeur 3 rijdt vandaag",
+    ],
+)
+def test_a_currency_word_hiding_inside_another_word_is_not_an_amount(sentence: str) -> None:
+    # "kleur" and "debiteur" both end in "eur". Without a letter check in front of the marker the
+    # pattern reads an ordinary Dutch word plus the next number as money, and a reading that said
+    # nothing about money is refused over it.
+    assert numeric_claims(sentence) == set()
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "U betaalt EUR 1 234,56 in totaal.",
+        "U betaalt 1 234,56 euro in totaal.",
+        "U betaalt EUR 1.234,56 in totaal.",
+        "U betaalt 1.234,56 euro in totaal.",
+    ],
+)
+def test_a_thousands_group_is_read_whichever_separator_is_printed(sentence: str) -> None:
+    # A model writing prose reaches for the space as often as the dot. Reading only the group
+    # after the space turns EUR 1.234,56 into EUR 234,56, which is a wrong claim rather than a
+    # missed one, and refuses a reading whose amount was grounded exactly as the letter prints it.
+    assert numeric_claims(sentence) == {"EUR 1.234,56"}
+
+
+def test_a_space_between_digits_is_only_a_separator_in_groups_of_three() -> None:
+    # The control for the line above, and the reason the group is exactly three digits: a customer
+    # number is also digits with a space in it, and 6512 is not a thousands group.
+    assert numeric_claims("klantnummer 6512 3387") == set()
+
+
 def test_a_number_ending_a_sentence_does_not_borrow_the_next_sentences_currency() -> None:
     # The svb sample closes a step on a customer number and opens the next one on an amount. A
     # pattern that lets the number run over the full stop welds the two into an amount neither

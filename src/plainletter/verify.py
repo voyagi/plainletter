@@ -157,24 +157,41 @@ _ISO_DATE = re.compile(r"(?<!\d)(\d{4})-(\d{1,2})-(\d{1,2})(?!\d)")
 # reason the month table is: a wrong amount is no less wrong for being written in Ukrainian.
 _CURRENCY = r"eur|euros?|€|евро|євро|avro"
 
+# The number itself, in the two ways an amount is grouped. The space-grouped form is tried first
+# and its groups are exactly three digits, which is what a thousands separator is. That precision
+# is what keeps a customer number out: "6512 3387" cannot be read as one number, because 6512 is
+# not a group of three, while "1 234,56" can.
+#
+# The number has to END on a digit. A sentence closing on a customer number puts a full stop
+# straight after the digits, and letting the number run over it leaves the pattern looking for a
+# currency word across the sentence break. The next sentence in a plan opened with one, which read
+# a customer number as three thousand euro and refused a sample letter that was correct.
+# An ordinary space or a non-breaking one, the latter written as its codepoint: a rule that
+# turns on a character nobody can see in an editor is a rule nobody can review.
+_SPACE = f"[ {chr(0x00A0)}]"
+_NUMBER = rf"\d{{1,3}}(?:{_SPACE}\d{{3}})+(?:,\d{{1,2}})?|\d(?:[\d.]*\d)?(?:,\d{{1,2}})?"
+
 # An amount is a currency marker and a number, in either order. Both orders matter and only one
 # of them used to be read: the letter prints "EUR 174,00" and prose in every one of these
 # languages puts the word after the number instead. A bare number is deliberately NOT an amount,
 # because every reference number, page count and day count in a reading is also a bare number.
-# The trailing guard is a letter lookahead rather than \b, because the sign is not a word
-# character and \b after it would refuse "540,00 €." while accepting "540,00 € x".
 #
-# The number in the trailing form has to END on a digit, which the leading form does not need. A
-# sentence closing on a customer number, "bel de SVB met klantnummer 6512 3387.", puts a full stop
-# straight after the digits; letting the number run over it leaves the pattern looking for a
-# currency word across the sentence break, and the next sentence in the plan opened with one. That
-# read a customer number as three thousand euro and refused a sample letter that was correct.
-_TRAILING_NUMBER = r"\d(?:[\d.]*\d)?(?:,\d{1,2})?"
+# Both guards are letter lookarounds rather than \b, because the sign is not a word character:
+# \b after it would refuse "540,00 €." while accepting "540,00 € x". The leading one is the reason
+# "kleur 20" and "Debiteur 12345" are not amounts. They contain "eur 20" and "eur 12345", and
+# without a letter check in front of the marker both became money claims that refused correct
+# output over an ordinary Dutch word.
 _AMOUNT = re.compile(
-    rf"(?:(?:{_CURRENCY})\s*\d[\d.]*(?:,\d{{1,2}})?"
-    rf"|{_TRAILING_NUMBER}\s*(?:{_CURRENCY})(?![^\W\d_]))",
+    rf"(?:(?<![^\W\d_])(?:{_CURRENCY})\s*(?:{_NUMBER})"
+    rf"|(?:{_NUMBER})\s*(?:{_CURRENCY})(?![^\W\d_]))",
     re.IGNORECASE,
 )
+
+# A space between two digits inside a matched amount is a thousands separator, and the country's
+# own parser reads the separator it prints rather than that one. Rewriting it here keeps the
+# knowledge of what a grouped amount looks like in one place: "1 234,56" would otherwise parse as
+# one euro, which is a wrong claim rather than a missed one.
+_GROUPING_SPACE = re.compile(rf"(?<=\d){_SPACE}(?=\d)")
 
 
 def verify(facts: LetterFacts, letter_text: str) -> VerificationResult:
@@ -226,7 +243,7 @@ def numeric_claims(text: str) -> frozenset[str]:
         if found is not None:
             claims.add(locale.format_date(found))
     for match in _AMOUNT.finditer(text):
-        cents = locale.parse_amount_cents(match.group(0))
+        cents = locale.parse_amount_cents(_GROUPING_SPACE.sub(".", match.group(0)))
         if cents is not None:
             claims.add(locale.format_amount(cents))
     return frozenset(claims)
