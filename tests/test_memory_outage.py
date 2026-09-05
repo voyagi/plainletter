@@ -12,7 +12,13 @@ from typing import Any
 import pytest
 
 from plainletter import app as runtime
-from plainletter.app import NO_STORE, NOTES, STORE_UNREACHABLE, read_letter
+from plainletter.app import (
+    EARLIER_UNAVAILABLE,
+    NO_STORE,
+    NOTES,
+    STORE_UNREACHABLE,
+    read_letter,
+)
 from plainletter.memory import CaseRecord
 
 SAMPLE = "cjib-verkeersboete"
@@ -124,10 +130,40 @@ def test_a_recall_that_failed_is_said_out_loud_rather_than_read_as_an_empty_case
     # away from them.
     done = answer({"case_id": CASE})
     assert done["stage"] == "done"
-    assert done["case"]["reason"] == STORE_UNREACHABLE
-    assert done["case"]["note"] == NOTES[STORE_UNREACHABLE]
+    assert done["case"]["reason"] == EARLIER_UNAVAILABLE
+    assert done["case"]["note"] == NOTES[EARLIER_UNAVAILABLE]
     assert done["case"]["id"] == CASE
     assert CASE in done["desk_card_html"]
+
+
+def test_a_case_that_was_kept_is_never_reported_as_a_case_that_was_not(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Reads and writes fail separately. A throttled read beside a working write told a visitor
+    # their case had not been kept while it had just been kept, which is worse than saying
+    # nothing: it is the opposite of what happened to their own data.
+    written: list[CaseRecord] = []
+
+    class ReadsFailWritesWork(Unreachable):
+        def remember(self, record: CaseRecord) -> bool:
+            written.append(record)
+            return True
+
+    monkeypatch.setattr(runtime, "case_memory", ReadsFailWritesWork)
+    case = answer({"consent": True, "case_id": CASE})["case"]
+
+    assert len(written) == 1, "the write really happened"
+    assert case["remembered"] is True
+    assert case["reason"] == EARLIER_UNAVAILABLE
+    assert "was kept" in NOTES[EARLIER_UNAVAILABLE]
+
+
+def test_control_a_failed_write_still_reports_that_nothing_was_kept(writes_fail: None) -> None:
+    # The control for the line above: the two reasons have to stay apart in both directions, or
+    # splitting them buys nothing.
+    case = answer({"consent": True, "case_id": CASE})["case"]
+    assert case["remembered"] is False
+    assert case["reason"] == STORE_UNREACHABLE
 
 
 def test_control_a_reading_with_no_case_at_all_prints_no_case_number() -> None:

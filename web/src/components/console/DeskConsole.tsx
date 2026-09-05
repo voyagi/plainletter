@@ -441,14 +441,21 @@ function Case({ info }: { info: CaseInfo }) {
           Wissen lukte niet. Probeer het zo nog een keer.
         </p>
       ) : null}
-      {/* Two situations, and only one of them is worth coming back for. A desk with no store
-          linked will never keep a case; a store that could not be reached may keep it on the next
-          try. The agent says which in `reason`, because its own note is written in English and
-          this counter is not. */}
+      {/* Three situations, and they are three different things to tell the person standing here.
+          A desk with no store linked will never keep a case. A write that failed means this
+          reading was not kept and trying again may work. A read that failed means it WAS kept and
+          only the earlier ones are missing, so saying "not kept" there would tell the visitor the
+          opposite of what happened to their own data. The agent says which in `reason`, because
+          its own note is written in English and this counter is not. */}
       {info.reason === 'store_unreachable' ? (
         <p className="m-0 mt-1.5 text-mark" role="alert">
           Het zaakgeheugen was even niet bereikbaar, dus deze zaak is nu niet bewaard. De brief is
           gewoon gelezen. Probeer het zo nog een keer.
+        </p>
+      ) : info.reason === 'earlier_unavailable' ? (
+        <p className="m-0 mt-1.5 text-mark" role="alert">
+          Deze brief is bewaard. De eerdere brieven onder dit zaaknummer konden nu niet opgehaald
+          worden, dus die staan er niet bij. Probeer het zo nog een keer.
         </p>
       ) : info.note ? (
         <p className="m-0 mt-1.5 text-ink-2">

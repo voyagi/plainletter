@@ -256,14 +256,24 @@ def model_audit(model: ReadingModel) -> list[str]:
 # the second is worth coming back for.
 NO_STORE = "no_store"
 STORE_UNREACHABLE = "store_unreachable"
+EARLIER_UNAVAILABLE = "earlier_unavailable"
 
 NOTES = {
     NO_STORE: "This desk keeps no cases: no memory store is configured.",
     STORE_UNREACHABLE: (
-        "The case store could not be reached just now. The reading itself is unaffected, and "
-        "trying again may still keep the case."
+        "The case store could not be reached just now, so this reading was not kept. The reading "
+        "itself is unaffected, and trying again may still keep the case."
+    ),
+    EARLIER_UNAVAILABLE: (
+        "This reading was kept, but the earlier ones under this case could not be read just now, "
+        "so they are not shown."
     ),
 }
+
+# The two ways a store that exists can let the desk down. They are separate because reads and
+# writes fail separately: a throttled read with a working write kept the case and reported that it
+# had not been, which tells a visitor the opposite of what happened to their data.
+OUTAGES = frozenset({STORE_UNREACHABLE, EARLIER_UNAVAILABLE})
 
 
 @dataclass(frozen=True)
@@ -309,6 +319,11 @@ def _remembered(
     letter that had been read correctly. Consent that could not be honoured is reported as such,
     and so is a lookup that could not be made, which otherwise left the desk showing nothing with
     nothing said about why.
+
+    The two failures are reported apart, because they happen apart. Reads and writes fail
+    separately, and a throttled read beside a working write once put "the case was not kept" in
+    front of a visitor whose case had just been kept, which is worse than saying nothing: it is
+    telling somebody the opposite of what happened to their own data.
     """
     try:
         event = _remember(request, reading, today, memory, earlier.records)
@@ -317,10 +332,13 @@ def _remembered(
         event = _case_event(request.case_id, earlier.records)
         event["reason"] = STORE_UNREACHABLE
 
-    if event is not None and not event.get("reason") and not earlier.reached:
-        event["reason"] = STORE_UNREACHABLE
-    if event is not None and event.get("reason"):
-        event["note"] = NOTES[event["reason"]]
+    if event is not None:
+        # A failed write is the worse news and keeps the reason. A failed read only means the
+        # earlier readings are missing from the screen, whatever happened to this one.
+        if not event.get("reason") and not earlier.reached:
+            event["reason"] = EARLIER_UNAVAILABLE
+        if event.get("reason"):
+            event["note"] = NOTES[event["reason"]]
     return event
 
 
@@ -374,7 +392,7 @@ def _completed(
     # the visitor supplied survives an outage. A number this desk minted does not: on a desk that
     # keeps nothing there is nothing behind it, and printing it would promise a visitor a case
     # they do not have.
-    unreachable = bool(case and case.get("reason") == STORE_UNREACHABLE and request.case_id)
+    unreachable = bool(case and case.get("reason") in OUTAGES and request.case_id)
     case_id = (
         case["id"] if case and (case["remembered"] or case["earlier"] or unreachable) else None
     )
