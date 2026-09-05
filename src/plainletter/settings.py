@@ -17,9 +17,21 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from .bedrock import DRAFTING_MODEL_ID, READING_MODEL_ID, SOURCE_REGION
 from .spend import DEFAULT_READINGS_PER_DAY
 
-# The prefix every AWS region in the European Union carries. Frankfurt, Ireland, London, Paris,
-# Stockholm, Milan, Spain and Zurich all begin with it, and no region outside Europe does.
-EU_PREFIX = "eu-"
+# The AWS regions that stand in an EU member state, named one by one rather than matched on their
+# prefix. `eu-` is a name, not a jurisdiction: `eu-west-2` is London and `eu-central-2` is Zurich,
+# and the United Kingdom and Switzerland are both outside the Union. A prefix check would have let
+# a letter be read in either while the page still said EU. Descriptions read from botocore's own
+# endpoints.json.
+EU_REGIONS = frozenset(
+    {
+        "eu-central-1",  # Frankfurt, Germany
+        "eu-north-1",  # Stockholm, Sweden
+        "eu-south-1",  # Milan, Italy
+        "eu-south-2",  # Spain
+        "eu-west-1",  # Ireland
+        "eu-west-3",  # Paris, France
+    }
+)
 
 
 def in_the_eu(region: str) -> str:
@@ -35,11 +47,12 @@ def in_the_eu(region: str) -> str:
 
     A promise nothing checks is a promise until the day somebody exports a variable.
     """
-    if not region.startswith(EU_PREFIX):
+    if region not in EU_REGIONS:
+        allowed = ", ".join(sorted(EU_REGIONS))
         raise ValueError(
             f"{region} is not an EU region. This product reads letters carrying personal data and "
             f"processes them in the EU only, so it will not start pointed at {region}. Set "
-            f"PLAINLETTER_REGION to an {EU_PREFIX} region, or unset it to use {SOURCE_REGION}."
+            f"PLAINLETTER_REGION to one of {allowed}, or unset it to use {SOURCE_REGION}."
         )
     return region
 

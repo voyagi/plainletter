@@ -128,6 +128,9 @@ export type CaseInfo = {
   id: string | null;
   remembered: boolean;
   earlier: CaseRecord[];
+  // Why the case was not kept. The note beside it is the agent's own English sentence, which is
+  // for an API reader; the console renders its own wording per reason, at the counter's language.
+  reason?: 'no_store' | 'store_unreachable';
   note?: string;
 };
 

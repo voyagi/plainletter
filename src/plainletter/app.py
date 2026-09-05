@@ -29,6 +29,7 @@ import binascii
 import json
 import logging
 from collections.abc import Iterator
+from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
 from typing import Any
@@ -177,8 +178,8 @@ def _events(
         memory = case_memory()
         with within(span):
             earlier = _recalled(span, memory, request.case_id)
-        if earlier:
-            yield {"stage": "case", "case": _case_event(request.case_id, earlier)}
+        if earlier.records:
+            yield {"stage": "case", "case": _case_event(request.case_id, earlier.records)}
 
         stages = Pipeline(model=model).stages(letter, visitor_language=language, today=today)
         try:
@@ -249,26 +250,48 @@ def model_audit(model: ReadingModel) -> list[str]:
     return list(entries) if isinstance(entries, list) else []
 
 
-MEMORY_UNAVAILABLE = (
-    "The case store could not be reached, so nothing was kept and nothing earlier could be shown. "
-    "The reading itself is unaffected."
-)
+# Why a case was not kept, as a value the console can switch on rather than a sentence it has to
+# read. The two are different situations for the visitor in front of the desk: one desk keeps
+# nothing and never will, the other keeps cases and could not reach the store just now, and only
+# the second is worth coming back for.
+NO_STORE = "no_store"
+STORE_UNREACHABLE = "store_unreachable"
+
+NOTES = {
+    NO_STORE: "This desk keeps no cases: no memory store is configured.",
+    STORE_UNREACHABLE: (
+        "The case store could not be reached just now. The reading itself is unaffected, and "
+        "trying again may still keep the case."
+    ),
+}
 
 
-def _recalled(span: Any, memory: CaseMemory, case_id: str | None) -> tuple[CaseRecord, ...]:
-    """Earlier readings under this case, or none when the store cannot be reached.
+@dataclass(frozen=True)
+class Recalled:
+    """Earlier readings under a case, and whether looking for them worked."""
+
+    records: tuple[CaseRecord, ...] = ()
+    reached: bool = True
+
+
+def _recalled(span: Any, memory: CaseMemory, case_id: str | None) -> Recalled:
+    """Earlier readings under this case, and whether the store answered at all.
 
     Recalling is a convenience and reading the letter is the product, so a store that is down must
     not stop a visitor having their letter read. Before this, a case id on the card plus an
     unreachable store meant no reading at all.
+
+    Whether it answered is carried rather than dropped. An empty answer and an unreachable store
+    look identical from the outside, and they are not the same thing to tell a returning visitor:
+    one says the case has nothing in it, the other says the desk could not look.
     """
     if case_id is None:
-        return ()
+        return Recalled()
     try:
-        return memory.recall(case_id)
+        return Recalled(records=memory.recall(case_id))
     except Exception as failure:
         _note_memory_failure(span, "recall", failure)
-        return ()
+        return Recalled(reached=False)
 
 
 def _remembered(
@@ -277,21 +300,28 @@ def _remembered(
     reading: DeskReading,
     today: date,
     memory: CaseMemory,
-    earlier: tuple[CaseRecord, ...],
+    earlier: Recalled,
 ) -> dict[str, Any] | None:
     """Keep the reading, and say so honestly when keeping it did not work.
 
     This runs after the whole pipeline has succeeded. A store that raises here used to take a
     finished, checked reading down with it, so the desk lost the card and the calendar file for a
-    letter that had been read correctly. Consent that could not be honoured is reported as such.
+    letter that had been read correctly. Consent that could not be honoured is reported as such,
+    and so is a lookup that could not be made, which otherwise left the desk showing nothing with
+    nothing said about why.
     """
     try:
-        return _remember(request, reading, today, memory, earlier)
+        event = _remember(request, reading, today, memory, earlier.records)
     except Exception as failure:
         _note_memory_failure(span, "remember", failure)
-        event = _case_event(request.case_id, earlier)
-        event["note"] = MEMORY_UNAVAILABLE
-        return event
+        event = _case_event(request.case_id, earlier.records)
+        event["reason"] = STORE_UNREACHABLE
+
+    if event is not None and not event.get("reason") and not earlier.reached:
+        event["reason"] = STORE_UNREACHABLE
+    if event is not None and event.get("reason"):
+        event["note"] = NOTES[event["reason"]]
+    return event
 
 
 def _note_memory_failure(span: Any, what: str, failure: Exception) -> None:
@@ -315,7 +345,7 @@ def _remember(
     event = _case_event(case_id, earlier)
     event["remembered"] = kept
     if not kept:
-        event["note"] = "This desk keeps no cases: no memory store is configured."
+        event["reason"] = NO_STORE
     return event
 
 
@@ -335,8 +365,19 @@ def _completed(
     case: dict[str, Any] | None,
 ) -> dict[str, Any]:
     reference = reading.facts.reference.value if reading.facts.reference else "plainletter"
-    # The card carries the case id once there is a case: kept today, or continued from before.
-    case_id = case["id"] if case and (case["remembered"] or case["earlier"]) else None
+    # The card carries the case id only when that number leads somewhere: the reading was kept
+    # today, or there were earlier ones under it.
+    #
+    # The third case is the one worth spelling out. When the store could not be reached, `earlier`
+    # is empty because nobody could look, not because the case is empty, and dropping the number
+    # would hand a returning visitor a card without the number they walked in with. So a number
+    # the visitor supplied survives an outage. A number this desk minted does not: on a desk that
+    # keeps nothing there is nothing behind it, and printing it would promise a visitor a case
+    # they do not have.
+    unreachable = bool(case and case.get("reason") == STORE_UNREACHABLE and request.case_id)
+    case_id = (
+        case["id"] if case and (case["remembered"] or case["earlier"] or unreachable) else None
+    )
     return {
         "stage": "done",
         "source": "sample" if request.sample else "letter",

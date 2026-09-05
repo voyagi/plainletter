@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from plainletter import app as runtime
-from plainletter.app import MEMORY_UNAVAILABLE, read_letter
+from plainletter.app import NO_STORE, NOTES, STORE_UNREACHABLE, read_letter
 from plainletter.memory import CaseRecord
 
 SAMPLE = "cjib-verkeersboete"
@@ -82,7 +82,8 @@ def test_a_failed_write_does_not_destroy_a_reading_that_already_succeeded(
     assert done["stage"] == "done"
     assert done["desk_card_html"]
     assert done["case"]["remembered"] is False
-    assert done["case"]["note"] == MEMORY_UNAVAILABLE
+    assert done["case"]["reason"] == STORE_UNREACHABLE
+    assert done["case"]["note"] == NOTES[STORE_UNREACHABLE]
 
 
 def test_the_failure_is_reported_by_its_type_and_never_by_its_message(
@@ -93,3 +94,46 @@ def test_the_failure_is_reported_by_its_type_and_never_by_its_message(
     logged = caplog.text
     assert "RuntimeError" in logged
     assert BROKEN not in logged
+
+
+def test_a_store_that_is_down_is_not_reported_as_a_desk_that_keeps_nothing(
+    writes_fail: None,
+) -> None:
+    # The console renders its own sentence per reason and cannot read an English note, so the
+    # reason has to say which of the two situations this is. A desk with no store configured will
+    # never keep a case; a store that could not be reached may keep it on the next try, and only
+    # one of those is worth a visitor coming back for.
+    assert answer({"consent": True})["case"]["reason"] == STORE_UNREACHABLE
+
+
+def test_control_a_desk_with_no_store_configured_reports_the_other_reason() -> None:
+    # The control for the line above, and the reason both constants exist: without it the test
+    # would pass on a build that answered STORE_UNREACHABLE to everything.
+    done = answer({"consent": True})
+    assert done["case"]["remembered"] is False
+    assert done["case"]["reason"] == NO_STORE
+    assert done["case"]["note"] == NOTES[NO_STORE]
+
+
+def test_a_recall_that_failed_is_said_out_loud_rather_than_read_as_an_empty_case(
+    unreachable: None,
+) -> None:
+    # Without consent nothing is written, so a read-only outage left the desk showing no earlier
+    # readings with nothing said about why, and the card dropped the visitor's own case number
+    # because `earlier` was empty. Losing a visitor's case number over an outage takes their case
+    # away from them.
+    done = answer({"case_id": CASE})
+    assert done["stage"] == "done"
+    assert done["case"]["reason"] == STORE_UNREACHABLE
+    assert done["case"]["note"] == NOTES[STORE_UNREACHABLE]
+    assert done["case"]["id"] == CASE
+    assert CASE in done["desk_card_html"]
+
+
+def test_control_a_reading_with_no_case_at_all_prints_no_case_number() -> None:
+    # The control for the card assertion above: the number appears because there is a case, not
+    # because the card prints one regardless.
+    done = answer({})
+    assert done["case"] is None
+    assert CASE not in done["desk_card_html"]
+    assert "Zaaknummer" not in done["desk_card_html"]
