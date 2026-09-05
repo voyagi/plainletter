@@ -29,7 +29,19 @@ def test_the_default_is_frankfurt() -> None:
 
 
 @pytest.mark.parametrize("variable", ["AWS_REGION", "PLAINLETTER_REGION"])
-@pytest.mark.parametrize("outside", ["us-east-1", "ap-southeast-2", "sa-east-1"])
+@pytest.mark.parametrize(
+    "outside",
+    [
+        "us-east-1",
+        "ap-southeast-2",
+        "sa-east-1",
+        # AWS calls these "Europe" and they begin with eu-, but the promise is the Union. The
+        # United Kingdom left it and Switzerland was never in it, so a prefix check would have
+        # read a letter in either while the page still said EU.
+        "eu-west-2",
+        "eu-central-2",
+    ],
+)
 def test_a_region_outside_the_eu_refuses_to_start(
     variable: str, outside: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -40,9 +52,14 @@ def test_a_region_outside_the_eu_refuses_to_start(
     assert "EU" in str(refused.value)
 
 
-@pytest.mark.parametrize("inside", ["eu-central-1", "eu-west-1", "eu-north-1"])
-def test_control_another_eu_region_is_allowed(inside: str, monkeypatch: pytest.MonkeyPatch) -> None:
-    # The rule is the European Union, not one city: a deployment moved to Ireland is still inside
-    # the promise and must not be refused.
+@pytest.mark.parametrize(
+    "inside", ["eu-central-1", "eu-west-1", "eu-west-3", "eu-north-1", "eu-south-1", "eu-south-2"]
+)
+def test_control_every_member_state_region_is_allowed(
+    inside: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The control, and it is the half that keeps the check honest: the rule is the European Union,
+    # not one city. A deployment moved to Ireland or Paris is still inside the promise, so a check
+    # that refused everything would pass the test above and fail this one.
     monkeypatch.setenv("PLAINLETTER_REGION", inside)
     assert Settings().region == inside
