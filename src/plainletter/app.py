@@ -64,6 +64,12 @@ logger = logging.getLogger(__name__)
 # and it should be refused before it is decoded rather than after.
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
+# The same ceiling counted in base64 characters, which is what actually arrives. Comparing the
+# encoded string against the byte figure is off by a third, so the real limit was 18.75 MiB while
+# the page that uploads the file was letting 25 MiB through: every file between the two was
+# accepted by the browser and refused here for being too large.
+MAX_UPLOAD_CHARS = (MAX_UPLOAD_BYTES + 2) // 3 * 4
+
 DEFAULT_LANGUAGE = "en"
 
 app = BedrockAgentCoreApp()
@@ -87,7 +93,10 @@ class LetterUpload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     filename: str = Field(default="letter.txt", max_length=255)
-    text: str | None = None
+    # Both fields carry a letter, so both are bounded. Only the encoded one used to be, which left
+    # the text field as an unbounded way into a metered service. The encoded one keeps its bound in
+    # `_decode` instead of here, because that is where the refusal can say what to do about it.
+    text: str | None = Field(default=None, max_length=MAX_UPLOAD_BYTES)
     content_base64: str | None = None
 
 
@@ -383,7 +392,7 @@ def _decode(upload: LetterUpload) -> LetterInput:
         return intake.from_text(upload.text)
     if upload.content_base64 is None:
         raise ValueError("a letter needs either text or content_base64")
-    if len(upload.content_base64) > MAX_UPLOAD_BYTES:
+    if len(upload.content_base64) > MAX_UPLOAD_CHARS:
         raise IntakeError("that file is too large to be a letter. Send the pages one at a time.")
     try:
         data = base64.b64decode(upload.content_base64, validate=True)

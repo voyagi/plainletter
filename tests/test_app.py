@@ -4,7 +4,14 @@ import json
 import pytest
 from starlette.testclient import TestClient
 
-from plainletter.app import MAX_UPLOAD_BYTES, LetterUpload, _decode, app, read_letter
+from plainletter.app import (
+    MAX_UPLOAD_BYTES,
+    MAX_UPLOAD_CHARS,
+    LetterUpload,
+    _decode,
+    app,
+    read_letter,
+)
 from plainletter.demo import sample_text
 
 TODAY = "2026-08-21"
@@ -88,8 +95,25 @@ def test_a_broken_upload_is_named_as_an_upload_problem() -> None:
 
 
 def test_an_upload_too_large_to_be_a_letter_is_refused_before_it_is_decoded() -> None:
-    oversized = {"filename": "a.pdf", "content_base64": "A" * (MAX_UPLOAD_BYTES + 1)}
+    oversized = {"filename": "a.pdf", "content_base64": "A" * (MAX_UPLOAD_CHARS + 1)}
     assert read_letter({"letter": oversized})["error"]["kind"] == "upload"
+
+
+def test_the_size_limit_counts_the_bytes_of_the_file_not_the_characters_of_the_encoding() -> None:
+    # The page that uploads the file refuses at 25 MiB of file. Base64 is a third longer than what
+    # it encodes, so comparing the encoded string against the byte figure refused every file over
+    # 18.75 MiB: accepted by the browser, refused here, with no way for the volunteer to tell why.
+    encoded_at_the_limit = "A" * MAX_UPLOAD_CHARS
+    assert len(encoded_at_the_limit) > MAX_UPLOAD_BYTES
+    answer = read_letter({"letter": {"filename": "a.pdf", "content_base64": encoded_at_the_limit}})
+    # Refused for being unreadable rather than for being too large, which is the point.
+    assert answer["error"]["kind"] == "upload"
+    assert "too large" not in answer["error"]["detail"]
+
+
+def test_a_letter_sent_as_text_is_bounded_too() -> None:
+    huge = {"filename": "a.txt", "text": "x" * (MAX_UPLOAD_BYTES + 1)}
+    assert read_letter({"letter": huge})["error"]["kind"] == "payload"
 
 
 @pytest.mark.parametrize(

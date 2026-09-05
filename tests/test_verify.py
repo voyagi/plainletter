@@ -127,4 +127,47 @@ def test_a_wrong_date_in_a_visitor_language_is_still_caught() -> None:
 
 
 def test_a_word_that_is_not_a_month_is_not_a_date() -> None:
-    assert numeric_claims("15 stuks 2026 bestellingen, 3 keer 2025 euro") == set()
+    assert numeric_claims("15 stuks 2026 bestellingen, 3 keer 2025 pakketten") == set()
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "U moet EUR 540,00 betalen.",
+        "U moet 540,00 euro betalen.",
+        "You must pay 540,00 euros.",
+        "Заплатіть 540,00 євро.",
+        "Zaplac 540,00 euro.",
+        "540,00 avro odeyin.",
+        "Het bedrag is 540,00 €.",
+    ],
+)
+def test_an_amount_is_read_whichever_side_the_currency_is_written_on(sentence: str) -> None:
+    # The letter prints "EUR 540,00" and prose in every language this desk answers in puts the
+    # word after the number instead. Only the first of these used to be read, so an invented
+    # amount written the ordinary way passed the guard unseen.
+    assert numeric_claims(sentence) == {"EUR 540,00"}
+
+
+def test_a_bare_number_is_still_not_an_amount() -> None:
+    # The control for the line above. Every reference number, page count and day count in a
+    # reading is a bare number, so reading one as money would refuse nearly every letter.
+    assert numeric_claims("Kenmerk 8194 5523 7761, pagina 2 van 3, nog 14 dagen.") == set()
+
+
+def test_a_date_written_the_way_a_json_field_writes_one_is_read() -> None:
+    # The guard reads the tool call before anything is validated, so a date field arrives as
+    # "2026-10-01". Nothing else in this module recognises that shape.
+    assert numeric_claims('{"send_before": "2026-10-01"}') == {"1 oktober 2026"}
+
+
+def test_an_impossible_iso_date_is_not_a_claim() -> None:
+    assert numeric_claims('{"send_before": "2026-13-45"}') == set()
+
+
+def test_a_number_ending_a_sentence_does_not_borrow_the_next_sentences_currency() -> None:
+    # The svb sample closes a step on a customer number and opens the next one on an amount. A
+    # pattern that lets the number run over the full stop welds the two into an amount neither
+    # step wrote, and refuses a reading that was right.
+    welded = "bel de SVB met klantnummer 6512 3387. EUR 299,86 komt op uw rekening."
+    assert numeric_claims(welded) == {"EUR 299,86"}

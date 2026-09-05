@@ -146,7 +146,35 @@ def month_words() -> dict[str, int]:
 # Unicode letter class rather than A-Z, which is the whole point of the table above.
 _WORDED_DATE = re.compile(r"(?<!\d)(\d{1,2})\s+([^\W\d_]+)\.?\s+(\d{4})(?!\d)")
 _NUMERIC_DATE = re.compile(r"\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b")
-_AMOUNT = re.compile(r"(?:eur|euro|€)\s*\d[\d.]*(?:,\d{1,2})?", re.IGNORECASE)
+
+# A year, a month and a day with hyphens, which is how a model writes a date field in JSON. The
+# guard reads the tool call before anything has been validated, so `send_before` reaches it as
+# "2026-10-01" and nothing else in this file would recognise that as a date. It is read
+# year-first, deliberately: the day-first reader below would take 2026 for a day and give up.
+_ISO_DATE = re.compile(r"(?<!\d)(\d{4})-(\d{1,2})-(\d{1,2})(?!\d)")
+
+# The word for euro in the languages the desk answers in, and the sign. Written out for the same
+# reason the month table is: a wrong amount is no less wrong for being written in Ukrainian.
+_CURRENCY = r"eur|euros?|€|евро|євро|avro"
+
+# An amount is a currency marker and a number, in either order. Both orders matter and only one
+# of them used to be read: the letter prints "EUR 174,00" and prose in every one of these
+# languages puts the word after the number instead. A bare number is deliberately NOT an amount,
+# because every reference number, page count and day count in a reading is also a bare number.
+# The trailing guard is a letter lookahead rather than \b, because the sign is not a word
+# character and \b after it would refuse "540,00 €." while accepting "540,00 € x".
+#
+# The number in the trailing form has to END on a digit, which the leading form does not need. A
+# sentence closing on a customer number, "bel de SVB met klantnummer 6512 3387.", puts a full stop
+# straight after the digits; letting the number run over it leaves the pattern looking for a
+# currency word across the sentence break, and the next sentence in the plan opened with one. That
+# read a customer number as three thousand euro and refused a sample letter that was correct.
+_TRAILING_NUMBER = r"\d(?:[\d.]*\d)?(?:,\d{1,2})?"
+_AMOUNT = re.compile(
+    rf"(?:(?:{_CURRENCY})\s*\d[\d.]*(?:,\d{{1,2}})?"
+    rf"|{_TRAILING_NUMBER}\s*(?:{_CURRENCY})(?![^\W\d_]))",
+    re.IGNORECASE,
+)
 
 
 def verify(facts: LetterFacts, letter_text: str) -> VerificationResult:
@@ -193,6 +221,10 @@ def numeric_claims(text: str) -> frozenset[str]:
         found = _worded_date(worded.group(1), worded.group(2), worded.group(3))
         if found is not None:
             claims.add(locale.format_date(found))
+    for iso in _ISO_DATE.finditer(text):
+        found = _safe_date(int(iso.group(1)), int(iso.group(2)), int(iso.group(3)))
+        if found is not None:
+            claims.add(locale.format_date(found))
     for match in _AMOUNT.finditer(text):
         cents = locale.parse_amount_cents(match.group(0))
         if cents is not None:
@@ -200,14 +232,18 @@ def numeric_claims(text: str) -> frozenset[str]:
     return frozenset(claims)
 
 
+def _safe_date(year: int, month: int, day: int) -> date | None:
+    try:
+        return date(year, month, day)
+    except ValueError:
+        return None
+
+
 def _worded_date(day: str, month_word: str, year: str) -> date | None:
     month = month_words().get(month_word.casefold())
     if month is None:
         return None
-    try:
-        return date(int(year), month, int(day))
-    except ValueError:
-        return None
+    return _safe_date(int(year), month, int(day))
 
 
 def ungrounded_claims(text: str, allowed: Iterable[str]) -> frozenset[str]:

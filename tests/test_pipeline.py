@@ -236,3 +236,35 @@ def test_an_unverified_sender_is_handed_to_a_person() -> None:
 def test_a_sender_outside_the_knowledge_base_is_handed_to_a_person() -> None:
     handoff = handoff_for(VerificationResult(), None)
     assert handoff.required
+
+
+def _with_draft_send_before(when: date | None) -> ScriptedReadingModel:
+    model = cjib_model()
+    assert model.draft_letter is not None
+    return ScriptedReadingModel(
+        facts=model.facts,
+        explanations=model.explanations,
+        steps=model.steps,
+        draft_letter=model.draft_letter.model_copy(update={"send_before": when}),
+    )
+
+
+def test_a_posting_day_the_draft_invented_refuses_the_reading() -> None:
+    # send_before is a date field rather than prose, so it reaches the guard inside the tool call
+    # as "2026-10-01" and reached this check as nothing at all. It is the day the visitor is told
+    # to post by, which makes it exactly the kind of value that has to stand in the letter.
+    with pytest.raises(UngroundedOutputError) as refused:
+        run(_with_draft_send_before(date(2026, 10, 1)))
+    assert refused.value.claims == {"1 oktober 2026"}
+
+
+def test_control_the_posting_day_the_calendar_computed_goes_through() -> None:
+    reading = run(_with_draft_send_before(date(2026, 9, 8)))
+    assert reading.draft is not None
+    assert reading.draft.send_before == date(2026, 9, 8)
+
+
+def test_control_a_draft_with_no_posting_day_goes_through() -> None:
+    reading = run(_with_draft_send_before(None))
+    assert reading.draft is not None
+    assert reading.draft.send_before is None
