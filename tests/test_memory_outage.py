@@ -7,6 +7,7 @@ number printed on an old card made a letter unreadable.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 import pytest
@@ -53,6 +54,15 @@ def unreachable(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture
 def writes_fail(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(runtime, "case_memory", WritesFail)
+
+
+def _a_reading() -> Any:
+    from plainletter.demo import sample_input, scripted_model
+    from plainletter.pipeline import Pipeline
+
+    return Pipeline(model=scripted_model(SAMPLE)).run(
+        sample_input(SAMPLE), visitor_language="uk", today=date(2026, 8, 1)
+    )
 
 
 def answer(payload: dict[str, Any]) -> dict[str, Any]:
@@ -164,6 +174,39 @@ def test_control_a_failed_write_still_reports_that_nothing_was_kept(writes_fail:
     case = answer({"consent": True, "case_id": CASE})["case"]
     assert case["remembered"] is False
     assert case["reason"] == STORE_UNREACHABLE
+
+
+def test_a_failed_write_alone_does_not_reprint_a_number_that_leads_nowhere(
+    writes_fail: None,
+) -> None:
+    # The sentence printed beside the number says to bring the card back and the desk will
+    # continue where you left off. Here the store ANSWERED, so the case really is empty, and
+    # today was not kept either. Reprinting the number repeats a promise nothing can keep.
+    #
+    # This is narrower than "any outage". When the READ failed the desk could not look, so the
+    # number is kept, which the test above pins.
+    done = answer({"consent": True, "case_id": CASE})
+    assert done["case"]["remembered"] is False
+    assert done["case"]["reason"] == STORE_UNREACHABLE
+    assert CASE not in done["desk_card_html"]
+
+
+def test_control_a_failed_write_still_prints_the_number_when_the_case_has_earlier_readings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The control for the line above. The number leads somewhere here, so it must survive the
+    # same failed write, or the rule is just "drop it whenever a write fails".
+    kept = CaseRecord.from_reading(CASE, _a_reading(), date(2026, 8, 1))
+
+    class HasEarlierButCannotWrite(Unreachable):
+        def recall(self, case_id: str) -> tuple[CaseRecord, ...]:
+            return (kept,)
+
+    monkeypatch.setattr(runtime, "case_memory", HasEarlierButCannotWrite)
+    done = answer({"consent": True, "case_id": CASE})
+    assert done["case"]["remembered"] is False
+    assert done["case"]["earlier"]
+    assert CASE in done["desk_card_html"]
 
 
 def test_control_a_reading_with_no_case_at_all_prints_no_case_number() -> None:
