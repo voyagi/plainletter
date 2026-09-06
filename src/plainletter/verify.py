@@ -146,7 +146,87 @@ def month_words() -> dict[str, int]:
 # Unicode letter class rather than A-Z, which is the whole point of the table above.
 _WORDED_DATE = re.compile(r"(?<!\d)(\d{1,2})\s+([^\W\d_]+)\.?\s+(\d{4})(?!\d)")
 _NUMERIC_DATE = re.compile(r"\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b")
-_AMOUNT = re.compile(r"(?:eur|euro|€)\s*\d[\d.]*(?:,\d{1,2})?", re.IGNORECASE)
+
+# A year, a month and a day with hyphens, which is how a model writes a date field in JSON. The
+# guard reads the tool call before anything has been validated, so `send_before` reaches it as
+# "2026-10-01" and nothing else in this file would recognise that as a date. It is read
+# year-first, deliberately: the day-first reader below would take 2026 for a day and give up.
+_ISO_DATE = re.compile(r"(?<!\d)(\d{4})-(\d{1,2})-(\d{1,2})(?!\d)")
+
+# The word for euro in the languages the desk answers in, and the sign. Written out for the same
+# reason the month table is: a wrong amount is no less wrong for being written in Ukrainian.
+_CURRENCY = r"eur|euros?|€|евро|євро|avro"
+
+# The number itself, in the two ways an amount is grouped. The space-grouped form is tried first
+# and its groups are exactly three digits, which is what a thousands separator is. That precision
+# is what keeps a customer number out: "6512 3387" cannot be read as one number, because 6512 is
+# not a group of three, while "1 234,56" can.
+#
+# The number has to END on a digit. A sentence closing on a customer number puts a full stop
+# straight after the digits, and letting the number run over it leaves the pattern looking for a
+# currency word across the sentence break. The next sentence in a plan opened with one, which read
+# a customer number as three thousand euro and refused a sample letter that was correct.
+#
+# An ordinary space or a non-breaking one, the latter written as its codepoint: a rule that
+# turns on a character nobody can see in an editor is a rule nobody can review.
+_SPACE = f"[ {chr(0x00A0)}]"
+_GROUPED = rf"\d{{1,3}}(?:{_SPACE}\d{{3}})+"
+_PLAIN = r"\d(?:[\d.]*\d)?"
+_CENTS = r",\d{1,2}"
+
+# Whatever the number is, it has to be the WHOLE number. A match that stops inside a longer run of
+# digits invents a value nobody wrote, and that cuts both ways: `EUR 123 456 7890` used to report
+# `EUR 123.456.789,00`, which is a wrong refusal, and `EUR 123 4567` used to report
+# `EUR 123.456,00`, which is worse, because a mistyped amount whose truncation happens to equal a
+# grounded one would have been waved through as allowed.
+#
+# So each form carries its own continuation guard, and they differ. After the cents, only a digit
+# glued straight on can be a continuation, because "EUR 1 234,56 7 dagen" is an amount followed by
+# a separate number and reading it as one would lose the amount. Without cents, a separator and a
+# digit after it are a continuation too, because that is exactly what another thousands group
+# looks like.
+_CONTINUES = rf"(?!\d)(?!{_SPACE}\d)"
+
+# The grouped form also has to START clean, and only the grouped form does. Reading a space as a
+# separator is what makes "in 2026 450 euro" ambiguous: `26 450` is a perfectly good grouped
+# number and a perfectly good year-then-amount, and the first reading turns an ordinary Dutch
+# sentence into a claim of twenty-six thousand euro that the letter never made. Refusing to start
+# a group straight after a digit leaves that sentence to the plain form, which reads `450 euro`,
+# the amount actually written.
+#
+# The plain form carries no such guard on purpose. It never crosses a space, so nothing before it
+# can change what it reads, and adding one there would lose amounts rather than protect them.
+_STARTS_CLEAN = rf"(?<!\d)(?<!\d{_SPACE})"
+_NUMBER = "|".join(
+    (
+        rf"{_STARTS_CLEAN}{_GROUPED}{_CENTS}(?!\d)",
+        rf"{_STARTS_CLEAN}{_GROUPED}{_CONTINUES}",
+        rf"{_PLAIN}{_CENTS}(?!\d)",
+        rf"{_PLAIN}{_CONTINUES}",
+    )
+)
+
+# An amount is a currency marker and a number, in either order. Both orders matter and only one
+# of them used to be read: the letter prints "EUR 174,00" and prose in every one of these
+# languages puts the word after the number instead. A bare number is deliberately NOT an amount,
+# because every reference number, page count and day count in a reading is also a bare number.
+#
+# Both guards are letter lookarounds rather than \b, because the sign is not a word character:
+# \b after it would refuse "540,00 €." while accepting "540,00 € x". The leading one is the reason
+# "kleur 20" and "Debiteur 12345" are not amounts. They contain "eur 20" and "eur 12345", and
+# without a letter check in front of the marker both became money claims that refused correct
+# output over an ordinary Dutch word.
+_AMOUNT = re.compile(
+    rf"(?:(?<![^\W\d_])(?:{_CURRENCY})\s*(?:{_NUMBER})"
+    rf"|(?:{_NUMBER})\s*(?:{_CURRENCY})(?![^\W\d_]))",
+    re.IGNORECASE,
+)
+
+# A space between two digits inside a matched amount is a thousands separator, and the country's
+# own parser reads the separator it prints rather than that one. Rewriting it here keeps the
+# knowledge of what a grouped amount looks like in one place: "1 234,56" would otherwise parse as
+# one euro, which is a wrong claim rather than a missed one.
+_GROUPING_SPACE = re.compile(rf"(?<=\d){_SPACE}(?=\d)")
 
 
 def verify(facts: LetterFacts, letter_text: str) -> VerificationResult:
@@ -193,21 +273,35 @@ def numeric_claims(text: str) -> frozenset[str]:
         found = _worded_date(worded.group(1), worded.group(2), worded.group(3))
         if found is not None:
             claims.add(locale.format_date(found))
+    for iso in _ISO_DATE.finditer(text):
+        found = _safe_date(int(iso.group(1)), int(iso.group(2)), int(iso.group(3)))
+        if found is not None:
+            claims.add(locale.format_date(found))
     for match in _AMOUNT.finditer(text):
-        cents = locale.parse_amount_cents(match.group(0))
+        cents = locale.parse_amount_cents(_GROUPING_SPACE.sub(".", match.group(0)))
         if cents is not None:
             claims.add(locale.format_amount(cents))
     return frozenset(claims)
+
+
+def _safe_date(year: int, month: int, day: int) -> date | None:
+    """A date, or None when those three numbers are not one. Never raises on nonsense input.
+
+    A model writes 31 February and 2026-13-45 as readily as it writes a real date, and this runs
+    over every sentence a model produces, so an impossible date has to be no claim rather than an
+    exception on the reading path.
+    """
+    try:
+        return date(year, month, day)
+    except ValueError:
+        return None
 
 
 def _worded_date(day: str, month_word: str, year: str) -> date | None:
     month = month_words().get(month_word.casefold())
     if month is None:
         return None
-    try:
-        return date(int(year), month, int(day))
-    except ValueError:
-        return None
+    return _safe_date(int(year), month, int(day))
 
 
 def ungrounded_claims(text: str, allowed: Iterable[str]) -> frozenset[str]:

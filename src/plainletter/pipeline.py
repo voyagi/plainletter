@@ -281,7 +281,10 @@ def _refuse_stray(parts: Iterable[str], allowed: frozenset[str]) -> None:
     safe: an explanation is on the volunteer's screen the instant it is sent, so it has to have
     been checked before it is sent, not after the draft comes back.
     """
-    stray = ungrounded_claims(" ".join(parts), allowed)
+    # Joined on something no claim can be written across. A plain space lets the last number of
+    # one step and the first word of the next read as a single amount, which is a claim neither of
+    # them makes.
+    stray = ungrounded_claims(" | ".join(parts), allowed)
     if stray:
         raise UngroundedOutputError(stray)
 
@@ -393,4 +396,16 @@ def _step_text(steps: tuple[ActionStep, ...]) -> list[str]:
 
 
 def _draft_text(draft: DraftLetter | None) -> list[str]:
-    return [draft.dutch, draft.visitor] if draft is not None else []
+    """Every part of the draft that carries a date or an amount, including the one that is a date.
+
+    `send_before` is a date field rather than prose, so it reaches the guard inside the tool call
+    as "2026-10-01" and reaches this check as nothing at all unless it is written out here. It is
+    the day the visitor is told to post by, which makes it exactly the kind of value that has to
+    stand in the letter.
+    """
+    if draft is None:
+        return []
+    parts = [draft.dutch, draft.visitor]
+    if draft.send_before is not None:
+        parts.append(active().format_date(draft.send_before))
+    return parts

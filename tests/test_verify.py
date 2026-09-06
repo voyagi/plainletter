@@ -127,4 +127,142 @@ def test_a_wrong_date_in_a_visitor_language_is_still_caught() -> None:
 
 
 def test_a_word_that_is_not_a_month_is_not_a_date() -> None:
-    assert numeric_claims("15 stuks 2026 bestellingen, 3 keer 2025 euro") == set()
+    assert numeric_claims("15 stuks 2026 bestellingen, 3 keer 2025 pakketten") == set()
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "U moet EUR 540,00 betalen.",
+        "U moet 540,00 euro betalen.",
+        "You must pay 540,00 euros.",
+        "Заплатіть 540,00 євро.",
+        "Zaplac 540,00 euro.",
+        "540,00 avro odeyin.",
+        "Het bedrag is 540,00 €.",
+    ],
+)
+def test_an_amount_is_read_whichever_side_the_currency_is_written_on(sentence: str) -> None:
+    # The letter prints "EUR 540,00" and prose in every language this desk answers in puts the
+    # word after the number instead. Only the first of these used to be read, so an invented
+    # amount written the ordinary way passed the guard unseen.
+    assert numeric_claims(sentence) == {"EUR 540,00"}
+
+
+def test_a_bare_number_is_still_not_an_amount() -> None:
+    # The control for the line above. Every reference number, page count and day count in a
+    # reading is a bare number, so reading one as money would refuse nearly every letter.
+    assert numeric_claims("Kenmerk 8194 5523 7761, pagina 2 van 3, nog 14 dagen.") == set()
+
+
+def test_a_date_written_the_way_a_json_field_writes_one_is_read() -> None:
+    # The guard reads the tool call before anything is validated, so a date field arrives as
+    # "2026-10-01". Nothing else in this module recognises that shape.
+    assert numeric_claims('{"send_before": "2026-10-01"}') == {"1 oktober 2026"}
+
+
+def test_an_impossible_iso_date_is_not_a_claim() -> None:
+    assert numeric_claims('{"send_before": "2026-13-45"}') == set()
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "de kleur 20 is anders",
+        "Debiteur 12345 heeft betaald",
+        "Chauffeur 3 rijdt vandaag",
+    ],
+)
+def test_a_currency_word_hiding_inside_another_word_is_not_an_amount(sentence: str) -> None:
+    # "kleur" and "debiteur" both end in "eur". Without a letter check in front of the marker the
+    # pattern reads an ordinary Dutch word plus the next number as money, and a reading that said
+    # nothing about money is refused over it.
+    assert numeric_claims(sentence) == set()
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "U betaalt EUR 1 234,56 in totaal.",
+        "U betaalt 1 234,56 euro in totaal.",
+        "U betaalt EUR 1.234,56 in totaal.",
+        "U betaalt 1.234,56 euro in totaal.",
+    ],
+)
+def test_a_thousands_group_is_read_whichever_separator_is_printed(sentence: str) -> None:
+    # A model writing prose reaches for the space as often as the dot. Reading only the group
+    # after the space turns EUR 1.234,56 into EUR 234,56, which is a wrong claim rather than a
+    # missed one, and refuses a reading whose amount was grounded exactly as the letter prints it.
+    assert numeric_claims(sentence) == {"EUR 1.234,56"}
+
+
+@pytest.mark.parametrize(
+    "malformed",
+    ["EUR 123 456 7890", "EUR 1 234 5678", "EUR 123 4567", "EUR 12 3456 789"],
+)
+def test_a_number_that_is_not_a_whole_number_is_no_claim_at_all(malformed: str) -> None:
+    # A match that stops inside a longer run of digits invents a value nobody wrote, and it cuts
+    # both ways. "EUR 123 456 7890" reported EUR 123.456.789,00, which refuses a reading over a
+    # number that is not in it. "EUR 123 4567" reported EUR 123.456,00, which is worse: a mistyped
+    # amount whose truncation happens to equal a grounded one would be waved through as allowed.
+    assert numeric_claims(malformed) == set()
+
+
+@pytest.mark.parametrize(
+    ("sentence", "expected"),
+    [
+        ("EUR 1 234 567", "EUR 1.234.567,00"),
+        ("EUR 123 456", "EUR 123.456,00"),
+        # The amount ends at its cents, so the number after it is a different number. A guard that
+        # treated any following digit as a continuation would lose the amount entirely.
+        ("U betaalt EUR 1 234,56 7 dagen lang.", "EUR 1.234,56"),
+        ("EUR 1 234 en meer", "EUR 1.234,00"),
+    ],
+)
+def test_control_a_whole_grouped_number_is_still_read(sentence: str, expected: str) -> None:
+    assert numeric_claims(sentence) == {expected}
+
+
+@pytest.mark.parametrize(
+    ("sentence", "expected"),
+    [
+        ("U moet in 2026 450 euro betalen.", "EUR 450,00"),
+        ("Bel met klantnummer 6512 3387 euro.", "EUR 3.387,00"),
+        ("Sinds 2025 120 euro per maand.", "EUR 120,00"),
+    ],
+)
+def test_a_number_before_an_amount_does_not_get_absorbed_into_it(
+    sentence: str, expected: str
+) -> None:
+    # A space read as a thousands separator makes an ordinary sentence ambiguous: in "in 2026 450
+    # euro", `26 450` is a perfectly good grouped number and a perfectly good year-then-amount,
+    # and the first reading claims twenty-six thousand euro the letter never mentioned. A grouped
+    # number may not start straight after a digit, which leaves that sentence to the plain form
+    # and the amount actually written.
+    assert numeric_claims(sentence) == {expected}
+
+
+def test_the_two_forms_guard_different_ends_and_that_is_deliberate() -> None:
+    # With the currency first, the number's START is known, so the pattern insists it ENDS
+    # cleanly and refuses a run that continues past it. With the currency last, only the END is
+    # known, so it reads back to the nearest boundary.
+    #
+    # Pinned so nobody flattens it into symmetry later: making the trailing form refuse a
+    # preceding digit outright would also throw away the amount in every sentence above, and a
+    # missed claim is the direction that lets an invented number reach a visitor.
+    assert numeric_claims("EUR 1 234 5678") == set()
+    assert numeric_claims("1 234 5678 euro") == {"EUR 5.678,00"}
+
+
+def test_a_space_between_digits_is_only_a_separator_in_groups_of_three() -> None:
+    # The control for the line above, and the reason the group is exactly three digits: a customer
+    # number is also digits with a space in it, and 6512 is not a thousands group.
+    assert numeric_claims("klantnummer 6512 3387") == set()
+
+
+def test_a_number_ending_a_sentence_does_not_borrow_the_next_sentences_currency() -> None:
+    # The svb sample closes a step on a customer number and opens the next one on an amount. A
+    # pattern that lets the number run over the full stop welds the two into an amount neither
+    # step wrote, and refuses a reading that was right.
+    welded = "bel de SVB met klantnummer 6512 3387. EUR 299,86 komt op uw rekening."
+    assert numeric_claims(welded) == {"EUR 299,86"}

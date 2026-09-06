@@ -31,10 +31,10 @@ import logging
 from collections.abc import Iterator
 from datetime import date
 from functools import lru_cache
-from typing import Any
+from typing import Annotated, Any
 
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
 from . import intake
 from .bedrock import VERIFIED_MODEL_IDS, VERIFIED_ON, BedrockReadingModel, probe_models
@@ -64,6 +64,24 @@ logger = logging.getLogger(__name__)
 # and it should be refused before it is decoded rather than after.
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
+# The same ceiling counted in base64 characters, which is what actually arrives. Comparing the
+# encoded string against the byte figure is off by a third, so the real limit was 18.75 MiB while
+# the page that uploads the file was letting 25 MiB through: every file between the two was
+# accepted by the browser and refused here for being too large.
+MAX_UPLOAD_CHARS = (MAX_UPLOAD_BYTES + 2) // 3 * 4
+
+
+def _within_the_ceiling(text: str) -> str:
+    """The letter's size as the wire carries it, which is bytes rather than characters."""
+    if len(text.encode("utf-8")) > MAX_UPLOAD_BYTES:
+        raise ValueError(f"a letter may be at most {MAX_UPLOAD_BYTES} bytes of text")
+    return text
+
+
+LetterText = Annotated[str, AfterValidator(_within_the_ceiling)]
+
+TOO_LARGE = "that file is too large to be a letter. Send the pages one at a time."
+
 DEFAULT_LANGUAGE = "en"
 
 app = BedrockAgentCoreApp()
@@ -87,7 +105,15 @@ class LetterUpload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     filename: str = Field(default="letter.txt", max_length=255)
-    text: str | None = None
+    # Both fields carry a letter, so both are bounded. Only the encoded one used to be, which left
+    # the text field as an unbounded way into a metered service. The encoded one keeps its bound in
+    # `_decode` instead of here, because that is where the refusal can say what to do about it.
+    #
+    # Bounded in bytes rather than in characters. Pydantic's own `max_length` counts characters,
+    # and the visitors this desk serves write in Cyrillic and Arabic, where a character is two
+    # bytes or three: a character bound is twice the ceiling it was written to be, for exactly the
+    # letters this product exists for.
+    text: LetterText | None = None
     content_base64: str | None = None
 
 
@@ -126,7 +152,7 @@ def read_letter(payload: dict[str, Any]) -> dict[str, Any] | Iterator[dict[str, 
     try:
         request = ReadRequest.model_validate(_unwrapped(payload))
     except ValidationError as invalid:
-        return _error("payload", str(invalid))
+        return _error("payload", _why_invalid(invalid))
 
     if request.forget is not None:
         return _forgotten(request.forget)
@@ -383,12 +409,17 @@ def _decode(upload: LetterUpload) -> LetterInput:
         return intake.from_text(upload.text)
     if upload.content_base64 is None:
         raise ValueError("a letter needs either text or content_base64")
-    if len(upload.content_base64) > MAX_UPLOAD_BYTES:
-        raise IntakeError("that file is too large to be a letter. Send the pages one at a time.")
+    if len(upload.content_base64) > MAX_UPLOAD_CHARS:
+        raise IntakeError(TOO_LARGE)
     try:
         data = base64.b64decode(upload.content_base64, validate=True)
     except (binascii.Error, ValueError) as broken:
         raise IntakeError(f"the upload was not valid base64 ({broken})") from broken
+    # The character bound above is the cheap check, made before decoding, and it rounds up to the
+    # next whole base64 quantum: a string of exactly that length with no padding decodes to two
+    # bytes past the ceiling. The ceiling is a number of bytes, so it is also checked in bytes.
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise IntakeError(TOO_LARGE)
     return intake.from_bytes(data, filename=upload.filename)
 
 
@@ -410,6 +441,21 @@ def _unwrapped(payload: dict[str, Any]) -> dict[str, Any]:
     except json.JSONDecodeError:
         return payload
     return parsed if isinstance(parsed, dict) else payload
+
+
+def _why_invalid(invalid: ValidationError) -> str:
+    """Which field was wrong and why, never the value that was wrong.
+
+    `str(ValidationError)` quotes the input it refused. The refused input here is the letter, so
+    the whole reason the reading path logs only an exception type applies to this line too: the
+    detail travels to the browser and into whatever logs the response. The field name and the
+    rule it broke are all a caller needs to fix the request.
+    """
+    problems = [
+        f"{'.'.join(str(part) for part in problem['loc']) or 'payload'}: {problem['msg']}"
+        for problem in invalid.errors(include_url=False)
+    ]
+    return "; ".join(problems) or "the payload did not match what one reading may carry"
 
 
 def _error(kind: str, detail: str) -> dict[str, Any]:

@@ -168,6 +168,16 @@ def _from_image(data: bytes, filename: str) -> LetterInput:
         raise IntakeError(
             f"{filename} claims more pixels than any letter has. Photograph the page again."
         ) from error
+    except OSError as error:
+        # A half-transferred photograph is the ordinary case here, not an exotic one: a phone on
+        # a library's wifi drops an upload mid-file and the bytes decode as a valid JPEG header
+        # over a truncated body. Pillow raises a plain OSError for that, which is neither of the
+        # two above, so before this it left the entrypoint as an unhandled failure and the desk
+        # saw a server error instead of a line telling the volunteer to take the photo again.
+        raise IntakeError(
+            f"{filename} stops partway through, so the page is incomplete. Take the photograph "
+            "again and upload the whole file."
+        ) from error
 
     blocks = _page_blocks(1, 1, image, prefer_lossless=source_format != "JPEG")
     return LetterInput(blocks=tuple(blocks), kind="image", pages=1)

@@ -4,7 +4,14 @@ import json
 import pytest
 from starlette.testclient import TestClient
 
-from plainletter.app import MAX_UPLOAD_BYTES, LetterUpload, _decode, app, read_letter
+from plainletter.app import (
+    MAX_UPLOAD_BYTES,
+    MAX_UPLOAD_CHARS,
+    LetterUpload,
+    _decode,
+    app,
+    read_letter,
+)
 from plainletter.demo import sample_text
 
 TODAY = "2026-08-21"
@@ -88,8 +95,46 @@ def test_a_broken_upload_is_named_as_an_upload_problem() -> None:
 
 
 def test_an_upload_too_large_to_be_a_letter_is_refused_before_it_is_decoded() -> None:
-    oversized = {"filename": "a.pdf", "content_base64": "A" * (MAX_UPLOAD_BYTES + 1)}
+    oversized = {"filename": "a.pdf", "content_base64": "A" * (MAX_UPLOAD_CHARS + 1)}
     assert read_letter({"letter": oversized})["error"]["kind"] == "upload"
+
+
+def test_the_size_limit_counts_the_bytes_of_the_file_not_the_characters_of_the_encoding() -> None:
+    # The page that uploads the file refuses at 25 MiB of file. Base64 is a third longer than what
+    # it encodes, so comparing the encoded string against the byte figure refused every file over
+    # 18.75 MiB: accepted by the browser, refused here, with no way for the volunteer to tell why.
+    # A file of exactly the ceiling has to get past the size check and be refused for what it is.
+    at_the_limit = base64.b64encode(b"\x00" * MAX_UPLOAD_BYTES).decode()
+    assert len(at_the_limit) > MAX_UPLOAD_BYTES
+    answer = read_letter({"letter": {"filename": "a.pdf", "content_base64": at_the_limit}})
+    assert answer["error"]["kind"] == "upload"
+    assert "too large" not in answer["error"]["detail"]
+
+
+def test_a_file_one_byte_over_the_ceiling_is_refused_for_being_too_large() -> None:
+    # The character bound rounds up to the next base64 quantum, so a string of exactly that length
+    # decodes to two bytes past the ceiling. The ceiling is a number of bytes.
+    over = base64.b64encode(b"\x00" * (MAX_UPLOAD_BYTES + 1)).decode()
+    answer = read_letter({"letter": {"filename": "a.pdf", "content_base64": over}})
+    assert answer["error"]["kind"] == "upload"
+    assert "too large" in answer["error"]["detail"]
+
+
+def test_a_letter_sent_as_text_is_bounded_in_bytes_not_in_characters() -> None:
+    # Pydantic's own max_length counts characters. The visitors this desk serves write in Cyrillic
+    # and Arabic, where a character is two bytes or three, so a character bound is twice the
+    # ceiling it was written to be for exactly the letters this product exists for.
+    cyrillic = "я" * (MAX_UPLOAD_BYTES // 2 + 1)
+    assert len(cyrillic) < MAX_UPLOAD_BYTES
+    assert len(cyrillic.encode("utf-8")) > MAX_UPLOAD_BYTES
+    refused = read_letter({"letter": {"filename": "a.txt", "text": cyrillic}})
+    assert refused["error"]["kind"] == "payload"
+
+    # The control: the same number of BYTES in Latin letters is inside the ceiling and validates.
+    # Validation only, because reading it would be a real model call.
+    latin = "x" * MAX_UPLOAD_BYTES
+    assert len(latin.encode("utf-8")) == MAX_UPLOAD_BYTES
+    assert LetterUpload(filename="a.txt", text=latin).text == latin
 
 
 @pytest.mark.parametrize(
@@ -155,3 +200,20 @@ def test_an_uploaded_letter_arrives_with_its_own_words_intact() -> None:
     assert letter.kind == "text"
     assert letter.text is not None
     assert "Betaal voor 15 september 2026." in letter.text
+
+
+def test_a_refused_payload_names_the_field_and_never_quotes_the_letter() -> None:
+    # str(ValidationError) quotes the input it refused, and the refused input here is the letter.
+    # web/src/server/agent.ts forwards this detail to the browser, so the same reasoning that
+    # keeps the reading path logging only an exception type applies to this line.
+    opening = "Uw burgerservicenummer is 111222333. "
+    answer = read_letter(
+        {"letter": {"filename": "brief.txt", "text": opening + "x" * MAX_UPLOAD_BYTES}}
+    )
+    detail = answer["error"]["detail"]
+    assert answer["error"]["kind"] == "payload"
+    assert "burgerservicenummer" not in detail
+    assert "111222333" not in detail
+    # Still useful: it says which field and which rule.
+    assert "letter.text" in detail
+    assert "at most" in detail

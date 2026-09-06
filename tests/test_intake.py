@@ -203,3 +203,16 @@ def test_a_letter_that_arrived_as_a_picture_still_reaches_the_desk() -> None:
     assert reading.deadline is not None
     assert reading.deadline.on == date(2026, 9, 15)
     assert reading.verification.is_grounded
+
+
+def test_a_photograph_that_stops_partway_is_answered_and_not_raised_at_the_desk() -> None:
+    # A phone on a library wifi drops an upload mid-file. Pillow raises a plain OSError for that,
+    # which is neither of the two the reader used to catch, so it left the entrypoint unhandled
+    # and the desk saw a server error instead of a line telling the volunteer what to do.
+    whole = photograph((900, 1200))
+    with pytest.raises(IntakeError) as refused:
+        intake.from_bytes(whole[: len(whole) // 2], filename="IMG_0004.jpg")
+    assert "again" in str(refused.value)
+
+    # The control: the same photograph, whole, still reads.
+    assert intake.from_bytes(whole, filename="IMG_0004.jpg").kind == "image"
