@@ -29,6 +29,7 @@ import binascii
 import json
 import logging
 from collections.abc import Iterator
+from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
 from typing import Annotated, Any
@@ -202,9 +203,9 @@ def _events(
     try:
         memory = case_memory()
         with within(span):
-            earlier = memory.recall(request.case_id) if request.case_id else ()
-        if earlier:
-            yield {"stage": "case", "case": _case_event(request.case_id, earlier)}
+            earlier = _recalled(span, memory, request.case_id)
+        if earlier.records:
+            yield {"stage": "case", "case": _case_event(request.case_id, earlier.records)}
 
         stages = Pipeline(model=model).stages(letter, visitor_language=language, today=today)
         try:
@@ -243,7 +244,7 @@ def _events(
         # base's own id or nothing, never a string the model wrote.
         span.set_attribute("plainletter.sender", known_sender_id(reading) or "unknown")
         with within(span):
-            case = _remember(request, reading, today, memory, earlier)
+            case = _remembered(span, request, reading, today, memory, earlier)
         span.set_attribute("plainletter.remembered", bool(case and case["remembered"]))
         yield _completed(request, letter, reading, today, case)
     finally:
@@ -275,6 +276,104 @@ def model_audit(model: ReadingModel) -> list[str]:
     return list(entries) if isinstance(entries, list) else []
 
 
+# Why a case was not kept, as a value the console can switch on rather than a sentence it has to
+# read. The two are different situations for the visitor in front of the desk: one desk keeps
+# nothing and never will, the other keeps cases and could not reach the store just now, and only
+# the second is worth coming back for.
+NO_STORE = "no_store"
+STORE_UNREACHABLE = "store_unreachable"
+EARLIER_UNAVAILABLE = "earlier_unavailable"
+
+NOTES = {
+    NO_STORE: "This desk keeps no cases: no memory store is configured.",
+    STORE_UNREACHABLE: (
+        "The case store could not be reached just now, so this reading was not kept. The reading "
+        "itself is unaffected, and trying again may still keep the case."
+    ),
+    EARLIER_UNAVAILABLE: (
+        "This reading was kept, but the earlier ones under this case could not be read just now, "
+        "so they are not shown."
+    ),
+}
+
+# The two ways a store that exists can let the desk down. They are separate because reads and
+# writes fail separately: a throttled read with a working write kept the case and reported that it
+# had not been, which tells a visitor the opposite of what happened to their data.
+OUTAGES = frozenset({STORE_UNREACHABLE, EARLIER_UNAVAILABLE})
+
+
+@dataclass(frozen=True)
+class Recalled:
+    """Earlier readings under a case, and whether looking for them worked."""
+
+    records: tuple[CaseRecord, ...] = ()
+    reached: bool = True
+
+
+def _recalled(span: Any, memory: CaseMemory, case_id: str | None) -> Recalled:
+    """Earlier readings under this case, and whether the store answered at all.
+
+    Recalling is a convenience and reading the letter is the product, so a store that is down must
+    not stop a visitor having their letter read. Before this, a case id on the card plus an
+    unreachable store meant no reading at all.
+
+    Whether it answered is carried rather than dropped. An empty answer and an unreachable store
+    look identical from the outside, and they are not the same thing to tell a returning visitor:
+    one says the case has nothing in it, the other says the desk could not look.
+    """
+    if case_id is None:
+        return Recalled()
+    try:
+        return Recalled(records=memory.recall(case_id))
+    except Exception as failure:
+        _note_memory_failure(span, "recall", failure)
+        return Recalled(reached=False)
+
+
+def _remembered(
+    span: Any,
+    request: ReadRequest,
+    reading: DeskReading,
+    today: date,
+    memory: CaseMemory,
+    earlier: Recalled,
+) -> dict[str, Any] | None:
+    """Keep the reading, and say so honestly when keeping it did not work.
+
+    This runs after the whole pipeline has succeeded. A store that raises here used to take a
+    finished, checked reading down with it, so the desk lost the card and the calendar file for a
+    letter that had been read correctly. Consent that could not be honoured is reported as such,
+    and so is a lookup that could not be made, which otherwise left the desk showing nothing with
+    nothing said about why.
+
+    The two failures are reported apart, because they happen apart. Reads and writes fail
+    separately, and a throttled read beside a working write once put "the case was not kept" in
+    front of a visitor whose case had just been kept, which is worse than saying nothing: it is
+    telling somebody the opposite of what happened to their own data.
+    """
+    try:
+        event = _remember(request, reading, today, memory, earlier.records)
+    except Exception as failure:
+        _note_memory_failure(span, "remember", failure)
+        event = _case_event(request.case_id, earlier.records)
+        event["reason"] = STORE_UNREACHABLE
+
+    if event is not None:
+        # A failed write is the worse news and keeps the reason. A failed read only means the
+        # earlier readings are missing from the screen, whatever happened to this one.
+        if not event.get("reason") and not earlier.reached:
+            event["reason"] = EARLIER_UNAVAILABLE
+        if event.get("reason"):
+            event["note"] = NOTES[event["reason"]]
+    return event
+
+
+def _note_memory_failure(span: Any, what: str, failure: Exception) -> None:
+    """The type only, for the same reason the reading path logs only the type."""
+    span.set_attribute(f"plainletter.memory_{what}_failed", type(failure).__name__)
+    logger.error("plainletter.memory %s failed with %s", what, type(failure).__name__)
+
+
 def _remember(
     request: ReadRequest,
     reading: DeskReading,
@@ -290,7 +389,7 @@ def _remember(
     event = _case_event(case_id, earlier)
     event["remembered"] = kept
     if not kept:
-        event["note"] = "This desk keeps no cases: no memory store is configured."
+        event["reason"] = NO_STORE
     return event
 
 
@@ -310,8 +409,19 @@ def _completed(
     case: dict[str, Any] | None,
 ) -> dict[str, Any]:
     reference = reading.facts.reference.value if reading.facts.reference else "plainletter"
-    # The card carries the case id once there is a case: kept today, or continued from before.
-    case_id = case["id"] if case and (case["remembered"] or case["earlier"]) else None
+    # The card carries the case id only when that number leads somewhere: the reading was kept
+    # today, or there were earlier ones under it.
+    #
+    # The third case is the one worth spelling out. When the store could not be reached, `earlier`
+    # is empty because nobody could look, not because the case is empty, and dropping the number
+    # would hand a returning visitor a card without the number they walked in with. So a number
+    # the visitor supplied survives an outage. A number this desk minted does not: on a desk that
+    # keeps nothing there is nothing behind it, and printing it would promise a visitor a case
+    # they do not have.
+    unreachable = bool(case and case.get("reason") in OUTAGES and request.case_id)
+    case_id = (
+        case["id"] if case and (case["remembered"] or case["earlier"] or unreachable) else None
+    )
     return {
         "stage": "done",
         "source": "sample" if request.sample else "letter",

@@ -128,6 +128,11 @@ export type CaseInfo = {
   id: string | null;
   remembered: boolean;
   earlier: CaseRecord[];
+  // Why the case is not as the desk would like it. The note beside it is the agent's own English
+  // sentence, which is for an API reader; the console renders its own wording per reason, at the
+  // counter's language. The last two are separate because reads and writes fail separately: with
+  // `earlier_unavailable` the reading WAS kept and only the earlier ones are missing.
+  reason?: 'no_store' | 'store_unreachable' | 'earlier_unavailable';
   note?: string;
 };
 

@@ -49,7 +49,7 @@ def mark_letter(letter_text: str, facts: LetterFacts, result: VerificationResult
     letter = redact(canonical(letter_text))
     folded, offsets = fold_with_offsets(letter)
 
-    placements, unplaced = _place(folded, offsets, result)
+    placements, unplaced = _place(letter, folded, offsets, result)
     keys = tuple(
         MarkKey(number=number, text=item.text, facts=item.facts)
         for number, item in enumerate(placements, start=1)
@@ -65,9 +65,9 @@ def mark_letter(letter_text: str, facts: LetterFacts, result: VerificationResult
 
 
 def _place(
-    folded: str, offsets: tuple[int, ...], result: VerificationResult
+    letter: str, folded: str, offsets: tuple[int, ...], result: VerificationResult
 ) -> tuple[tuple[_Placement, ...], tuple[str, ...]]:
-    """Locate each grounded passage once, keeping the outermost when two of them overlap."""
+    """Locate each grounded passage once, covering both when two of them overlap."""
     found: dict[str, _Placement] = {}
     unplaced: list[str] = []
 
@@ -96,16 +96,30 @@ def _place(
     kept: list[_Placement] = []
     for item in ordered:
         if kept and item.start < kept[-1].end:
-            previous = kept[-1]
-            kept[-1] = _Placement(
-                previous.start,
-                previous.end,
-                previous.text,
-                previous.facts + item.facts,
-            )
+            kept[-1] = _merged(letter, kept[-1], item)
             continue
         kept.append(item)
     return tuple(kept), tuple(unplaced)
+
+
+def _merged(letter: str, previous: _Placement, item: _Placement) -> _Placement:
+    """Two passages that touch, as one mark that really covers both of them.
+
+    Nesting is the easy case and the sort makes it the common one. Two passages that merely
+    overlap are the case worth writing down. The model picks its own spans, so a deadline whose
+    span runs to the middle of a sentence and an amount whose span starts in that same middle and
+    runs past its end are an ordinary pair. Keeping only the first one's end left the amount
+    outside the wash while its name was still listed under that numeral, so the key pointed the
+    volunteer at words that do not contain the value. Nothing reported it either: the passage had
+    been found, so it never reached `unplaced`.
+
+    When the range grows, the key's text has to grow with it, and it comes from the letter rather
+    than from either span, because neither span is the merged passage.
+    """
+    facts = previous.facts + item.facts
+    if item.end <= previous.end:
+        return _Placement(previous.start, previous.end, previous.text, facts)
+    return _Placement(previous.start, item.end, letter[previous.start : item.end], facts)
 
 
 def _split_lines(
