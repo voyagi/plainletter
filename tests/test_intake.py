@@ -216,3 +216,87 @@ def test_a_photograph_that_stops_partway_is_answered_and_not_raised_at_the_desk(
 
     # The control: the same photograph, whole, still reads.
     assert intake.from_bytes(whole, filename="IMG_0004.jpg").kind == "image"
+
+
+# ---------------------------------------------------------------------------------------------
+# The swept property.
+#
+# app.py's docstring promises that an upload which is not a letter is answered rather than
+# forwarded, and that a failure is reported by its type. A truncated photograph broke that promise
+# and left the entrypoint as a raw OSError, which is what a phone dropping an upload on a library
+# wifi produces. So rather than adding that one shape, this sweeps the shapes a desk really sees.
+# ---------------------------------------------------------------------------------------------
+
+
+def a_png(size: tuple[int, int] = (60, 60)) -> bytes:
+    buffer = BytesIO()
+    Image.new("RGBA", size, (255, 0, 0, 128)).save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def broken_uploads() -> dict[str, tuple[str, bytes, str]]:
+    """Each shape a desk really receives, with the filename and what must happen to it.
+
+    The outcome is stated per shape rather than counted across them. An aggregate floor lets a
+    real regression hide inside the slack: a whole photograph named `scan0001` could start being
+    refused and a count would not notice, though `from_bytes` treats the name as the weakest
+    signal on purpose, because files arrive from phones called whatever the phone decided.
+    """
+    jpeg = photograph((400, 600))
+    pdf = scanned_pdf(1)
+    return {
+        # Whole files, which must still be read. A reader that refused everything would satisfy
+        # every other assertion here and be useless.
+        "a whole photograph": ("letter.jpg", jpeg, "image"),
+        "a whole pdf": ("letter.pdf", pdf, "pdf"),
+        "a png with transparency": ("letter.png", a_png(), "image"),
+        "no extension on the name": ("scan0001", jpeg, "image"),
+        # A phone that lost the connection halfway through the upload.
+        "a photograph cut in half": ("letter.jpg", jpeg[: len(jpeg) // 2], "refused"),
+        "a photograph cut to its header": ("letter.jpg", jpeg[:200], "refused"),
+        "a pdf cut in half": ("letter.pdf", pdf[: len(pdf) // 2], "refused"),
+        "a pdf header and nothing else": ("letter.pdf", b"%PDF-1.4\n", "refused"),
+        "a pdf header over rubbish": (
+            "letter.pdf",
+            b"%PDF-1.4\n" + b"\x00\x01\x02" * 400,
+            "refused",
+        ),
+        # Files that are not what their name says.
+        "a zip wearing a jpg name": ("letter.jpg", b"PK\x03\x04" + b"\x00" * 500, "refused"),
+        "an iphone heic": ("IMG_0001.heic", b"\x00\x00\x00\x18ftypheic" + b"\x00" * 300, "refused"),
+        "a photograph renamed to txt": ("letter.txt", jpeg, "refused"),
+        # Text that is not what a Dutch desk expects.
+        "utf-16 text": ("letter.txt", "Beste meneer".encode("utf-16"), "refused"),
+        "a null byte inside text": ("letter.txt", b"Beste\x00 mevrouw", "refused"),
+        # The edges.
+        "one byte": ("letter.jpg", b"\xff", "refused"),
+        "nothing at all": ("letter.jpg", b"", "refused"),
+    }
+
+
+@pytest.mark.parametrize("label", list(broken_uploads()))
+def test_each_upload_shape_gets_the_outcome_it_should(label: str) -> None:
+    # One case per shape, so a regression on any single one is named rather than absorbed by the
+    # others. `_prepare` catches IntakeError and ValueError, so anything else escapes the
+    # entrypoint and the desk sees a server error instead of a line to act on.
+    filename, data, expected = broken_uploads()[label]
+    try:
+        letter = intake.from_bytes(data, filename=filename)
+    except intake.IntakeError as answer:
+        assert expected == "refused", f"{label} should have been read as {expected}"
+        said = str(answer)
+        assert said, "refused with an empty reason"
+        # Not a stack trace, not a codec's own words, not a byte offset into somebody's file.
+        assert "Traceback" not in said, said
+        assert "codec" not in said, said
+    except Exception as escaped:
+        raise AssertionError(f"{type(escaped).__name__}: {escaped}") from escaped
+    else:
+        assert letter.kind == expected, f"{label} was read as {letter.kind}"
+
+
+def test_the_upload_sweep_covers_both_answers() -> None:
+    # The control on the fixtures themselves. A sweep where every shape expects the same answer
+    # would pass on a reader that refused everything, or on one that read everything.
+    outcomes = {expected for _, _, expected in broken_uploads().values()}
+    assert outcomes == {"refused", "image", "pdf"}

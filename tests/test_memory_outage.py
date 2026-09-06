@@ -7,6 +7,8 @@ number printed on an old card made a letter unreadable.
 
 from __future__ import annotations
 
+import itertools
+import re
 from datetime import date
 from typing import Any
 
@@ -26,6 +28,9 @@ SAMPLE = "cjib-verkeersboete"
 TODAY = "2026-08-21"
 CASE = "AB12-CD34"
 BROKEN = "the case store is unreachable"
+
+# Kept so the sweep below can put the real one back after swapping in a fake per row.
+_real_case_memory = runtime.case_memory
 
 
 class Unreachable:
@@ -216,3 +221,131 @@ def test_control_a_reading_with_no_case_at_all_prints_no_case_number() -> None:
     assert done["case"] is None
     assert CASE not in done["desk_card_html"]
     assert "Zaaknummer" not in done["desk_card_html"]
+
+
+# ---------------------------------------------------------------------------------------------
+# The swept property.
+#
+# What the desk is told about a case is a small state machine: the store can be absent, healthy,
+# failing on reads, failing on writes or failing on both, crossed with whether the visitor
+# consented and whether they brought a case number. Twenty combinations, and two of them were
+# wrong at different times, each found only after it shipped.
+#
+# So the whole space is enumerated, and each row is checked against what actually happened to the
+# store rather than against what anyone expected the code to say.
+# ---------------------------------------------------------------------------------------------
+
+_ON_CARD = re.compile(r"Zaaknummer ([A-Z0-9]{4}-[A-Z0-9]{4})")
+
+
+class SweptStore:
+    """A store whose reads and writes can each be made to fail, recording what really landed."""
+
+    def __init__(self, *, reads: bool, writes: bool, holds: tuple[CaseRecord, ...] = ()) -> None:
+        self._reads = reads
+        self._writes = writes
+        self._holds = holds
+        self.written: list[CaseRecord] = []
+
+    def remember(self, record: CaseRecord) -> bool:
+        if not self._writes:
+            raise RuntimeError("write refused")
+        self.written.append(record)
+        return True
+
+    def recall(self, case_id: str) -> tuple[CaseRecord, ...]:
+        if not self._reads:
+            raise RuntimeError("read refused")
+        return self._holds
+
+    def forget(self, case_id: str) -> int:
+        return 0
+
+
+_HEALTH = {
+    "no store": None,
+    "healthy": (True, True),
+    "reads fail": (False, True),
+    "writes fail": (True, False),
+    "both fail": (False, False),
+}
+
+
+def test_what_the_desk_is_told_matches_what_happened_to_the_store() -> None:
+    seen: list[tuple[str, bool, bool]] = []
+
+    for label, (consent, with_case) in itertools.product(
+        _HEALTH, itertools.product([False, True], [False, True])
+    ):
+        health = _HEALTH[label]
+        store: Any = (
+            runtime.NoCaseMemory()
+            if health is None
+            else SweptStore(reads=health[0], writes=health[1])
+        )
+        runtime.case_memory = lambda kept=store: kept  # type: ignore[assignment]
+        try:
+            payload: dict[str, Any] = {"sample": SAMPLE, "today": TODAY}
+            if consent:
+                payload["consent"] = True
+            if with_case:
+                payload["case_id"] = CASE
+            done = read_letter(payload)
+        finally:
+            runtime.case_memory = _real_case_memory
+
+        assert isinstance(done, dict)
+        assert done["stage"] == "done", f"{label}: no reading at all"
+        seen.append((label, consent, with_case))
+
+        case = done["case"]
+        landed = bool(getattr(store, "written", []))
+        reason = (case or {}).get("reason")
+        where = f"{label}/consent={consent}/case={with_case}"
+
+        # A consented reading always has a case to report on, so `case` going missing is a
+        # regression rather than a shape to skip past. Without this, every assertion below is
+        # quietly stepped over the day one appears, and the sweep stays green.
+        if consent or with_case:
+            assert case is not None, f"{where}: the answer carried no case at all"
+
+        if case is not None:
+            # Ground truth first. What the desk says must agree with the store, in both
+            # directions: never claim a case was kept that was not, never deny one that was.
+            assert case["remembered"] == landed, f"{where}: says {case['remembered']}, was {landed}"
+            if landed:
+                assert reason != STORE_UNREACHABLE, f"{where}: kept, but reason says not kept"
+            if reason == NO_STORE:
+                assert health is None, f"{where}: blames a missing store"
+            if reason == EARLIER_UNAVAILABLE:
+                assert health is not None and not health[0], f"{where}: blames a working read"
+            if reason is not None:
+                assert reason in NOTES, f"{where}: unknown reason {reason!r}"
+                assert case["note"] == NOTES[reason], f"{where}: note does not match its reason"
+
+        # A number is printed only when it leads somewhere: kept today, or the desk could not look
+        # and the visitor brought it in themselves.
+        printed = _ON_CARD.search(done["desk_card_html"])
+        could_not_look = with_case and health is not None and not health[0]
+        assert bool(printed) == (landed or could_not_look), f"{where}: card number={printed}"
+        if printed and with_case:
+            assert printed.group(1) == CASE, f"{where}: card shows {printed.group(1)}"
+
+    assert len(seen) == len(_HEALTH) * 4
+
+
+def test_a_failed_write_does_not_erase_a_number_that_still_leads_somewhere() -> None:
+    # The control for the card rule above, and the reason it is worded around the READ. The store
+    # answered here and the case really does hold something, so the number survives the same
+    # failed write that drops it when the case is empty.
+    kept = CaseRecord.from_reading(CASE, _a_reading(), date(2026, 8, 1))
+    store = SweptStore(reads=True, writes=False, holds=(kept,))
+    runtime.case_memory = lambda: store  # type: ignore[assignment]
+    try:
+        done = answer({"consent": True, "case_id": CASE})
+    finally:
+        runtime.case_memory = _real_case_memory
+
+    assert done["case"]["remembered"] is False
+    assert done["case"]["earlier"]
+    assert CASE in done["desk_card_html"]

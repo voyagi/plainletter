@@ -1,8 +1,19 @@
+import itertools
+
 import pytest
 
 from plainletter.demo import sample_text, scripted_reading
 from plainletter.schemas import LetterDate, Money, SourceSpan
-from plainletter.verify import numeric_claims, ungrounded_claims, verify
+from plainletter.verify import (
+    _AMOUNT,
+    _ISO_DATE,
+    _NUMERIC_DATE,
+    _WORDED_DATE,
+    numeric_claims,
+    ungrounded_claims,
+    verify,
+)
+from sweeps import digits_of, is_truncated
 
 SAMPLE = "cjib-verkeersboete"
 LETTER = sample_text(SAMPLE)
@@ -266,3 +277,124 @@ def test_a_number_ending_a_sentence_does_not_borrow_the_next_sentences_currency(
     # step wrote, and refuses a reading that was right.
     welded = "bel de SVB met klantnummer 6512 3387. EUR 299,86 komt op uw rekening."
     assert numeric_claims(welded) == {"EUR 299,86"}
+
+
+# ---------------------------------------------------------------------------------------------
+# Swept properties.
+#
+# Everything above picks its examples. These generate them, because picking missed the same class
+# of bug twice: an amount pattern that stopped inside a longer run of digits and reported a value
+# nobody wrote. Each sweep is followed by the control that proves its checker can fail, since two
+# of these checkers were themselves wrong before they were trusted.
+# ---------------------------------------------------------------------------------------------
+
+_NBSP = chr(0x00A0)
+
+_BEFORE = ["", "in ", "nummer ", "2026 ", "12", "x ", "(", "de kleur ", "1 234 ", "5 ", "0", "9"]
+_NUMBERS = [
+    "1",
+    "12",
+    "123",
+    "1234",
+    "12345",
+    "1 234",
+    "12 345",
+    "123 456",
+    "1 234 567",
+    "123 4567",
+    "1 234 5678",
+    "123 456 7890",
+    "12 3456 789",
+    "1.234",
+    "1.234,56",
+    "174,00",
+    "1 234,56",
+    "0,50",
+    "1,5",
+    f"1{_NBSP}234",
+    f"1{_NBSP}234,56",
+]
+_AFTER = ["", " betalen", "7", " 7", ".", ",", " 890", "0", " en meer", "8", ",5", ".5"]
+_MARKERS = ["EUR ", "euro ", "€", "євро ", "avro "]
+
+
+def _money_sentences() -> list[str]:
+    written = []
+    for before, number, after in itertools.product(_BEFORE, _NUMBERS, _AFTER):
+        for marker in _MARKERS:
+            written.append(f"{before}{marker}{number}{after}")
+            written.append(f"{before}{number} {marker.strip()}{after}")
+    return written
+
+
+def test_the_truncation_checker_flags_both_bugs_it_was_written_for() -> None:
+    # The control for the sweep below. Without it a clean sweep would mean nothing, because a
+    # checker that cannot fail reads as coverage and gives none. These two spans are what the old
+    # patterns really matched.
+    assert is_truncated("EUR 123 4567", (4, 11)) == "ends right before a digit"
+    assert is_truncated("in 2026 450 euro", (5, 11)) == "begins right after a digit"
+    # And it stays quiet on the reading that is deliberately allowed: with the currency last, only
+    # the end of the number is known, so reading back to the nearest boundary is correct.
+    assert is_truncated("1 234 5678 euro", (6, 10)) is None
+
+
+def test_no_amount_is_read_out_of_part_of_a_longer_number() -> None:
+    for text in _money_sentences():
+        for match in _AMOUNT.finditer(text):
+            span = digits_of(text, match)
+            assert span is not None, f"an amount with no digits in {text!r}"
+            assert is_truncated(text, span) is None, f"{text!r} matched {match.group(0)!r}"
+
+
+def test_the_money_sweep_really_finds_amounts_to_check() -> None:
+    # The second control, and the one that keeps the sweep above from passing by finding nothing.
+    # A sweep over strings the pattern never matches would stay green whatever the pattern did.
+    #
+    # Measured on the day it was written: 30,240 sentences, 27,990 holding an amount. The floors
+    # sit well below both, because their job is to catch the sweep collapsing rather than to pin
+    # a number that legitimate edits will move.
+    matched = sum(1 for text in _money_sentences() if _AMOUNT.search(text))
+    assert len(_money_sentences()) > 20_000
+    assert matched > 20_000, f"only {matched} of the swept sentences held an amount at all"
+
+
+_YEARS = ["2026", "1999", "20261", "12026"]
+_MONTHS = ["09", "9", "13", "0", "12"]
+_DAYS = ["15", "5", "32", "0", "01", "151"]
+_DATE_BEFORE = ["", "voor ", "9", "1", "-", "x", "20", "31"]
+_DATE_AFTER = ["", " en later", "1", "-1", ".", "9", " 9", "0"]
+_SHAPES = ["{y}-{m}-{d}", "{d}-{m}-{y}", "{d}/{m}/{y}", "{d} september {y}", "{d}.{m}.{y}"]
+
+
+def _date_sentences() -> list[str]:
+    return [
+        f"{before}{shape.format(y=year, m=month, d=day)}{after}"
+        for before, year, month, day, after, shape in itertools.product(
+            _DATE_BEFORE, _YEARS, _MONTHS, _DAYS, _DATE_AFTER, _SHAPES
+        )
+    ]
+
+
+def test_no_date_is_read_out_of_part_of_a_longer_number() -> None:
+    # The ISO reader is the newest of the three and the one this sweep was written for: a date
+    # field arrives from a model as "2026-10-01", where a day-first reader sees nothing at all.
+    for text in _date_sentences():
+        for name, pattern in (
+            ("iso", _ISO_DATE),
+            ("numeric", _NUMERIC_DATE),
+            ("worded", _WORDED_DATE),
+        ):
+            for match in pattern.finditer(text):
+                if not numeric_claims(text):
+                    continue
+                verdict = is_truncated(text, match.span())
+                assert verdict is None, f"[{name}] {text!r} matched {match.group(0)!r}: {verdict}"
+
+
+def test_the_date_sweep_really_finds_dates_to_check() -> None:
+    # Measured on the day it was written: 38,400 sentences, 2,098 producing a date claim. Most of
+    # the generated shapes are deliberately impossible dates, which is the point of the sweep, so
+    # this ratio is much lower than the money one and the floor is set from the real figure.
+    claimed = sum(1 for text in _date_sentences() if numeric_claims(text))
+    assert len(_date_sentences()) > 20_000
+    assert claimed > 1_500, f"only {claimed} of the swept sentences produced a date claim"

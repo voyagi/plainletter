@@ -1,3 +1,4 @@
+import itertools
 import re
 from datetime import date
 
@@ -178,3 +179,102 @@ def test_each_half_of_the_card_is_tagged_with_the_language_actually_printed_in_i
     together = desk_card_html(whole, TODAY)
     assert explanation_tags(together) == {"uk"}
     assert step_tags(together) == {"uk"}
+
+
+# ---------------------------------------------------------------------------------------------
+# The swept property.
+#
+# The card's right-hand side can carry two languages at once, and both halves were tagged wrongly
+# at some point, in opposite directions. First the explanation rows were labelled with the
+# language that was asked for even when the model had answered in another, then the steps were
+# labelled with the language of the explanation even though the planner had been handed the
+# requested one. Picking examples found each of those only after it shipped.
+# ---------------------------------------------------------------------------------------------
+
+_EXPLANATION_ROW = re.compile(r'<div class="prow">.*?</div>', re.S)
+_STEP_ROW = re.compile(r"<li>.*?</li>", re.S)
+_TAGGED = re.compile(r'lang="([^"]+)"[^>]*dir="([^"]+)"')
+
+# Right-to-left languages are in here on purpose: a wrong tag there does not merely mislabel the
+# text, it reverses the direction it is printed in.
+_VISITOR_LANGUAGES = ["uk", "he", "ar", "tr", "nl", "pl"]
+
+# What a model can answer when it was asked for one language: exactly that, a regional variant of
+# it, another language entirely, or nothing at all.
+_ANSWER_SHAPES = ["exact", "regional", "different", "missing"]
+
+
+def tags_in(card: str, block: re.Pattern[str]) -> set[tuple[str, str]]:
+    return {found.groups() for chunk in block.findall(card) for found in _TAGGED.finditer(chunk)}
+
+
+def an_explanation(language: str) -> Explanation:
+    return Explanation(
+        language=language,
+        what_is_this="Tekst een.",
+        by_when="Tekst twee.",
+        if_you_do_nothing="Tekst drie.",
+    )
+
+
+def _answered(visitor: str, shape: str, dutch: Explanation) -> tuple[Explanation, ...]:
+    if shape == "exact":
+        return (dutch, an_explanation(visitor))
+    if shape == "regional":
+        return (dutch, an_explanation(f"{visitor}-XX"))
+    if shape == "different":
+        return (dutch, an_explanation("de"))
+    return (dutch,)
+
+
+def test_every_section_of_the_card_names_the_language_of_the_words_in_it() -> None:
+    whole = reading()
+    dutch = next(item for item in whole.explanations if item.language == "nl")
+    checked = 0
+
+    for visitor, shape in itertools.product(_VISITOR_LANGUAGES, _ANSWER_SHAPES):
+        answered = _answered(visitor, shape, dutch)
+        card = desk_card_html(
+            whole.model_copy(update={"visitor_language": visitor, "explanations": answered}),
+            TODAY,
+        )
+        rows, steps = tags_in(card, _EXPLANATION_ROW), tags_in(card, _STEP_ROW)
+        assert rows and steps, f"{visitor}/{shape}: the card has no tagged sections"
+        checked += 1
+
+        for language, direction in rows | steps:
+            want = "rtl" if is_rtl(language) else "ltr"
+            assert direction == want, f"{visitor}/{shape}: {language} printed {direction}"
+
+        # The rows may only claim a language the model actually answered in.
+        spoken = {item.language for item in answered}
+        for language, _ in rows:
+            assert language in spoken, f"{visitor}/{shape}: rows claim {language}, not in {spoken}"
+
+        # The steps were written by the planner in the language it was handed, whatever the
+        # explanation stage answered.
+        for language, _ in steps:
+            assert language == visitor, f"{visitor}/{shape}: steps claim {language}"
+
+    assert checked == len(_VISITOR_LANGUAGES) * len(_ANSWER_SHAPES)
+
+
+def test_the_language_sweep_really_reaches_the_fallback_and_the_right_to_left_case() -> None:
+    # The control. Without it the sweep would pass on a build where the model always answered
+    # exactly what was asked, which is the one case neither bug lived in.
+    whole = reading()
+    dutch = next(item for item in whole.explanations if item.language == "nl")
+
+    fell_back = desk_card_html(
+        whole.model_copy(update={"visitor_language": "uk", "explanations": (dutch,)}), TODAY
+    )
+    assert tags_in(fell_back, _EXPLANATION_ROW) == {("nl", "ltr")}
+    assert tags_in(fell_back, _STEP_ROW) == {("uk", "ltr")}
+
+    hebrew = desk_card_html(
+        whole.model_copy(
+            update={"visitor_language": "he", "explanations": (dutch, an_explanation("he"))}
+        ),
+        TODAY,
+    )
+    assert tags_in(hebrew, _EXPLANATION_ROW) == {("he", "rtl")}
