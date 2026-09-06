@@ -39,6 +39,65 @@ def test_a_txt_that_is_not_text_is_refused_with_a_line_a_volunteer_can_act_on(by
     assert "not readable as text" in str(refused.value)
 
 
+def test_binary_that_happens_to_decode_is_still_not_a_letter() -> None:
+    # Decoding is not the same as being text. Windows-1252 maps almost every byte to something
+    # printable, so a file that merely avoids the five undefined ones came through as a letter
+    # and went to the model. Measured: 148 of 500 random 64-byte blobs decode without complaint.
+    import io
+
+    from PIL import Image
+
+    buffer = io.BytesIO()
+    Image.new("RGB", (60, 60), "white").save(buffer, format="PNG")
+
+    for label, data in (
+        ("a null in the middle", b"Beste mevrouw\x00 Jansen, dit is een brief."),
+        ("a png renamed to .txt", buffer.getvalue()),
+        ("control characters only", bytes(range(1, 9)) * 8),
+    ):
+        with pytest.raises(intake.IntakeError) as refused:
+            intake.from_bytes(data, filename="brief.txt")
+        assert "not readable as text" in str(refused.value), label
+
+    # And it is not just those three. These blobs deliberately AVOID the five undefined bytes, so
+    # every one of them decodes without complaint and can only be caught by the control-character
+    # rule. That is the half the decoder cannot do.
+    usable = [byte for byte in range(256) if byte not in {0x81, 0x8D, 0x8F, 0x90, 0x9D}]
+    checked = 0
+    for offset in range(0, len(usable), 4):
+        blob = bytes(usable[(offset + step) % len(usable)] for step in range(64))
+        assert _decodes(blob), "this blob is meant to decode, or it tests the wrong half"
+        if not any(intake._is_control(char) for char in blob.decode("cp1252")):
+            # A window of purely printable bytes IS text, as far as anything at this layer can
+            # tell. Skipped rather than asserted either way, and named below so the limit of this
+            # rule is on the record instead of implied.
+            continue
+        checked += 1
+        with pytest.raises(intake.IntakeError):
+            intake.from_bytes(blob, filename="brief.txt")
+    assert checked > 20, "the sweep has to actually exercise the rule, not skip past it"
+
+
+def test_the_control_character_rule_cannot_see_an_all_printable_file_and_says_so() -> None:
+    # Written down rather than left implied. A file made only of printable bytes is text by every
+    # test available here, so this rule does not claim to be a binary detector. What it catches is
+    # binary that carries control bytes, which real formats overwhelmingly do: the PNG above came
+    # through as 175 characters carrying 58 of them.
+    printable = bytes(range(0x20, 0x60))
+    letter = intake.from_bytes(printable, filename="brief.txt")
+    assert letter.text is not None
+
+
+def test_control_no_sample_letter_carries_a_disallowed_control_character() -> None:
+    # The rule is only safe because a real letter has none. If a sample ever grows one, this says
+    # so here rather than by refusing that letter at a desk.
+    from plainletter.demo import sample_names, sample_text
+
+    for name in sample_names():
+        offenders = [char for char in sample_text(name) if intake._is_control(char)]
+        assert offenders == [], f"{name} carries {offenders!r}"
+
+
 def test_control_windows_1252_text_is_still_read() -> None:
     # The fallback exists because Dutch office software writes this, so the guard must not take
     # it away. Accented characters that are not valid UTF-8 on their own.

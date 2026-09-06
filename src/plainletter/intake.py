@@ -96,10 +96,36 @@ def from_bytes(data: bytes, *, filename: str) -> LetterInput:
     return _from_image(data, filename)
 
 
+NOT_TEXT = (
+    "that file is not readable as text. If it is a photograph or a scan, upload it as the "
+    "picture or the PDF it is rather than renamed to .txt."
+)
+
+# The control characters a letter may contain: a tab, the two line endings, and a page break.
+# Everything else below a space, the delete character, and the C1 block belong to a file that is
+# not text at all.
+_TEXT_CONTROLS = frozenset("\t\n\r\f")
+
+
+def _is_control(char: str) -> bool:
+    point = ord(char)
+    return (point < 0x20 or point == 0x7F or 0x80 <= point <= 0x9F) and char not in _TEXT_CONTROLS
+
+
 def from_text(text: str) -> LetterInput:
-    """A letter whose words are already in hand, which is what the sample letters are."""
+    """A letter whose words are already in hand, which is what the sample letters are.
+
+    Decoding is not the same as being text, which is the whole reason for the control-character
+    check. Windows-1252 maps almost every byte to something printable: 148 of 500 random 64-byte
+    blobs decode without complaining, and a PNG renamed to .txt came through as a 175-character
+    letter carrying 58 control characters, all of which then went to the model as a letter to
+    read. Every one of the twelve sample letters carries none, so a single one is enough to say
+    this file is not a letter.
+    """
     if not text.strip():
         raise IntakeError("that file holds no text")
+    if any(_is_control(char) for char in text):
+        raise IntakeError(NOT_TEXT)
     return LetterInput(blocks=({"text": text},), kind="text", pages=1, text=text)
 
 
@@ -117,10 +143,7 @@ def _from_text(data: bytes) -> LetterInput:
         try:
             text = data.decode("cp1252")
         except UnicodeDecodeError as unreadable:
-            raise IntakeError(
-                "that file is not readable as text. If it is a photograph or a scan, upload it "
-                "as the picture or the PDF it is rather than renamed to .txt."
-            ) from unreadable
+            raise IntakeError(NOT_TEXT) from unreadable
     return from_text(text)
 
 
