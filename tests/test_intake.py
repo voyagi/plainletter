@@ -234,67 +234,69 @@ def a_png(size: tuple[int, int] = (60, 60)) -> bytes:
     return buffer.getvalue()
 
 
-def broken_uploads() -> dict[str, tuple[str, bytes]]:
+def broken_uploads() -> dict[str, tuple[str, bytes, str]]:
+    """Each shape a desk really receives, with the filename and what must happen to it.
+
+    The outcome is stated per shape rather than counted across them. An aggregate floor lets a
+    real regression hide inside the slack: a whole photograph named `scan0001` could start being
+    refused and a count would not notice, though `from_bytes` treats the name as the weakest
+    signal on purpose, because files arrive from phones called whatever the phone decided.
+    """
     jpeg = photograph((400, 600))
     pdf = scanned_pdf(1)
     return {
-        # The two controls: whole files, which must still be read.
-        "a whole photograph": ("letter.jpg", jpeg),
-        "a whole pdf": ("letter.pdf", pdf),
+        # Whole files, which must still be read. A reader that refused everything would satisfy
+        # every other assertion here and be useless.
+        "a whole photograph": ("letter.jpg", jpeg, "image"),
+        "a whole pdf": ("letter.pdf", pdf, "pdf"),
+        "a png with transparency": ("letter.png", a_png(), "image"),
+        "no extension on the name": ("scan0001", jpeg, "image"),
         # A phone that lost the connection halfway through the upload.
-        "a photograph cut in half": ("letter.jpg", jpeg[: len(jpeg) // 2]),
-        "a photograph cut to its header": ("letter.jpg", jpeg[:200]),
-        "a pdf cut in half": ("letter.pdf", pdf[: len(pdf) // 2]),
-        "a pdf header and nothing else": ("letter.pdf", b"%PDF-1.4\n"),
-        "a pdf header over rubbish": ("letter.pdf", b"%PDF-1.4\n" + b"\x00\x01\x02" * 400),
+        "a photograph cut in half": ("letter.jpg", jpeg[: len(jpeg) // 2], "refused"),
+        "a photograph cut to its header": ("letter.jpg", jpeg[:200], "refused"),
+        "a pdf cut in half": ("letter.pdf", pdf[: len(pdf) // 2], "refused"),
+        "a pdf header and nothing else": ("letter.pdf", b"%PDF-1.4\n", "refused"),
+        "a pdf header over rubbish": (
+            "letter.pdf",
+            b"%PDF-1.4\n" + b"\x00\x01\x02" * 400,
+            "refused",
+        ),
         # Files that are not what their name says.
-        "a zip wearing a jpg name": ("letter.jpg", b"PK\x03\x04" + b"\x00" * 500),
-        "an iphone heic": ("IMG_0001.heic", b"\x00\x00\x00\x18ftypheic" + b"\x00" * 300),
-        "a photograph renamed to txt": ("letter.txt", jpeg),
-        "a png with transparency": ("letter.png", a_png()),
+        "a zip wearing a jpg name": ("letter.jpg", b"PK\x03\x04" + b"\x00" * 500, "refused"),
+        "an iphone heic": ("IMG_0001.heic", b"\x00\x00\x00\x18ftypheic" + b"\x00" * 300, "refused"),
+        "a photograph renamed to txt": ("letter.txt", jpeg, "refused"),
         # Text that is not what a Dutch desk expects.
-        "utf-16 text": ("letter.txt", "Beste meneer".encode("utf-16")),
-        "a null byte inside text": ("letter.txt", b"Beste\x00 mevrouw"),
+        "utf-16 text": ("letter.txt", "Beste meneer".encode("utf-16"), "refused"),
+        "a null byte inside text": ("letter.txt", b"Beste\x00 mevrouw", "refused"),
         # The edges.
-        "one byte": ("letter.jpg", b"\xff"),
-        "nothing at all": ("letter.jpg", b""),
-        "no extension on the name": ("scan0001", jpeg),
+        "one byte": ("letter.jpg", b"\xff", "refused"),
+        "nothing at all": ("letter.jpg", b"", "refused"),
     }
 
 
-def test_no_upload_a_desk_can_receive_leaves_the_reader_as_a_raw_exception() -> None:
-    # `_prepare` catches IntakeError and ValueError. Anything else escapes the entrypoint and the
-    # desk sees a server error instead of a line the volunteer can act on.
-    for label, (filename, data) in broken_uploads().items():
-        try:
-            intake.from_bytes(data, filename=filename)
-        except intake.IntakeError:
-            continue
-        except Exception as escaped:
-            raise AssertionError(f"{label}: {type(escaped).__name__}: {escaped}") from escaped
+@pytest.mark.parametrize("label", list(broken_uploads()))
+def test_each_upload_shape_gets_the_outcome_it_should(label: str) -> None:
+    # One case per shape, so a regression on any single one is named rather than absorbed by the
+    # others. `_prepare` catches IntakeError and ValueError, so anything else escapes the
+    # entrypoint and the desk sees a server error instead of a line to act on.
+    filename, data, expected = broken_uploads()[label]
+    try:
+        letter = intake.from_bytes(data, filename=filename)
+    except intake.IntakeError as answer:
+        assert expected == "refused", f"{label} should have been read as {expected}"
+        said = str(answer)
+        assert said, "refused with an empty reason"
+        # Not a stack trace, not a codec's own words, not a byte offset into somebody's file.
+        assert "Traceback" not in said, said
+        assert "codec" not in said, said
+    except Exception as escaped:
+        raise AssertionError(f"{type(escaped).__name__}: {escaped}") from escaped
+    else:
+        assert letter.kind == expected, f"{label} was read as {letter.kind}"
 
 
-def test_every_refusal_says_something_a_volunteer_can_act_on() -> None:
-    refused = 0
-    for label, (filename, data) in broken_uploads().items():
-        try:
-            intake.from_bytes(data, filename=filename)
-        except intake.IntakeError as answer:
-            refused += 1
-            said = str(answer)
-            assert said, f"{label}: refused with an empty reason"
-            # Not a stack trace, not a codec's own words, not a byte offset into somebody's file.
-            assert "Traceback" not in said, f"{label}: {said}"
-            assert "codec" not in said, f"{label}: {said}"
-    # The control. A sweep where nothing is refused would pass whatever the reader did, and two of
-    # these files are whole ones that must still be read.
-    assert refused >= len(broken_uploads()) - 4, f"only {refused} of the shapes were refused"
-
-
-def test_the_upload_sweep_still_reads_the_files_that_are_whole() -> None:
-    # The other half of the control. A reader that refused everything would satisfy the two tests
-    # above and be useless.
-    whole = broken_uploads()
-    for label, expected in (("a whole photograph", "image"), ("a whole pdf", "pdf")):
-        filename, data = whole[label]
-        assert intake.from_bytes(data, filename=filename).kind == expected, label
+def test_the_upload_sweep_covers_both_answers() -> None:
+    # The control on the fixtures themselves. A sweep where every shape expects the same answer
+    # would pass on a reader that refused everything, or on one that read everything.
+    outcomes = {expected for _, _, expected in broken_uploads().values()}
+    assert outcomes == {"refused", "image", "pdf"}

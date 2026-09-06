@@ -303,6 +303,12 @@ def test_what_the_desk_is_told_matches_what_happened_to_the_store() -> None:
         reason = (case or {}).get("reason")
         where = f"{label}/consent={consent}/case={with_case}"
 
+        # A consented reading always has a case to report on, so `case` going missing is a
+        # regression rather than a shape to skip past. Without this, every assertion below is
+        # quietly stepped over the day one appears, and the sweep stays green.
+        if consent or with_case:
+            assert case is not None, f"{where}: the answer carried no case at all"
+
         if case is not None:
             # Ground truth first. What the desk says must agree with the store, in both
             # directions: never claim a case was kept that was not, never deny one that was.
