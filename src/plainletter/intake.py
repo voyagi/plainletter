@@ -107,9 +107,20 @@ def _from_text(data: bytes) -> LetterInput:
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError:
-        # Dutch office software still writes Windows-1252, and every byte is valid in it, so this
-        # cannot fail again.
-        text = data.decode("cp1252")
+        # Dutch office software still writes Windows-1252, so that is the second thing to try. It
+        # is NOT a codec that accepts anything, whatever the comment here used to say: five byte
+        # values are undefined in it (0x81, 0x8D, 0x8F, 0x90, 0x9D) and Python raises on all five.
+        # A .txt carrying one of them is not text that was mislabelled, it is a file that is not
+        # text, usually a photograph someone renamed. Saying so beats a page of question marks,
+        # and beats what happened before, which was a raw codec error reaching the volunteer with
+        # a byte offset in it.
+        try:
+            text = data.decode("cp1252")
+        except UnicodeDecodeError as unreadable:
+            raise IntakeError(
+                "that file is not readable as text. If it is a photograph or a scan, upload it "
+                "as the picture or the PDF it is rather than renamed to .txt."
+            ) from unreadable
     return from_text(text)
 
 

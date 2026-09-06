@@ -246,7 +246,7 @@ def _events(
         with within(span):
             case = _remembered(span, request, reading, today, memory, earlier)
         span.set_attribute("plainletter.remembered", bool(case and case["remembered"]))
-        yield _completed(request, letter, reading, today, case)
+        yield _completed(request, letter, reading, today, case, earlier)
     finally:
         span.end()
 
@@ -407,20 +407,22 @@ def _completed(
     reading: DeskReading,
     today: date,
     case: dict[str, Any] | None,
+    earlier: Recalled,
 ) -> dict[str, Any]:
     reference = reading.facts.reference.value if reading.facts.reference else "plainletter"
-    # The card carries the case id only when that number leads somewhere: the reading was kept
-    # today, or there were earlier ones under it.
+    # The card carries the case id only when that number leads somewhere, because the sentence
+    # printed beside it says to bring the card back and the desk will continue where you left off.
+    # It leads somewhere when the reading was kept today, or when there are earlier ones under it.
     #
-    # The third case is the one worth spelling out. When the store could not be reached, `earlier`
-    # is empty because nobody could look, not because the case is empty, and dropping the number
-    # would hand a returning visitor a card without the number they walked in with. So a number
-    # the visitor supplied survives an outage. A number this desk minted does not: on a desk that
-    # keeps nothing there is nothing behind it, and printing it would promise a visitor a case
-    # they do not have.
-    unreachable = bool(case and case.get("reason") in OUTAGES and request.case_id)
+    # The third case is the one worth spelling out, and it is narrower than it first looks. When
+    # the store could not be READ, `earlier` is empty because nobody could look, not because the
+    # case is empty, so dropping the number would hand a returning visitor a card without the
+    # number they walked in with over an outage. A failed WRITE is not that case: the read
+    # answered, the case really is empty, and today was not kept either, so printing the number
+    # would repeat a promise that nothing behind it can keep.
+    could_not_look = bool(request.case_id) and not earlier.reached
     case_id = (
-        case["id"] if case and (case["remembered"] or case["earlier"] or unreachable) else None
+        case["id"] if case and (case["remembered"] or case["earlier"] or could_not_look) else None
     )
     return {
         "stage": "done",
