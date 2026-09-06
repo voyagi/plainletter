@@ -1,3 +1,4 @@
+import itertools
 from datetime import date
 
 import pytest
@@ -245,3 +246,86 @@ def test_every_fact_under_a_numeral_is_really_inside_the_words_it_marks(
         for name, value in (("deadline", "15 september 2026"), ("total_amount", "EUR 174,00")):
             if name in key.facts:
                 assert value in key.text, f"{label}: {name} not in the key text it is filed under"
+
+
+# ---------------------------------------------------------------------------------------------
+# The swept property.
+#
+# Everything above picks its overlapping pairs. This generates them, because the merge that joins
+# two touching passages was wrong for one shape and right for every shape anyone had thought to
+# write down: two spans that merely overlap kept only the first one's end, so the second value
+# fell outside the wash while its name stayed filed under that numeral, and `unplaced` stayed
+# empty because the passage had been found.
+# ---------------------------------------------------------------------------------------------
+
+SWEPT_LETTER = (
+    "Betaal voor 15 september 2026 het bedrag van EUR 174,00 aan het CJIB te Leeuwarden.\n"
+)
+
+# Start and end points spread across the letter, so the pairs below cover nesting, partial
+# overlap, touching and disjoint without anyone having to enumerate those cases by hand.
+_CUTS = [0, 6, 12, 19, 29, 33, 40, 44, 55, 62, len(SWEPT_LETTER) - 1]
+_SWEPT_SPANS = [
+    (start, end)
+    for start, end in itertools.combinations(_CUTS, 2)
+    if 4 <= end - start <= 60 and len(SWEPT_LETTER[start:end].strip()) >= 4
+]
+
+
+def two_passages(first: tuple[int, int], second: tuple[int, int]) -> VerificationResult:
+    return VerificationResult(
+        grounded=tuple(
+            GroundedFact(
+                name=name,
+                display=SWEPT_LETTER[span[0] : span[1]].strip(),
+                span=SourceSpan(page=1, text=SWEPT_LETTER[span[0] : span[1]].strip()),
+            )
+            for name, span in (("one", first), ("two", second))
+        )
+    )
+
+
+def washed_text(marked) -> str:
+    return "".join(run.text for line in marked.lines for run in line.runs if run.mark is not None)
+
+
+def test_every_grounded_fact_is_marked_with_its_own_words_or_reported_unplaced() -> None:
+    # The key tells a volunteer that number four is where a fact came from, so the words under
+    # that numeral have to contain it. A fact that is neither marked nor listed in `unplaced` is
+    # the shape the old merge produced, and nothing reported it.
+    for first, second in itertools.combinations(_SWEPT_SPANS, 2):
+        result = two_passages(first, second)
+        marked = mark_letter(SWEPT_LETTER, LetterFacts(), result)
+
+        accounted = {name for key in marked.keys for name in key.facts} | set(marked.unplaced)
+        assert accounted == {"one", "two"}, f"{first}/{second}: accounted for {sorted(accounted)}"
+
+        washed = washed_text(marked)
+        for fact in result.grounded:
+            if fact.name in marked.unplaced:
+                continue
+            assert fact.display in washed, f"{first}/{second}: {fact.name} placed but not marked"
+            for key in marked.keys:
+                if fact.name in key.facts:
+                    assert fact.display in key.text, (
+                        f"{first}/{second}: {fact.name} filed under a key whose words lack it"
+                    )
+
+
+def test_the_mark_sweep_really_produces_overlapping_pairs_to_check() -> None:
+    # The control. A sweep whose pairs never touch would pass however the merge behaved, and the
+    # merge is the only thing this sweep exists for. Measured when written: 1,128 pairs, 856 of
+    # them overlapping, 231 of those a partial overlap rather than one nested inside the other.
+    pairs = list(itertools.combinations(_SWEPT_SPANS, 2))
+    overlapping = [
+        (first, second) for first, second in pairs if first[0] < second[1] and second[0] < first[1]
+    ]
+    partial = [
+        (first, second)
+        for first, second in overlapping
+        if not (first[0] <= second[0] and second[1] <= first[1])
+        and not (second[0] <= first[0] and first[1] <= second[1])
+    ]
+    assert len(pairs) > 1_000
+    assert len(overlapping) > 600, f"only {len(overlapping)} pairs overlap at all"
+    assert len(partial) > 150, f"only {len(partial)} pairs overlap without nesting"
