@@ -28,6 +28,17 @@
     "test": "uv run pytest -q && npm run test --workspace @plainletter/web",
     "verify:ship": "node verify-ship.mjs"
   },
+  "comment:overrides": [
+    "Both are transitive and their parents still allow the vulnerable version, so a plain install",
+    "will not move them. sharp comes from next, js-yaml from eslint by way of @eslint/eslintrc.",
+    "npm reads overrides only from the workspace ROOT, never from web/package.json, so they live",
+    "here. Drop each entry once the parent's own range has moved past it: keeping a pin after that",
+    "quietly holds the tree back."
+  ],
+  "overrides": {
+    "sharp": "^0.35.4",
+    "js-yaml": "^4.3.2"
+  },
   "devDependencies": {
     "jscpd": "^5.0.11"
   }
