@@ -68,9 +68,9 @@ explanations:
       Er kan ook een boete bij komen.
   - language: pl
     what_is_this: >-
-      UWV uważa, że wypłacono Panu za wysoki zasiłek i chce zwrotu. Z kwoty EUR 1.842,60 potrącono
-      już EUR 240,00, więc do zapłaty zostaje EUR 1.602,60.
-    by_when: Zapłać albo zadzwoń przed 28 augustus 2026.
+      UWV uważa, że wypłacił zbyt wysokie świadczenie WW i żąda zwrotu nadpłaty. Z kwoty
+      EUR 1.842,60 potrącono już EUR 240,00, więc pozostaje do zapłaty EUR 1.602,60.
+    by_when: Proszę zapłacić albo zadzwonić przed 28 augustus 2026.
     if_you_do_nothing: >-
       UWV potrąci tę kwotę z kolejnego zasiłku albo przekaże sprawę komornikowi. Może dojść też
       kara pieniężna.
@@ -80,22 +80,24 @@ steps:
       Bel UWV voor 28 augustus 2026 en zeg dat u de brief heeft gekregen, ook als u niet kunt
       betalen. Een gesprek stopt de verrekening niet, maar het legt uw situatie vast.
     visitor: >-
-      Zadzwoń do UWV przed 28 augustus 2026 i powiedz, że list dotarł, nawet jeśli nie masz z
-      czego zapłacić. Rozmowa nie wstrzymuje potrącenia, ale zapisuje Twoją sytuację.
+      Proszę zadzwonić do UWV przed 28 augustus 2026 i powiedzieć, że list został odebrany, nawet
+      jeśli nie ma możliwości zapłaty. Rozmowa nie wstrzymuje potrącenia, ale pozwala odnotować
+      sytuację.
     official_route: https://www.uwv.nl/particulieren/
   - order: 2
     dutch: >-
       Vraag een betalingsregeling aan als EUR 1.602,60 in een keer niet kan.
     visitor: >-
-      Poproś o rozłożenie na raty, jeśli EUR 1.602,60 naraz jest nie do udźwignięcia.
+      Proszę wystąpić o rozłożenie kwoty EUR 1.602,60 na raty, jeśli nie można jej zapłacić
+      jednorazowo.
     official_route: https://www.uwv.nl/particulieren/
   - order: 3
     dutch: >-
       Ga met deze brief naar Het Juridisch Loket voordat de zes weken voorbij zijn. Een
       terugvordering kan om redenen worden aangevochten die niet in de brief staan.
     visitor: >-
-      Zanieś ten list do Het Juridisch Loket, zanim minie sześć tygodni. Żądanie zwrotu można
-      podważyć z powodów, których w liście nie ma.
+      Proszę udać się z tym listem do Het Juridisch Loket, zanim minie sześć tygodni. Żądanie
+      zwrotu można zakwestionować także z powodów, których nie wskazano w liście.
     official_route: https://www.juridischloket.nl/
 draft:
   kind: objection
@@ -112,8 +114,8 @@ draft:
   visitor: |-
     Szanowni Państwo,
 
-    Składam odwołanie od decyzji o numerze WW 8830 4471. Zgłaszałem każdą zmianę pracy i dochodu i
-    nie rozumiem, na czym opiera się żądanie zwrotu. Proszę o przesłanie wyliczenia i o ponowne
-    rozpatrzenie decyzji.
+    Składam odwołanie od decyzji o numerze WW 8830 4471. Informacje o mojej pracy i dochodach
+    były przeze mnie na bieżąco zgłaszane i nie rozumiem, na czym opiera się żądanie zwrotu.
+    Proszę o przesłanie wyliczenia i o ponowne rozpatrzenie decyzji.
 
     Z poważaniem,

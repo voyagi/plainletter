@@ -83,7 +83,7 @@ steps:
       bezwaar bij de heffingsambtenaar en stuur uw parkeerbewijs mee.
     visitor: >-
       Araba orada değil miydi, ya da ödeme yaptınız mı? 12 augustus 2026 tarihinden itibaren altı
-      hafta içinde belediyeye itiraz edin ve park biletinizi ekleyin.
+      hafta içinde vergi tahakkuk yetkilisine itiraz edin ve park biletinizi ekleyin.
     official_route: https://www.rijksoverheid.nl/onderwerpen/bezwaar-en-beroep
   - order: 3
     dutch: Lukt betalen niet in een keer? Vraag de gemeente om een betalingsregeling.
@@ -101,9 +101,9 @@ draft:
 
     Met vriendelijke groet,
   visitor: |-
-    Sayın yetkili,
+    Sayın vergi tahakkuk yetkilisi,
 
-    NP 4471 2208 numaralı ek vergi kararına itiraz ediyorum. O gün park ücretini ödemiştim ve
-    ödeme belgesini ekte gönderiyorum. Kararın iptalini rica ediyorum.
+    NP 4471 2208 numaralı ek vergi tahakkukuna itiraz ediyorum. O gün park ücretini ödemiştim ve
+    ödeme belgesini ekte gönderiyorum. Ek vergi tahakkukunun iptalini rica ediyorum.
 
     Saygılarımla,
