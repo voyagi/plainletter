@@ -61,7 +61,7 @@ const HEADINGS: Record<string, Record<HeadingKey, string> | undefined> = {
   pl: {
     what_is_this: 'Co to za pismo',
     amounts: 'Kwoty',
-    if_you_do_nothing: 'Jeśli nic nie zrobisz',
+    if_you_do_nothing: 'Skutki braku działania',
     what_to_do: 'Co teraz zrobić',
     not_checked: 'Niesprawdzone',
   },
@@ -70,7 +70,7 @@ const HEADINGS: Record<string, Record<HeadingKey, string> | undefined> = {
     amounts: 'Tutarlar',
     if_you_do_nothing: 'Hiçbir şey yapmazsanız',
     what_to_do: 'Şimdi ne yapmalı',
-    not_checked: 'Doğrulanmadı',
+    not_checked: 'Kontrol edilmedi',
   },
   en: {
     what_is_this: 'What this is',

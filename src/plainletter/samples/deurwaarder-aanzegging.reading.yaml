@@ -70,10 +70,10 @@ explanations:
   - language: pl
     what_is_this: >-
       Komornik ściąga kwotę, o której sąd już zdecydował: EUR 612,40 plus EUR 188,95 odsetek i
-      kosztów, razem EUR 801,35. To nie jest pierwszy rachunek, to koniec sprawy, która już się
-      toczyła.
+      kosztów, razem EUR 801,35. To nie jest pierwszy rachunek, to koniec sprawy, która została
+      już rozstrzygnięta.
     by_when: >-
-      Termin w liście to 14 augustus 2026 i już minął. Zadzwoń jeszcze dzisiaj.
+      Data podana w liście to 14 augustus 2026 i już minęła. Proszę zadzwonić jeszcze dzisiaj.
     if_you_do_nothing: >-
       Komornik zajmie wynagrodzenie, zasiłek albo konto bankowe, a koszty zajęcia dojdą do kwoty.
 steps:
@@ -82,23 +82,24 @@ steps:
       Bel vandaag het kantoor met dossiernummer 26 44 7180 en zeg dat u een regeling wilt. Zolang
       er nog geen beslag ligt, kan dat volgens deze brief.
     visitor: >-
-      Zadzwoń dzisiaj do kancelarii, podaj numer sprawy 26 44 7180 i poproś o rozłożenie na raty.
-      Dopóki nie ma zajęcia, list mówi, że to możliwe.
+      Proszę zadzwonić dzisiaj do kancelarii, podać numer sprawy 26 44 7180 i poprosić
+      o rozłożenie należności na raty. Zgodnie z tym listem jest to możliwe, dopóki nie doszło do
+      zajęcia.
     official_route: https://www.juridischloket.nl/
   - order: 2
     dutch: >-
       Ga vandaag of morgen naar Het Juridisch Loket, 0800 8020, en neem deze brief mee. Bij een
       deurwaarder tellen dagen.
     visitor: >-
-      Idź dziś albo jutro do Het Juridisch Loket, 0800 8020, i weź ten list ze sobą. Przy
-      komorniku liczą się dni.
+      Proszę dziś albo jutro udać się do Het Juridisch Loket, 0800 8020, i zabrać ze sobą ten
+      list. W sprawach z komornikiem liczy się każdy dzień.
     official_route: https://www.juridischloket.nl/
   - order: 3
     dutch: >-
       Meld u bij de schuldhulpverlening van uw gemeente. Dat is gratis en het kan een beslag nog
       afwenden.
     visitor: >-
-      Zgłoś się do gminnego doradcy do spraw długów. To bezpłatne i może jeszcze zatrzymać
-      zajęcie.
+      Proszę zgłosić się do gminnego doradcy do spraw długów. To bezpłatne i może jeszcze
+      zatrzymać zajęcie.
     official_route: https://www.juridischloket.nl/
 draft: null

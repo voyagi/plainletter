@@ -91,7 +91,7 @@ steps:
       Bent u het er niet mee eens? Stel beroep in bij de officier van justitie, binnen zes weken na
       de datum van de beschikking.
     visitor: >-
-      Не згодні? Подайте заперечення прокурору протягом шести тижнів від дати рішення.
+      Не згодні? Оскаржіть рішення у прокурора протягом шести тижнів від дати рішення.
     official_route: https://www.om.nl/onderwerpen/verkeer
 draft:
   kind: objection

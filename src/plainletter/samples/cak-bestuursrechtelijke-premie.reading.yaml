@@ -68,29 +68,29 @@ explanations:
       achterstand bij de verzekeraar blijft er los van staan en wordt hier niet kleiner van.
   - language: pl
     what_is_this: >-
-      Ubezpieczyciel zdrowotny zgłosił Pana do CAK, ponieważ składki długo nie były płacone. Od
-      teraz z dochodu potrącane jest EUR 187,50 miesięcznie zamiast zwykłych EUR 149,35. To nie
-      jest kara i stary dług nie zostaje przez to spłacony.
-    by_when: Odpowiedz przed 17 september 2026.
+      Ubezpieczyciel zdrowotny przekazał do CAK informację o nieopłaconej składce. Od teraz
+      z dochodu potrącane jest EUR 187,50 miesięcznie zamiast zwykłych EUR 149,35. To nie jest
+      kara i nie oznacza spłaty zaległego długu.
+    by_when: Proszę odpowiedzieć przed 17 september 2026.
     if_you_do_nothing: >-
-      Pracodawca albo instytucja wypłacająca świadczenie potrąci wyższą kwotę z Pana dochodu. Dług
-      u ubezpieczyciela zostaje osobno i przez to nie maleje.
+      Pracodawca albo instytucja wypłacająca świadczenie potrąci wyższą kwotę z Państwa dochodu.
+      Dług u ubezpieczyciela stanowi osobną kwestię i przez to nie maleje.
 steps:
   - order: 1
     dutch: >-
       Heeft u al een betalingsregeling met uw zorgverzekeraar? Meld dat bij het CAK met
       zaaknummer CAK 3390 7742, dan stopt de aanmelding volgens deze brief.
     visitor: >-
-      Czy ma Pan już rozłożenie długu na raty u ubezpieczyciela? Proszę zgłosić to do CAK, podając
-      numer sprawy CAK 3390 7742. Według tego listu zgłoszenie wtedy się kończy.
+      Czy ma już Pan/Pani ustalony plan spłaty u ubezpieczyciela? Proszę zgłosić to do CAK,
+      podając numer sprawy CAK 3390 7742. Według tego listu zgłoszenie zostanie wtedy zakończone.
     official_route: https://www.rijksoverheid.nl/onderwerpen/schulden
   - order: 2
     dutch: >-
       Heeft u die regeling nog niet? Bel dan eerst uw zorgverzekeraar en maak er een, en ga
       daarna naar de schuldhulpverlening van uw gemeente.
     visitor: >-
-      Jeszcze nie ma Pan takiej umowy? Proszę najpierw zadzwonić do ubezpieczyciela i ją ustalić,
-      a potem pójść do gminnego doradcy do spraw długów.
+      Jeszcze nie ma Pan/Pani takiej umowy? Proszę najpierw zadzwonić do ubezpieczyciela i ją
+      ustalić, a potem pójść do gminnego doradcy do spraw długów.
     official_route: https://www.rijksoverheid.nl/onderwerpen/schulden
   - order: 3
     dutch: >-
@@ -98,7 +98,7 @@ steps:
       worden aangevochten en dat is te ingewikkeld om alleen te doen.
     visitor: >-
       Proszę zanieść ten list do Het Juridisch Loket przed 17 september 2026. Zgłoszenie można
-      podważyć, a to zbyt skomplikowane, by robić to samemu.
+      podważyć, a to zbyt skomplikowane, by robić to samodzielnie.
     official_route: https://www.juridischloket.nl/
 draft:
   kind: reply
@@ -115,8 +115,8 @@ draft:
   visitor: |-
     Szanowni Państwo,
 
-    Odpowiadam na zgłoszenie o numerze sprawy CAK 3390 7742. Uzgodniłem z moim ubezpieczycielem
-    zdrowotnym spłatę w ratach i wywiązuję się z niej. Proszę o zakończenie zgłoszenia, w
-    załączeniu przesyłam potwierdzenie umowy.
+    Odpowiadam na zgłoszenie o numerze sprawy CAK 3390 7742. Mam z moim ubezpieczycielem
+    zdrowotnym uzgodnioną spłatę w ratach i wywiązuję się z niej. Proszę o zakończenie zgłoszenia,
+    w załączeniu przesyłam potwierdzenie umowy.
 
     Z poważaniem,
