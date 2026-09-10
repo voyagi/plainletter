@@ -17,6 +17,47 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Protocol, runtime_checkable
 
+FORMS = frozenset({"zero", "one", "two", "few", "many", "other"})
+"""The names a language may give the forms of a counted sentence, from the Unicode plural rules."""
+
+
+@dataclass(frozen=True)
+class CountedWords:
+    """One sentence in every form its language needs for a count.
+
+    Languages disagree both about how many forms there are and about which count takes which one.
+    English and Dutch have two and put only exactly one in the singular, so a count of zero takes
+    the same form as a count of nine. Polish has four. Turkish has one. So the forms are named
+    rather than numbered, and the locale decides which name a count reaches, in `plural_form`.
+
+    `other` is the only form that must be filled. A language that needs no more fills that alone,
+    and a form left out falls back to it, so a locale can never crash on a count it did not think
+    about.
+    """
+
+    other: str
+    zero: str | None = None
+    one: str | None = None
+    two: str | None = None
+    few: str | None = None
+    many: str | None = None
+
+    def form(self, name: str) -> str:
+        """The named form, or `other` where this language does not fill that one."""
+        if name not in FORMS:
+            raise ValueError(f"{name!r} is not one of the plural forms: {sorted(FORMS)}")
+        filled: str | None = getattr(self, name)
+        return filled if filled is not None else self.other
+
+
+def counted(phrase: CountedWords, days: int) -> str:
+    """A counted sentence in the form the country's language gives this count.
+
+    Every caller goes through here rather than formatting a template itself, because picking the
+    form is a fact about a language and this is the one place allowed to ask the locale for it.
+    """
+    return phrase.form(active().plural_form(days)).format(days=days)
+
 
 @dataclass(frozen=True)
 class DeskWords:
@@ -48,10 +89,10 @@ class DeskWords:
     deadline_lead: str
     """Template with `date`."""
     deadline_missing: str
-    days_left: str
-    """Template with `days`."""
-    days_overdue: str
-    """Template with `days`."""
+    days_left: CountedWords
+    """Counted sentence with `days`, for a deadline still ahead."""
+    days_overdue: CountedWords
+    """Counted sentence with `days`, for one already passed."""
     post_by: str
     """Template with `date`, printed after the days line, so it starts with its own space."""
 
@@ -74,8 +115,8 @@ class DeskWords:
 
     reminder_deadline: str
     """Template with `date`, the first sentence of the calendar entry."""
-    reminder_alarm: str
-    """Template with `days`, what the alarm says when it fires."""
+    reminder_alarm: CountedWords
+    """Counted sentence with `days`, what the alarm says when it fires."""
 
     unknown_letter_type: str
     unknown_sender_name: str
@@ -102,6 +143,9 @@ class Locale(Protocol):
     @property
     def reminder_region(self) -> str:
         """The region tag in the calendar file's product id."""
+
+    def plural_form(self, count: int) -> str:
+        """Which form of a counted sentence this count takes, named as in `CountedWords`."""
 
     def month_words(self) -> dict[str, int]:
         """Month names and abbreviations as the country's letters print them."""

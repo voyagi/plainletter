@@ -17,7 +17,7 @@ from html import escape
 
 from icalendar import Alarm, Calendar, Event
 
-from .locales import DeskWords, active
+from .locales import DeskWords, active, counted
 from .redact import redact
 from .schemas import DeskReading, Explanation, Urgency
 
@@ -184,7 +184,7 @@ def reminder_ics(reading: DeskReading, *, uid: str) -> str:
     alarm.add("action", "DISPLAY")
     alarm.add(
         "description",
-        f"{redact(reading.sender_name)}: {words.reminder_alarm.format(days=REMINDER_LEAD_DAYS)}",
+        f"{redact(reading.sender_name)}: {counted(words.reminder_alarm, REMINDER_LEAD_DAYS)}",
     )
     alarm.add("trigger", timedelta(days=-REMINDER_LEAD_DAYS))
     event.add_component(alarm)
@@ -238,9 +238,9 @@ def _deadline_block(reading: DeskReading, words: DeskWords) -> str:
     locale = active()
     word = _urgency_word(words, view.urgency)
     days = (
-        words.days_left.format(days=view.days_left)
+        counted(words.days_left, view.days_left)
         if view.days_left >= 0
-        else words.days_overdue.format(days=abs(view.days_left))
+        else counted(words.days_overdue, abs(view.days_left))
     )
     post_by = (
         words.post_by.format(date=locale.format_date(view.post_by))

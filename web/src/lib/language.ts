@@ -90,6 +90,18 @@ export function dutchHeading(key: HeadingKey): string {
   return DUTCH_HEADINGS[key];
 }
 
+/**
+ * The Dutch noun for a number of days: singular at exactly one, plural everywhere else, zero
+ * included.
+ *
+ * Kept in step with days_left, days_overdue and reminder_alarm in src/plainletter/locales/nl.py,
+ * which rule the printed card. The screen and the paper are read side by side at the counter, over
+ * the same number, so the two cannot be allowed to word it differently.
+ */
+export function dutchDays(count: number): string {
+  return Math.abs(count) === 1 ? 'dag' : 'dagen';
+}
+
 export function languageFor(code: string): Visitor {
   if (code === DUTCH.code) return DUTCH;
   return (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { dutchDays } from '@/lib/language';
 import type { DeadlineView, Urgency } from '@/lib/reading';
 
 // One line, in mark ink at full strength: the date, the days left, the last day a posted reply
@@ -38,7 +39,15 @@ export function Deadline({ deadline }: { deadline: DeadlineView | null }) {
     <div className="mt-6 flex flex-wrap items-baseline gap-x-5 gap-y-2 border-t-2 border-b border-t-mark border-b-rule pt-3.5 pb-4">
       <span className="text-[23px] font-bold text-mark">{deadline.on_written}</span>
       <span className="text-[23px] font-bold text-mark">
-        {late ? <><Counting to={days} /> dagen te laat</> : <>nog <Counting to={days} /> dagen</>}
+        {late ? (
+          <>
+            <Counting to={days} /> {dutchDays(days)} te laat
+          </>
+        ) : (
+          <>
+            nog <Counting to={days} /> {dutchDays(days)}
+          </>
+        )}
       </span>
       {deadline.post_by_written ? (
         <span className="text-[15px] text-ink-2">
@@ -66,7 +75,10 @@ function Counting({ to }: { to: number }) {
 
   useEffect(() => {
     const target = node.current;
-    if (!target || to === 0) return;
+    // Nothing to count to at one or zero, and counting there would be worse than still: the first
+    // frame writes a nought under a word that has already been put in the singular for the number
+    // beside it, so the line reads wrong for as long as the count runs.
+    if (!target || to <= 1) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const steps = Math.min(to, 20);
