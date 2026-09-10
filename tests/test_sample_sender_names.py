@@ -36,9 +36,14 @@ def paired_fields(name: str) -> Iterator[tuple[str, str, str]]:
     dutch = by_language.get("nl")
     visitor = by_language.get(reading.visitor_language)
 
-    if dutch is not None and visitor is not None:
-        for field in ("what_is_this", "by_when", "if_you_do_nothing"):
-            yield field, str(getattr(dutch, field)), str(getattr(visitor, field))
+    # Assert rather than skip. A sample missing either explanation would otherwise drop three
+    # fields out of the comparison silently, and the check would still report green over less
+    # than it claims to cover, which is the failure this test already had once.
+    assert dutch is not None, f"{name} has no Dutch explanation"
+    assert visitor is not None, f"{name} has no {reading.visitor_language} explanation"
+
+    for field in ("what_is_this", "by_when", "if_you_do_nothing"):
+        yield field, str(getattr(dutch, field)), str(getattr(visitor, field))
 
     for step in reading.steps:
         yield f"step {step.order}", str(step.dutch), str(step.visitor)
