@@ -20,7 +20,7 @@ from datetime import date, timedelta
 
 from dateutil.easter import EASTER_WESTERN, easter
 
-from . import DeskWords
+from . import CountedWords, DeskWords
 
 MONTHS: dict[str, int] = {
     "januari": 1,
@@ -102,8 +102,8 @@ WORDS = DeskWords(
     reference_missing="Geen kenmerk in de brief",
     deadline_lead="Uiterste dag: {date}",
     deadline_missing="Deze brief noemt geen uiterste datum.",
-    days_left="Nog {days} dagen.",
-    days_overdue="{days} dagen te laat.",
+    days_left=CountedWords(one="Nog {days} dag.", other="Nog {days} dagen."),
+    days_overdue=CountedWords(one="{days} dag te laat.", other="{days} dagen te laat."),
     post_by=" Post uw brief uiterlijk {date}.",
     urgency_overdue="Te laat",
     urgency_due_soon="Bijna te laat",
@@ -119,7 +119,7 @@ WORDS = DeskWords(
         "tegen uw eigen brief. Laat een medewerker meekijken voordat u iets verstuurt."
     ),
     reminder_deadline="Uiterste dag: {date}.",
-    reminder_alarm="nog {days} dagen",
+    reminder_alarm=CountedWords(one="nog {days} dag", other="nog {days} dagen"),
     unknown_letter_type="Onbekende brief",
     unknown_sender_name="Onbekende afzender",
     referral_last_resort_name="Het Juridisch Loket",
@@ -139,6 +139,14 @@ class DutchLocale:
     code = "nl"
     words = WORDS
     reminder_region = "NL"
+
+    def plural_form(self, count: int) -> str:
+        """Dutch has two forms and only exactly one takes the singular.
+
+        Zero takes the plural, which is where a rule written from English intuition usually goes
+        wrong the other way. The count is taken absolute so a day counted backwards reads the same.
+        """
+        return "one" if abs(count) == 1 else "other"
 
     def month_words(self) -> dict[str, int]:
         return {**MONTHS, **MONTH_ABBREVIATIONS}

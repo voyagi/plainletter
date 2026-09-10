@@ -5,6 +5,7 @@ import { Numeral } from '@/components/Numeral';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Wordmark } from '@/components/Wordmark';
 import exported from '@/data/sample-reading.json';
+import { dutchDays } from '@/lib/language';
 import { keyFor, type DeskReading } from '@/lib/reading';
 
 // The page is a marked-up letter. It explains the product by doing the product, on one real
@@ -101,7 +102,7 @@ export default function Landing() {
             {deadline ? (
               <p className="m-0 text-[16px]">
                 <b>
-                  {deadline.on_written}, nog {deadline.days_left} dagen.
+                  {deadline.on_written}, nog {deadline.days_left} {dutchDays(deadline.days_left)}.
                   {deadline.post_by_written ? ` Post uiterlijk ${deadline.post_by_written}.` : ''}
                 </b>
               </p>
