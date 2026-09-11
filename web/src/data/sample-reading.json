@@ -578,11 +578,11 @@
       }
     ],
     "draft": {
-      "kind": "objection",
+      "kind": "appeal",
       "addressed_to": "Officier van justitie",
       "send_before": null,
-      "dutch": "Geachte officier van justitie,\n\nIk maak bezwaar tegen beschikking 8194 5523 7761. Mijn auto stond die dag niet op de Boezemweg.\nIk verzoek u de sanctie in te trekken.\n\nMet vriendelijke groet,",
-      "visitor": "Шановний пане прокуроре,\n\nПодаю заперечення проти рішення 8194 5523 7761. Мого автомобіля того дня не було на вулиці\nBoezemweg. Прошу скасувати штраф.\n\nЗ повагою,"
+      "dutch": "Geachte officier van justitie,\n\nIk stel beroep in tegen beschikking 8194 5523 7761. Mijn auto stond die dag niet op de\nBoezemweg. Ik verzoek u de sanctie in te trekken.\n\nMet vriendelijke groet,",
+      "visitor": "Шановний(а) прокуроре,\n\nЦим оскаржую рішення 8194 5523 7761. Мого автомобіля того дня не було на вулиці\nBoezemweg. Прошу скасувати штраф.\n\nЗ повагою,"
     },
     "handoff": {
       "required": false,

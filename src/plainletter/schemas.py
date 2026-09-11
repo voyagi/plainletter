@@ -261,7 +261,7 @@ class DraftLetter(Frozen):
     note that a translation would go here is not a letter, and the length floor refuses it.
     """
 
-    kind: Literal["objection", "payment_plan", "reply"]
+    kind: Literal["objection", "appeal", "payment_plan", "reply"]
     addressed_to: Prose = Field(
         min_length=1, description="the body the letter goes to, as the official routes name it"
     )

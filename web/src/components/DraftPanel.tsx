@@ -10,6 +10,7 @@ import type { DraftLetter } from '@/lib/reading';
 
 const KIND_NL: Record<DraftLetter['kind'], string> = {
   objection: 'Concept bezwaar',
+  appeal: 'Concept beroep',
   payment_plan: 'Concept verzoek betalingsregeling',
   reply: 'Concept antwoord',
 };

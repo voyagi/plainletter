@@ -76,7 +76,7 @@ export type ActionStep = {
 };
 
 export type DraftLetter = {
-  kind: 'objection' | 'payment_plan' | 'reply';
+  kind: 'objection' | 'appeal' | 'payment_plan' | 'reply';
   addressed_to: string;
   send_before: string | null;
   dutch: string;
