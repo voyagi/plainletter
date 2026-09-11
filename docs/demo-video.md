@@ -23,8 +23,8 @@ letter shipped in this repository, so nothing real is shown.
 
 **On screen:** the photographed letter, full frame, scrolling slowly. No interface yet.
 
-> Every country sends its residents letters they cannot read. This one demands two hundred and
-> thirty one euro, gives a deadline, and says what happens if that deadline passes. If you moved
+> Every country sends its residents letters they cannot read. This one demands one hundred and
+> seventy four euro, gives a deadline, and says what happens if that deadline passes. If you moved
 > here last year, or you are eighty, or you read the language slowly, this envelope is a closed
 > door with a clock running behind it.
 
@@ -67,7 +67,7 @@ away while it works. Let the stages arrive.
 **On screen:** the steps, then the draft.
 
 > The steps carry official routes, and each route was fetched from a knowledge base through a tool
-> call rather than remembered by a model. Then the objection letter itself, in both languages, so
+> call rather than remembered by a model. Then the appeal letter itself, in both languages, so
 > the visitor knows what they are signing.
 
 ### 4. What the visitor takes home, 2:15 to 2:40
