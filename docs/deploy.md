@@ -188,7 +188,7 @@ The upload route meters each caller by the last hop of `X-Forwarded-For`, and th
 trustworthy when a proxy really wrote it. Left unset, every caller is counted as one, so the desk
 still works and the ceiling is simply shared. The ceilings themselves are in
 `web/src/server/limits.ts`; the agent's own daily ceiling is `PLAINLETTER_MAX_READINGS_PER_DAY`
-(default 200, zero closes the service), and neither of them replaces the account budget alarm.
+(default 50, zero closes the service), and neither of them replaces the account budget alarm.
 
 ## Check the three things this deployment promises
 

@@ -71,7 +71,7 @@ explanations:
       ödenmemiş. Park vergisi EUR 4,50, masraflar EUR 78,50, toplam EUR 83,00.
     by_when: 4 september 2026 tarihinden önce ödeyin.
     if_you_do_nothing: >-
-      Hatırlatma masrafları eklenir ve belediye alacağı bir icra memuruna devredebilir.
+      İhtarname masrafları eklenir ve belediye alacağı bir icra memuruna devredebilir.
 steps:
   - order: 1
     dutch: Betaal EUR 83,00 met aanslagnummer NP 4471 2208.

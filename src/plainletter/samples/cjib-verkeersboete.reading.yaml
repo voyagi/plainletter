@@ -94,20 +94,20 @@ steps:
       Не згодні? Оскаржіть рішення до прокурора протягом шести тижнів від дати рішення.
     official_route: https://www.om.nl/onderwerpen/verkeer
 draft:
-  kind: objection
+  kind: appeal
   addressed_to: Officier van justitie
   send_before: null
   dutch: |-
     Geachte officier van justitie,
 
-    Ik maak bezwaar tegen beschikking 8194 5523 7761. Mijn auto stond die dag niet op de Boezemweg.
-    Ik verzoek u de sanctie in te trekken.
+    Ik stel beroep in tegen beschikking 8194 5523 7761. Mijn auto stond die dag niet op de
+    Boezemweg. Ik verzoek u de sanctie in te trekken.
 
     Met vriendelijke groet,
   visitor: |-
-    Шановний пане прокуроре,
+    Шановний(а) прокуроре,
 
-    Подаю заперечення проти рішення 8194 5523 7761. Мого автомобіля того дня не було на вулиці
+    Цим оскаржую рішення 8194 5523 7761. Мого автомобіля того дня не було на вулиці
     Boezemweg. Прошу скасувати штраф.
 
     З повагою,

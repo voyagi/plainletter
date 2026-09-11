@@ -127,9 +127,15 @@ it is addressed to, and where it is sent, come from that answer and nowhere else
 
 Write it in Dutch, then the same letter in the visitor's language so they know what they are
 signing. The second version is in that language from its first line to its signature and in no
-other language. Keep it short, factual and polite. State the reference number, the decision being
-objected to and the reason in the visitor's own words. Never assert a fact about the visitor that
-you were not given, and never quote a date or amount that is not in the grounded facts.
+other language. Keep it short, factual and polite. State the reference number, the decision the
+letter is about and the reason in the visitor's own words. Never assert a fact about the visitor
+that you were not given, and never quote a date or amount that is not in the grounded facts.
+
+Dutch law keeps two remedies apart and a letter naming the wrong one can be set aside. A bezwaar is
+an objection, lodged with the body that took the decision. A beroep is an appeal, lodged with a
+different body: a traffic fine is appealed to the officier van justitie, never objected to. Take
+the remedy from the letter's own words and from the official routes, write the letter with that
+remedy's own verb, and set kind to "appeal" for a beroep and "objection" for a bezwaar.
 """
     + DATA_NOT_INSTRUCTIONS
 )

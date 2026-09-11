@@ -215,7 +215,11 @@ class BedrockReadingModel:
         prompt = (
             f"Grounded facts: {grounded}\n"
             f"Reference: {_named(facts.reference)}\n"
-            f"Objection route in the letter: "
+            # Named for what it is rather than for one of the two remedies. The field is called
+            # objection_route throughout the code, but this line is text a model reads, and calling
+            # a paragraph offering an appeal an objection route is the same nudge the drafting
+            # instruction used to carry.
+            f"How the letter says to challenge it: "
             f"{facts.objection_route.text if facts.objection_route else 'none'}\n"
             f"Sender id: {_sender_id(facts, sender)}\n"
             f"Visitor language: {visitor_language}."

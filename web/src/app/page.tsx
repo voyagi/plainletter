@@ -97,7 +97,7 @@ export default function Landing() {
             <p className="m-0 mb-2.5 text-[16px] text-ink-2">
               Mark <Mark name="deadline" /> is the only date the letter gives. The days left are
               worked out on a real calendar, Dutch public holidays included, along with the last day
-              a posted objection still arrives in time.
+              a posted appeal still arrives in time.
             </p>
             {deadline ? (
               <p className="m-0 text-[16px]">

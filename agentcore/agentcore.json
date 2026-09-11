@@ -31,7 +31,7 @@
         },
         {
           "name": "PLAINLETTER_MAX_READINGS_PER_DAY",
-          "value": "200"
+          "value": "50"
         }
       ],
       "lifecycleConfiguration": {
