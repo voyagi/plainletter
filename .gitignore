@@ -28,8 +28,5 @@ next-env.d.ts
 .DS_Store
 Thumbs.db
 
-# local planning notes
-.planning/
-
 # demo output
 out/
