@@ -71,6 +71,11 @@ def test_the_drafting_instruction_does_not_lean_towards_an_objection() -> None:
         "the instruction still asks for the decision being objected to, whatever the letter says"
     )
     assert APPEAL in instruction and OBJECTION in instruction, "it names only one of the remedies"
-    assert '"appeal"' in instruction and '"objection"' in instruction, (
-        "the instruction does not say which kind to set for which remedy"
+    # Each remedy against the kind it takes, rather than the four words in any arrangement: a
+    # mapping written the wrong way round names all four and would otherwise read as correct.
+    assert f'kind to "appeal" for a {APPEAL}' in instruction, (
+        "the instruction does not send a beroep to the appeal kind"
+    )
+    assert f'"objection" for a {OBJECTION}' in instruction, (
+        "the instruction does not send a bezwaar to the objection kind"
     )
