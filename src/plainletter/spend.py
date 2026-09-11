@@ -39,7 +39,12 @@ TRANSCRIPTION_TOKENS_PER_PAGE = 2000
 # is refused rather than printed.
 MAX_TRANSCRIPTION_TOKENS = 16000
 
-DEFAULT_READINGS_PER_DAY = 200
+# A reading costs about eleven US cents in model charges, measured over a day that carried exactly
+# one. At fifty a day the worst case is a few dollars, which crosses the account's early budget
+# alert inside a single abusive day rather than after the month's money is already gone. It cannot
+# go much lower: one visitor may already ask for twenty-five readings a day, so a ceiling of
+# twenty-five would let a single tester starve the whole desk.
+DEFAULT_READINGS_PER_DAY = 50
 
 
 def transcription_tokens(pages: int) -> int:
