@@ -24,7 +24,7 @@ letter shipped in this repository, so nothing real is shown.
 **On screen:** the photographed letter, full frame, scrolling slowly. No interface yet.
 
 > Every country sends its residents letters they cannot read. This one demands one hundred and
-> seventy four euro, gives a deadline, and says what happens if that deadline passes. If you moved
+> seventy-four euro, gives a deadline, and says what happens if that deadline passes. If you moved
 > here last year, or you are eighty, or you read the language slowly, this envelope is a closed
 > door with a clock running behind it.
 
