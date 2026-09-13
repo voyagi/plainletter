@@ -26,6 +26,10 @@ it leaks anywhere else.
 Built with the [Strands Agents SDK](https://strandsagents.com/) on Amazon Bedrock, deployed on
 Amazon Bedrock AgentCore in the EU (Frankfurt).
 
+**Try it without installing anything:** the desk console runs at
+[plainletter-web.vercel.app/desk](https://plainletter-web.vercel.app/desk), against the deployed
+agent. Pick one of the stored sample letters, or upload a synthetic one.
+
 ## How it works
 
 <picture>
