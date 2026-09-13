@@ -5,6 +5,11 @@ import { admit, withMarker } from '@/server/caller';
 // the deployment phase signs these requests, and the signing needs Node's crypto.
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+// A photographed letter is transcribed and then read in separate model turns, and one crooked,
+// folded page took 65 seconds end to end through the hosted console. Left to the platform default,
+// a slower page could be cut off mid-reading with a stage already on the screen. 300 is the Hobby
+// ceiling, so this raises the limit as far as the plan allows rather than to a guess.
+export const maxDuration = 300;
 
 // A letter is a page or a few. Anything past this is refused here as well as in the agent, because
 // a browser should not spend a minute uploading something that will be rejected on arrival.
