@@ -111,7 +111,7 @@ So the data procedures are these, and they are all of them:
 | What is seen | Most likely | First thing to check |
 | --- | --- | --- |
 | Every reading fails at once, console and terminal alike | The model, the region, or model access on the account | The startup probe's three states, above. Then the Bedrock console for model access |
-| Console fails, `agentcore invoke` works | The console's credentials or its runtime ARN | `PLAINLETTER_AGENT_RUNTIME_ARN` matches `agentcore status`, and the host's IAM user may call `bedrock-agentcore:InvokeAgentRuntime` on that exact ARN |
+| Console fails, `agentcore invoke` works | The console's credentials or its runtime ARN | `PLAINLETTER_AGENT_RUNTIME_ARN` matches `agentcore status`, and the host's IAM user may call `bedrock-agentcore:InvokeAgentRuntime` on that ARN and on `<ARN>/*`. A 503 naming `runtime-endpoint/DEFAULT` means the policy covers the runtime but not its endpoint |
 | Readings refused before anything happens | The daily ceiling was reached, or is set to zero | `PLAINLETTER_MAX_READINGS_PER_DAY` on the runtime |
 | One caller blocked, others fine | The console's per-caller meter | `web/src/server/limits.ts`. On a proxied host `PLAINLETTER_TRUST_PROXY_HEADER` must be true, or every caller counts as one and the whole desk shares one allowance |
 | Readings work, nothing appears in CloudWatch | Transaction Search was never switched on | The one-time account switch in `docs/deploy.md`, "Before the first deploy", step 5 |

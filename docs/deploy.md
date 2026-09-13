@@ -135,9 +135,29 @@ PLAINLETTER_AGENT_RUNTIME_ARN=arn:aws:bedrock-agentcore:eu-central-1:12345678901
 
 With that set, every reading is a signed `InvokeAgentRuntime` call from the host's AWS
 credentials. The host needs credentials that may call `bedrock-agentcore:InvokeAgentRuntime` on
-that ARN and nothing else: on Vercel, add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` for an
-IAM user or role with exactly that permission as environment variables of the project. The browser
-never sees any of it.
+this one runtime and nothing else. On Vercel, add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+for an IAM user or role with exactly that permission as environment variables of the project. The
+browser never sees any of it.
+
+The permission has to cover both the runtime and the endpoints inside it. The call is addressed to
+the runtime's default endpoint, `<runtime ARN>/runtime-endpoint/DEFAULT`, so a policy naming only
+the bare runtime ARN is refused as not authorized, and the console answers 503. List both:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "bedrock-agentcore:InvokeAgentRuntime",
+      "Resource": [
+        "arn:aws:bedrock-agentcore:eu-central-1:123456789012:runtime/plainletter-xxxxxxxxxx",
+        "arn:aws:bedrock-agentcore:eu-central-1:123456789012:runtime/plainletter-xxxxxxxxxx/*"
+      ]
+    }
+  ]
+}
+```
 
 Without the variable, the console posts to `PLAINLETTER_AGENT_ENDPOINT` (default
 `http://127.0.0.1:8080`), which is the same agent started locally with `uv run plainletter-serve`.
