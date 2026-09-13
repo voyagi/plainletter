@@ -31,6 +31,12 @@ import { fileURLToPath } from 'node:url';
 const FORBIDDEN_PATHS = [
   '.claude/', '.planning/', '.crash-buffers/', '.codex/', '.agents/',
   'CLAUDE.md', 'AGENTS.md',
+  // The build-lane marker. It is the ONE entry here that must keep EXISTING on disk, because local
+  // tooling reads it. Exact-path semantics, so only the ROOT copy is a finding and a fixtures tree
+  // holding nested copies stays green. Untracking it is the remedy, and the ignore goes in git's
+  // own exclude file rather than .gitignore, because a tracked .gitignore naming it republishes the
+  // name in the repo being cleaned.
+  '.build-lane',
   'FINAL-REPORT.md', 'ATTACK-REPORT.md', 'REFINE-REPORT.md', 'FORENSICS-REPORT.md',
   'VERIFICATION.md',        // ROOT only; a nested one is judged by CONTENT below
   'HUMAN-TODO.md',          // carries absolute machine paths (home-path leak)
@@ -403,10 +409,44 @@ function report(res) {
   // EACH REMEDY PRINTS ONLY WHEN ITS OWN FINDING TYPE IS PRESENT. The untrack instruction used to
   // print unconditionally, so a run whose only findings were pass-numbered directories opened with
   // "untrack them" and reached the caveat five lines later, if at all.
-  if (res.findings.some((f) => /^forbidden path/.test(f.why))) {
+  //
+  // THE MARKER IS EXCLUDED FROM THIS BLOCK. On a marker-only run the generic "then add to
+  // .gitignore" would print FIRST and be contradicted a paragraph later, so the operator acts on
+  // the wrong instruction. A run that ALSO has an ordinary path hit still prints both, because
+  // there both instructions are correct and each has its own finding.
+  if (res.findings.some((f) => /^forbidden path/.test(f.why) && !/^forbidden path \(\.build-lane\)/.test(f.why))) {
     console.error('');
     console.error('PATH hits are artifacts: untrack them (they stay on disk):');
     console.error('  git rm -r --cached <path>   then add to .gitignore');
+  }
+  // THE MARKER IS THE ONE PATH HIT WHOSE GENERIC REMEDY IS WRONG, so it replaces it. Following the
+  // generic line would write `.build-lane` into a TRACKED .gitignore, republishing the name in the
+  // very repo being cleaned.
+  if (res.findings.some((f) => /^forbidden path \(\.build-lane\)/.test(f.why))) {
+    // ASK GIT WHERE THE EXCLUDE FILE IS, DO NOT ASSUME THE LAYOUT. In a LINKED WORKTREE `.git` is a
+    // FILE pointing at the real git directory, so the literal `.git/info/exclude` does not exist
+    // there: an ignore written to that path does nothing, and the next `git add -A` stages the
+    // marker again. `--git-path` resolves to the exclude file that actually governs the checkout.
+    // The literal stays as a fallback for the one state where this line would otherwise be blank.
+    // Resolved HERE rather than printed as a `$(git rev-parse ...)` command, which reads correctly
+    // in POSIX sh and breaks in PowerShell.
+    let excludePath = '.git/info/exclude';
+    try { excludePath = git(['rev-parse', '--git-path', 'info/exclude'], res.root); } catch { /* keep the fallback */ }
+    console.error('');
+    console.error('THE .build-lane MARKER IS THE EXCEPTION: do NOT add it to .gitignore.');
+    console.error('A tracked .gitignore naming it republishes the name. Ignore it locally instead:');
+    // THE LEADING SLASH CARRIES THE RULE. An unanchored `.build-lane` in an exclude file matches the
+    // name at every depth, so it would also hide the nested fixture copies this entry is written to
+    // leave alone. `/.build-lane` is root-only, the same scope the gate itself uses.
+    //
+    // NAME THE PATH GIT ACTUALLY TRACKS, never the rule's own spelling. Path matching lowercases, so
+    // a tracked `.BUILD-LANE` is a real finding under the rule `.build-lane`, and printing the
+    // rule's spelling hands an operator on a case-sensitive filesystem a `git rm` that fails and an
+    // exclude pattern that misses the file. One line per matched path.
+    for (const f of res.findings.filter((x) => /^forbidden path \(\.build-lane\)/.test(x.why))) {
+      console.error(`  git rm --cached ${f.file}   then add /${f.file} to ${excludePath}`);
+    }
+    console.error('KEEP THE FILE ON DISK. Local tooling reads it, so deleting it breaks that tooling.');
   }
   if (res.findings.some((f) => /pass-numbered directory/.test(f.why))) {
     // BOTH GRADES ARE A REPORT, NOT AN INSTRUCTION, and this is the correction that matters most.
@@ -536,6 +576,20 @@ function selftest() {
   // One POSITIVE control per rule, each tripping ONLY that rule.
   cases.push({ name: 'path rule: root VERIFICATION.md', files: { ...clean, 'VERIFICATION.md': 'output\n' }, expect: 'fail' });
   cases.push({ name: 'path rule: case-variant .Codex/', files: { ...clean, '.Codex/reviews/n.json': '{"a":1}\n' }, expect: 'fail' });
+  // THE BUILD-LANE MARKER, both directions. The body is a bare slug, which trips no content marker,
+  // so ONLY the path rule can raise this finding.
+  cases.push({
+    name: 'path rule: root build-lane marker',
+    files: { ...clean, '.build-lane': 'example-lane\n' },
+    expect: 'fail', expectWhy: /forbidden path/,
+  });
+  // Exact-path semantics, asserted rather than assumed: a fixtures tree may hold nested copies on
+  // purpose, and a prefix or bare-name rule here would order them deleted.
+  cases.push({
+    name: 'path rule: a NESTED build-lane fixture is not the root marker',
+    files: { ...clean, 'scripts/fixtures/projects/demo/.build-lane': 'demo\n' },
+    expect: 'clean',
+  });
   {
     // Three real artifacts, not one `.txt`: `.txt` is FURNITURE now and abstains, so a fixture
     // built from it would assert the rule fires on a file that no longer votes at all.
@@ -1007,6 +1061,7 @@ function selftest() {
       // nobody noticed was missing: every remedy is now checked against every case by construction.
       const REMEDIES = {
         PATH: /PATH hits are artifacts/,
+        'build-lane': /THE \.build-lane MARKER IS THE EXCEPTION/,
         'pass-directory': /CONFIRM BEFORE UNTRACKING/,
         CONTENT: /CONTENT hits need a JUDGEMENT/,
       };
@@ -1025,6 +1080,7 @@ function selftest() {
           failures++;
           console.error(`SELFTEST FAIL: ${label} did not print exactly its own remedy (${wrong.join('; ')})`);
         } else console.log(`selftest ok: ${label} prints exactly its own remedy`);
+        return out;
       };
 
       // A directory of pure recognised output: the CONFIDENT grade. It must still demand a look,
@@ -1040,6 +1096,80 @@ function selftest() {
       expectExactly('a PATH-only run', { ...clean, 'VERIFICATION.md': 'x\n' }, ['PATH']);
       expectExactly('a CONTENT-only run',
         { ...clean, 'docs/notes/report.md': `${SIGNOFF} ${PASS} complete\n` }, ['CONTENT']);
+
+      // A MARKER-ONLY RUN PRINTS ITS OWN CORRECTION AND NOTHING ELSE. The PATH-only case above is the
+      // other direction: an ordinary path hit must not drag the marker paragraph along with it.
+      const markerOut = expectExactly('a build-lane marker-only run',
+        { ...clean, '.build-lane': 'example-lane\n' }, ['build-lane']);
+      // THE OTHER HALF OF THAT PAIR: with an ordinary path hit beside the marker, BOTH instructions
+      // are correct. Without this case the exclusion could tighten into "never print the generic
+      // block when a marker exists" and nothing would notice.
+      expectExactly('a marker plus an ordinary path hit',
+        { ...clean, '.build-lane': 'example-lane\n', 'VERIFICATION.md': 'x\n' }, ['PATH', 'build-lane']);
+
+      // THE EXCLUDE PATTERN MUST BE ROOT-ANCHORED, asserted on the printed text, which the
+      // blocks-printed table cannot see inside a paragraph.
+      {
+        const anchorName = 'the marker remedy names the root-anchored /.build-lane';
+        if (!/add \/\.build-lane to /.test(markerOut)) {
+          failures++;
+          console.error(`SELFTEST FAIL: ${anchorName} -> the printed exclude pattern is not root-anchored`);
+        } else console.log(`selftest ok: ${anchorName}`);
+      }
+
+      // THE REMEDY MUST NAME THE TRACKED PATH, NOT THE RULE'S SPELLING. The index preserves case on
+      // every platform, which makes this observable on a case-insensitive checkout too.
+      {
+        const variantRepo = fixture({ ...clean, '.BUILD-LANE': 'example-lane\n' });
+        roots.push(variantRepo);
+        const variantOut = cliOut(variantRepo);
+        const wrong = [];
+        if (!/git rm --cached \.BUILD-LANE\b/.test(variantOut)) wrong.push('the untrack command does not name .BUILD-LANE');
+        if (!/add \/\.BUILD-LANE to /.test(variantOut)) wrong.push('the exclude pattern does not name /.BUILD-LANE');
+        const caseName = "the marker remedy names the tracked path's own case";
+        if (wrong.length) {
+          failures++;
+          console.error(`SELFTEST FAIL: ${caseName} -> ${wrong.join('; ')}`);
+        } else console.log(`selftest ok: ${caseName}`);
+      }
+
+      // THE MARKER REMEDY MUST NAME A FILE THAT EXISTS. A LINKED WORKTREE has no `.git` directory,
+      // so a hardcoded `.git/info/exclude` points at nothing there. Only a worktree fixture can catch
+      // that: in an ordinary checkout the resolved path and the hardcoded one are the same string.
+      {
+        const wtName = "the marker remedy names git's own exclude path in a linked worktree";
+        const wtMain = fixture({ ...clean });
+        roots.push(wtMain);
+        const wtLinked = mkdtempSync(join(tmpdir(), 'ship-artifacts-st-wt-'));
+        rmSync(wtLinked, { recursive: true, force: true }); // git insists on creating it itself
+        // REGISTER FOR CLEANUP BEFORE GIT RUNS, not after it succeeds. `git worktree add` can create
+        // the directory and then fail, and a path registered only on success would then outlive the
+        // run. Removing a path that was never created is a no-op under `force: true`.
+        roots.push(wtLinked);
+        let worktreeMade = true;
+        try {
+          git(['worktree', 'add', '-b', 'selftest-worktree', wtLinked], wtMain);
+        } catch { worktreeMade = false; }
+        if (!worktreeMade) {
+          // NOT A PASS. A control that cannot run is an unknown.
+          failures++;
+          console.error(`SELFTEST FAIL: ${wtName} -> could not create a worktree fixture, so this path is UNTESTED`);
+        } else {
+          writeFileSync(join(wtLinked, '.build-lane'), 'example-lane\n');
+          git(['add', '.build-lane'], wtLinked);
+          git(['commit', '-m', 'track the marker'], wtLinked);
+          const wtOut = cliOut(wtLinked);
+          const named = (wtOut.match(/add \/\.build-lane to (.+)/) || [])[1];
+          const resolved = git(['rev-parse', '--git-path', 'info/exclude'], wtLinked);
+          if (!named) {
+            failures++;
+            console.error(`SELFTEST FAIL: ${wtName} -> no exclude path was printed`);
+          } else if (named.trim() !== resolved) {
+            failures++;
+            console.error(`SELFTEST FAIL: ${wtName} -> printed "${named.trim()}" but git resolves "${resolved}"`);
+          } else console.log(`selftest ok: ${wtName}`);
+        }
+      }
     }
 
     // Submodule control. The gitlink carve-out is keyed on git's 160000 mode; without a real

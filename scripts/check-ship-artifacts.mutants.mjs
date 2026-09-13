@@ -96,6 +96,11 @@ const MUTATIONS = [
   ['extensionless coverage', 'const NO_EXT_RE = /(^|\\/)\\.?[^./]+$/;', 'const NO_EXT_RE = /$^/;'],
   ['the whole content check', 'for (const m of CONTENT_MARKERS) {', 'for (const m of []) {'],
   ['the whole path check', 'for (const p of FORBIDDEN_PATHS) {', 'for (const p of []) {'],
+  // THE BUILD-LANE MARKER ENTRY, mutated on its own: 'the whole path check' above only proves the
+  // LIST is consulted, so without this the entry could be deleted and the sweep would still read
+  // full marks. The anchor carries its quotes and comma so it cannot also match the selftest
+  // fixture keys, which are followed by a colon.
+  ['build-lane marker path entry', "  '.build-lane',\n", ''],
   ['the empty-index UNKNOWN guard', "unknown: true, reason: 'git ls-files returned no tracked files (empty index)'", "unknown: false, ok: true, scanned: 0, read: 0"],
   // THE EXIT-CODE LAYER. Everything else mutates scan(); these mutate what a hook actually
   // reads. Without them a gate could print every finding and still exit 0, with --selftest
@@ -192,7 +197,7 @@ const MUTATIONS = [
   // Scoping each remedy to its own finding type. Unconditional again, a run whose only findings are
   // pass-numbered directories opens with "untrack them", which is read as the remedy for them.
   ['remedy scoped to its finding type',
-    'if (res.findings.some((f) => /^forbidden path/.test(f.why))) {',
+    'if (res.findings.some((f) => /^forbidden path/.test(f.why) && !/^forbidden path \\(\\.build-lane\\)/.test(f.why))) {',
     'if (true) {'],
   // The THIRD remedy branch, which had neither a control nor a mutation while the other two had
   // both. A branch nothing can observe is the gap this whole layer exists to close.
@@ -224,6 +229,33 @@ const MUTATIONS = [
   ['pass-dir remedy scoped to its finding type',
     'if (res.findings.some((f) => /pass-numbered directory/.test(f.why))) {',
     'if (true) {'],
+  // THE MARKER REMEDY, one mutation per decision in it.
+  //
+  // Its condition. Unconditional, every path hit tells the operator to ignore a marker it never
+  // found. Every remedy control asserts the exact SET of blocks printed, so several cases turn red.
+  ['build-lane remedy scoped to its finding type',
+    'if (res.findings.some((f) => /^forbidden path \\(\\.build-lane\\)/.test(f.why))) {',
+    'if (true) {'],
+  // Its exclusion from the generic block. Dropped, a marker-only run prints "then add to
+  // .gitignore" first and the contradiction second.
+  ['build-lane excluded from the generic path remedy',
+    ' && !/^forbidden path \\(\\.build-lane\\)/.test(f.why)',
+    ''],
+  // The leading slash. One character inside a paragraph that still prints, which is why it has a
+  // control reading the TEXT.
+  ['build-lane exclude pattern anchored at the root',
+    'then add /${f.file} to ${excludePath}`',
+    'then add ${f.file} to ${excludePath}`'],
+  // Naming the tracked path. Back to the hardcoded literal. ONLY the case-variant control catches
+  // this: every other control uses the lower-case name.
+  ['build-lane remedy names the tracked path',
+    '`  git rm --cached ${f.file}   then add /${f.file} to ${excludePath}`',
+    '`  git rm --cached .build-lane   then add /.build-lane to ${excludePath}`'],
+  // Asking git for the exclude path. Removing the line leaves the `let` initialiser, so the mutant
+  // parses and prints the literal. ONLY the worktree control can catch this.
+  ['build-lane exclude path asked of git',
+    "    try { excludePath = git(['rev-parse', '--git-path', 'info/exclude'], res.root); } catch { /* keep the fallback */ }\n",
+    ''],
 ];
 
 const dir = mkdtempSync(join(tmpdir(), 'ship-artifacts-mutants-'));
