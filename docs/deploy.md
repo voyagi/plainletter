@@ -135,9 +135,14 @@ PLAINLETTER_AGENT_RUNTIME_ARN=arn:aws:bedrock-agentcore:eu-central-1:12345678901
 
 With that set, every reading is a signed `InvokeAgentRuntime` call from the host's AWS
 credentials. The host needs credentials that may call `bedrock-agentcore:InvokeAgentRuntime` on
-this one runtime and nothing else. On Vercel, add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
-for an IAM user or role with exactly that permission as environment variables of the project. The
-browser never sees any of it.
+this one runtime and nothing else. On Vercel, create an IAM user with exactly that permission, give
+it an access key, and add the key as `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in the
+project's environment variables. The browser never sees any of it.
+
+Use an IAM user's access key rather than credentials from a role. The console builds its AWS client
+with no credentials of its own, so the SDK reads them from the environment, and a role's temporary
+credentials also need `AWS_SESSION_TOKEN` and expire. A hosted console on pasted role credentials
+stops reading letters the moment they run out.
 
 The permission has to cover both the runtime and the endpoints inside it. The call is addressed to
 the runtime's default endpoint, `<runtime ARN>/runtime-endpoint/DEFAULT`, so a policy naming only
