@@ -2,10 +2,10 @@
 
 ![Plainletter. The agent behind the help desk for letters people cannot read. Every date and amount is checked against the letter itself, and what does not check out never reaches the card.](docs/media/card.png)
 
-![A folded, shadowed phone photo of a health insurer's letter, read at the desk. Five passages are marked and numbered on the letter. Two blurred lines are typed as [onleesbaar] and carry no number.](docs/media/refusal.gif)
+![A folded, shadowed phone photo of a health insurer's letter, read at the desk. Five passages are marked and numbered on the letter. Two blurred lines are typed as [onleesbaar], the right edge runs off the photo, and neither carries a number.](docs/media/refusal.gif)
 
 *A folded photo in poor light: 5 facts checked, 7 kept off the card, and no number beside the two
-lines the desk could not read.*
+folded lines or the cut-off right edge.*
 
 **Every country sends its residents letters they cannot read.** A demand for money, a reference
 number, a deadline, and a sentence about what happens if nothing is done, written in formal
