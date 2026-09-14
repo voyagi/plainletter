@@ -13,7 +13,7 @@ them belongs to nobody.
 
 ## Open them with nothing installed
 
-- `desk-card.html` is the one-page card the desk prints. Open it in any browser. It is a single
+- `desk-card.html` is the card the desk prints. Open it in any browser. It is a single
   self-contained file with no network requests.
 - `reminder.ics` is the calendar reminder. Open it with any calendar app, or read it as text.
 - `reading.json` is the agent's final answer: every fact with the passage it was taken from, what
@@ -48,6 +48,12 @@ amount, the deadline and the objection route still reach the card.
 One wording slip is visible in the answer: the reason for each unreadable field says the part is
 unreadable "in de foto", in the photo, although this letter arrived as text with the gaps typed in.
 The fields and the refusal to guess are right. The sentence around them assumed the usual case.
+
+The capture also shows something the desk should not do yet. The payment step, the objection
+draft, the card and the reminder still quote the assessment number with its gap,
+`4471 [onleesbaar] 6`, so a volunteer has to read the full number off the letter before anything is
+paid or sent. Holding those steps until the number is confirmed is
+[issue #34](https://github.com/voyagi/plainletter/issues/34).
 
 ## `demo-transcript.md`
 
