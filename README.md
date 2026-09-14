@@ -24,11 +24,11 @@ when a professional should take over, and prints a one page desk card the visito
 calendar reminder for the deadline.
 
 **It is built for one country properly rather than five countries approximately.** That country is
-the Netherlands, which runs 861 of these desks in public libraries. The senders are the tax office,
-the fine collection agency, the municipality, the benefits and pension agencies, the immigration
-service, health insurers, the road authority and debt collectors. Everything specific to that
-choice sits in [a short list of files](#what-is-specific-to-the-netherlands), and a test fails if
-it leaks anywhere else.
+the Netherlands, which runs 861 of these desks, most of them in public libraries. The senders are
+the tax office, the fine collection agency, the municipality, the benefits and pension agencies,
+the immigration service, health insurers, the road authority and debt collectors. Everything
+specific to that choice sits in [a short list of files](#what-is-specific-to-the-netherlands), and
+a test fails if it leaks anywhere else.
 
 Built with the [Strands Agents SDK](https://strandsagents.com/) on Amazon Bedrock, deployed on
 Amazon Bedrock AgentCore in the EU (Frankfurt).

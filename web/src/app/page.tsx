@@ -239,9 +239,9 @@ export default function Landing() {
           Bring Plainletter to your library
         </h2>
         <p className="m-0 mb-5 max-w-[44em] text-[17px] text-ink-2">
-          There are 861 Informatiepunt Digitale Overheid desks in Dutch public libraries. This is
-          built for the volunteers at them and for the people sitting across the table. It is open
-          source, it runs in the EU, and it needs no account to try.
+          There are 861 Informatiepunt Digitale Overheid desks in the Netherlands, most of them in
+          public libraries. This is built for the volunteers at them and for the people sitting
+          across the table. It is open source, it runs in the EU, and it needs no account to try.
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
