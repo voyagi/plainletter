@@ -1,5 +1,12 @@
 # Plainletter
 
+![Plainletter. The agent behind the help desk for letters people cannot read. Every date and amount is checked against the letter itself, and what does not check out never reaches the card.](docs/media/card.png)
+
+![A folded, shadowed phone photo of a health insurer's letter, read at the desk. Five passages are marked and numbered on the letter. Two blurred lines are typed as [onleesbaar], the right edge runs off the photo, and neither carries a number.](docs/media/refusal.gif)
+
+*A folded photo in poor light: 5 facts checked, 7 kept off the card, and no number beside the two
+folded lines or the cut-off right edge.*
+
 **Every country sends its residents letters they cannot read.** A demand for money, a reference
 number, a deadline, and a sentence about what happens if nothing is done, written in formal
 language by a body you have never heard of. If you moved here last year, or you are eighty, or you
@@ -17,11 +24,11 @@ when a professional should take over, and prints a one page desk card the visito
 calendar reminder for the deadline.
 
 **It is built for one country properly rather than five countries approximately.** That country is
-the Netherlands, which runs 861 of these desks in public libraries. The senders are the tax office,
-the fine collection agency, the municipality, the benefits and pension agencies, the immigration
-service, health insurers, the road authority and debt collectors. Everything specific to that
-choice sits in [a short list of files](#what-is-specific-to-the-netherlands), and a test fails if
-it leaks anywhere else.
+the Netherlands, which runs 861 of these desks, most of them in public libraries. The senders are
+the tax office, the fine collection agency, the municipality, the benefits and pension agencies,
+the immigration service, health insurers, the road authority and debt collectors. Everything
+specific to that choice sits in [a short list of files](#what-is-specific-to-the-netherlands), and
+a test fails if it leaks anywhere else.
 
 Built with the [Strands Agents SDK](https://strandsagents.com/) on Amazon Bedrock, deployed on
 Amazon Bedrock AgentCore in the EU (Frankfurt).

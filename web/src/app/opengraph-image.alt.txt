@@ -1,0 +1,1 @@
+Plainletter. The agent behind the help desk for letters people cannot read. Every date and amount is checked against the letter itself, and what does not check out never reaches the card.
