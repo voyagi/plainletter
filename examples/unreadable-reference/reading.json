@@ -1,0 +1,586 @@
+{
+  "stage": "done",
+  "source": "letter",
+  "pages": 1,
+  "pages_omitted": 0,
+  "reading": {
+    "facts": {
+      "sender_id": "gemeente",
+      "sender_name": {
+        "value": "Gemeente Groningen",
+        "source": {
+          "page": 1,
+          "text": "Gemeente Groningen\nPostbus 30026, 9700 RM Groningen"
+        }
+      },
+      "letter_type": {
+        "value": "Aanmaning naheffingsaanslag parkeerbelasting",
+        "source": {
+          "page": 1,
+          "text": "Aanmaning naheffingsaanslag parkeerbelasting"
+        }
+      },
+      "reference": {
+        "value": "4471 [onleesbaar] 6",
+        "source": {
+          "page": 1,
+          "text": "Aanslagnummer: 4471 [onleesbaar] 6"
+        }
+      },
+      "issued_on": {
+        "day": 21,
+        "month": 8,
+        "year": 2026,
+        "source": {
+          "page": 1,
+          "text": "Dagtekening: 21 augustus 2026"
+        }
+      },
+      "deadline": {
+        "day": 18,
+        "month": 9,
+        "year": 2026,
+        "source": {
+          "page": 1,
+          "text": "Betaal voor 18 september 2026."
+        }
+      },
+      "other_dates": [],
+      "total_amount": {
+        "currency": "EUR",
+        "cents": 8900,
+        "label": "Totaal te betalen",
+        "source": {
+          "page": 1,
+          "text": "Totaal te betalen: EUR 89,00"
+        }
+      },
+      "line_amounts": [
+        {
+          "currency": "EUR",
+          "cents": 8000,
+          "label": "Openstaand bedrag",
+          "source": {
+            "page": 1,
+            "text": "Openstaand bedrag: EUR 80,00"
+          }
+        },
+        {
+          "currency": "EUR",
+          "cents": 900,
+          "label": "Aanmaningskosten",
+          "source": {
+            "page": 1,
+            "text": "Aanmaningskosten: EUR 9,00"
+          }
+        }
+      ],
+      "consequences": [
+        {
+          "page": 1,
+          "text": "Betaalt u niet op tijd, dan volgt een dwangbevel. De kosten van het dwangbevel komen bovenop het bedrag hierboven."
+        }
+      ],
+      "objection_route": {
+        "page": 1,
+        "text": "Bent u het niet eens met de naheffingsaanslag? U kunt binnen zes weken na de dagtekening van de naheffingsaanslag bezwaar maken bij de gemeente."
+      },
+      "unreadable": [
+        {
+          "field": "Aanslagnummer (volledig)",
+          "reason": "Een deel van het aanslagnummer is onleesbaar in de foto (weergegeven als '[onleesbaar]').",
+          "ask_the_visitor": "Kunt u het volledige aanslagnummer laten zien? Het staat op de brief bij 'Aanslagnummer'."
+        },
+        {
+          "field": "Kenteken",
+          "reason": "Een deel van het kenteken is onleesbaar in de foto (weergegeven als '[onleesbaar]').",
+          "ask_the_visitor": "Kunt u het volledige kenteken laten zien? Het staat op de brief bij 'Kenteken'."
+        }
+      ]
+    },
+    "verification": {
+      "grounded": [
+        {
+          "name": "issued_on",
+          "display": "21 augustus 2026",
+          "span": {
+            "page": 1,
+            "text": "Dagtekening: 21 augustus 2026"
+          }
+        },
+        {
+          "name": "deadline",
+          "display": "18 september 2026",
+          "span": {
+            "page": 1,
+            "text": "Betaal voor 18 september 2026."
+          }
+        },
+        {
+          "name": "total_amount",
+          "display": "EUR 89,00",
+          "span": {
+            "page": 1,
+            "text": "Totaal te betalen: EUR 89,00"
+          }
+        },
+        {
+          "name": "line_amount_1",
+          "display": "EUR 80,00",
+          "span": {
+            "page": 1,
+            "text": "Openstaand bedrag: EUR 80,00"
+          }
+        },
+        {
+          "name": "line_amount_2",
+          "display": "EUR 9,00",
+          "span": {
+            "page": 1,
+            "text": "Aanmaningskosten: EUR 9,00"
+          }
+        },
+        {
+          "name": "sender_name",
+          "display": "Gemeente Groningen",
+          "span": {
+            "page": 1,
+            "text": "Gemeente Groningen\nPostbus 30026, 9700 RM Groningen"
+          }
+        },
+        {
+          "name": "letter_type",
+          "display": "Aanmaning naheffingsaanslag parkeerbelasting",
+          "span": {
+            "page": 1,
+            "text": "Aanmaning naheffingsaanslag parkeerbelasting"
+          }
+        },
+        {
+          "name": "reference",
+          "display": "4471 [onleesbaar] 6",
+          "span": {
+            "page": 1,
+            "text": "Aanslagnummer: 4471 [onleesbaar] 6"
+          }
+        },
+        {
+          "name": "consequence_1",
+          "display": "Betaalt u niet op tijd, dan volgt een dwangbevel. De kosten van het dwangbevel komen bovenop het bedrag hierboven.",
+          "span": {
+            "page": 1,
+            "text": "Betaalt u niet op tijd, dan volgt een dwangbevel. De kosten van het dwangbevel komen bovenop het bedrag hierboven."
+          }
+        },
+        {
+          "name": "objection_route",
+          "display": "Bent u het niet eens met de naheffingsaanslag? U kunt binnen zes weken na de dagtekening van de naheffingsaanslag bezwaar maken bij de gemeente.",
+          "span": {
+            "page": 1,
+            "text": "Bent u het niet eens met de naheffingsaanslag? U kunt binnen zes weken na de dagtekening van de naheffingsaanslag bezwaar maken bij de gemeente."
+          }
+        }
+      ],
+      "issues": []
+    },
+    "letter": {
+      "lines": [
+        {
+          "runs": [
+            {
+              "text": "--- pagina 1 ---",
+              "mark": null
+            }
+          ],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Gemeente Groningen",
+              "mark": 1
+            }
+          ],
+          "mark": 1,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Postbus 30026, 9700 RM Groningen",
+              "mark": 1
+            }
+          ],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "De heer A. Dzhaparov",
+              "mark": null
+            }
+          ],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Korreweg 148 a",
+              "mark": null
+            }
+          ],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "9715 AE Groningen",
+              "mark": null
+            }
+          ],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Aanmaning naheffingsaanslag parkeerbelasting",
+              "mark": 2
+            }
+          ],
+          "mark": 2,
+          "gap": false
+        },
+        {
+          "runs": [],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Aanslagnummer: 4471 [onleesbaar] 6",
+              "mark": 3
+            }
+          ],
+          "mark": 3,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Dagtekening: 21 augustus 2026",
+              "mark": 4
+            }
+          ],
+          "mark": 4,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Kenteken: 30-[onleesbaar]-7",
+              "mark": null
+            }
+          ],
+          "mark": null,
+          "gap": true
+        },
+        {
+          "runs": [],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Openstaand bedrag: EUR 80,00",
+              "mark": 5
+            }
+          ],
+          "mark": 5,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Aanmaningskosten: EUR 9,00",
+              "mark": 6
+            }
+          ],
+          "mark": 6,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Totaal te betalen: EUR 89,00",
+              "mark": 7
+            }
+          ],
+          "mark": 7,
+          "gap": false
+        },
+        {
+          "runs": [],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Betaal voor 18 september 2026.",
+              "mark": 8
+            }
+          ],
+          "mark": 8,
+          "gap": false
+        },
+        {
+          "runs": [],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Betaalt u niet op tijd, dan volgt een dwangbevel. De kosten van het dwangbevel komen bovenop het",
+              "mark": 9
+            }
+          ],
+          "mark": 9,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "bedrag hierboven.",
+              "mark": 9
+            }
+          ],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Bent u het niet eens met de naheffingsaanslag? U kunt binnen zes weken na de dagtekening van de",
+              "mark": 10
+            }
+          ],
+          "mark": 10,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "naheffingsaanslag bezwaar maken bij de gemeente.",
+              "mark": 10
+            }
+          ],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [
+            {
+              "text": "Dit is een verzonnen voorbeeldbrief. Naam, adres, kenteken en aanslagnummer bestaan niet.",
+              "mark": null
+            }
+          ],
+          "mark": null,
+          "gap": false
+        },
+        {
+          "runs": [],
+          "mark": null,
+          "gap": false
+        }
+      ],
+      "keys": [
+        {
+          "number": 1,
+          "text": "Gemeente Groningen\nPostbus 30026, 9700 RM Groningen",
+          "facts": [
+            "sender_name"
+          ]
+        },
+        {
+          "number": 2,
+          "text": "Aanmaning naheffingsaanslag parkeerbelasting",
+          "facts": [
+            "letter_type"
+          ]
+        },
+        {
+          "number": 3,
+          "text": "Aanslagnummer: 4471 [onleesbaar] 6",
+          "facts": [
+            "reference"
+          ]
+        },
+        {
+          "number": 4,
+          "text": "Dagtekening: 21 augustus 2026",
+          "facts": [
+            "issued_on"
+          ]
+        },
+        {
+          "number": 5,
+          "text": "Openstaand bedrag: EUR 80,00",
+          "facts": [
+            "line_amount_1"
+          ]
+        },
+        {
+          "number": 6,
+          "text": "Aanmaningskosten: EUR 9,00",
+          "facts": [
+            "line_amount_2"
+          ]
+        },
+        {
+          "number": 7,
+          "text": "Totaal te betalen: EUR 89,00",
+          "facts": [
+            "total_amount"
+          ]
+        },
+        {
+          "number": 8,
+          "text": "Betaal voor 18 september 2026.",
+          "facts": [
+            "deadline"
+          ]
+        },
+        {
+          "number": 9,
+          "text": "Betaalt u niet op tijd, dan volgt een dwangbevel. De kosten van het dwangbevel komen bovenop het bedrag hierboven.",
+          "facts": [
+            "consequence_1"
+          ]
+        },
+        {
+          "number": 10,
+          "text": "Bent u het niet eens met de naheffingsaanslag? U kunt binnen zes weken na de dagtekening van de naheffingsaanslag bezwaar maken bij de gemeente.",
+          "facts": [
+            "objection_route"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "field": "Aanslagnummer (volledig)",
+          "reason": "Een deel van het aanslagnummer is onleesbaar in de foto (weergegeven als '[onleesbaar]').",
+          "ask_the_visitor": "Kunt u het volledige aanslagnummer laten zien? Het staat op de brief bij 'Aanslagnummer'."
+        },
+        {
+          "field": "Kenteken",
+          "reason": "Een deel van het kenteken is onleesbaar in de foto (weergegeven als '[onleesbaar]').",
+          "ask_the_visitor": "Kunt u het volledige kenteken laten zien? Het staat op de brief bij 'Kenteken'."
+        }
+      ],
+      "unplaced": []
+    },
+    "deadline": {
+      "on": "2026-09-18",
+      "days_left": 4,
+      "urgency": "due_soon",
+      "post_by": null,
+      "on_written": "18 september 2026",
+      "post_by_written": null
+    },
+    "sender_name": "Gemeente",
+    "letter_type": "Aanmaning naheffingsaanslag parkeerbelasting",
+    "visitor_language": "uk",
+    "explanations": [
+      {
+        "language": "nl",
+        "what_is_this": "Dit is een aanmaning van Gemeente Groningen. U heeft een naheffingsaanslag parkeerbelasting niet betaald. Dat betekent dat u te weinig of geen parkeerbelasting heeft betaald. Nu stuurt de gemeente een herinnering met extra kosten. U moet in totaal EUR 89,00 betalen: EUR 80,00 openstaand bedrag en EUR 9,00 aanmaningskosten.",
+        "by_when": "U moet betalen vóór 18 september 2026.",
+        "if_you_do_nothing": "Betaalt u niet op tijd, dan stuurt de gemeente een dwangbevel. Een dwangbevel is een officieel bevel om te betalen. De kosten van dat dwangbevel komen bovenop EUR 89,00. U betaalt dan dus nog meer."
+      },
+      {
+        "language": "uk",
+        "what_is_this": "Це нагадування-вимога (aanmaning) від Gemeente Groningen - муніципалітету міста Гронінген. Вам раніше нарахували додатковий податок за паркування (naheffingsaanslag parkeerbelasting), але його не було сплачено. Тепер муніципалітет вимагає оплати з додатковими витратами. Загальна сума до сплати - EUR 89,00: EUR 80,00 - основний борг, EUR 9,00 - витрати за нагадування.",
+        "by_when": "Ви повинні сплатити до 18 september 2026.",
+        "if_you_do_nothing": "Якщо ви не сплатите вчасно, муніципалітет видасть dwangbevel - офіційний примусовий припис до сплати. Витрати на цей припис додадуться до суми EUR 89,00. Тобто ви заплатите ще більше."
+      }
+    ],
+    "steps": [
+      {
+        "order": 1,
+        "dutch": "Zoek de betaalinstructies op: kijk op de voorkant én achterkant van de brief van Gemeente Groningen voor het IBAN-rekeningnummer en de betalingsreferentie. Er is geen officieel betaalportaal bekend via de opzoektool - gebruik alleen de gegevens die op de brief staan.",
+        "visitor": "Знайдіть реквізити для оплати: перевірте лицьову та зворотну сторони листа від Gemeente Groningen, щоб знайти номер рахунку IBAN та платіжний референс. Офіційного платіжного порталу для цього відправника не знайдено - використовуйте лише дані, зазначені у листі.",
+        "official_route": null
+      },
+      {
+        "order": 2,
+        "dutch": "Betaal EUR 89,00 vóór 18 september 2026 via de betaalgegevens op de brief, met kenmerk 4471 [onleesbaar] 6. Dit is zeer urgent: nog maar 4 dagen.",
+        "visitor": "Сплатіть EUR 89,00 до 18 вересня 2026 року, використовуючи реквізити з листа, із зазначенням референсу 4471 [нерозбірливо] 6. Це дуже терміново: залишилося лише 4 дні.",
+        "official_route": null
+      },
+      {
+        "order": 3,
+        "dutch": "Bent u het niet eens met de naheffingsaanslag (het bedrag van EUR 80,00)? Maak dan bezwaar binnen zes weken na de dagtekening van de aanslag (21 augustus 2026) bij het college van burgemeester en wethouders van Gemeente Groningen. Lees hoe u bezwaar maakt op de officiële pagina.",
+        "visitor": "Якщо ви не згодні з донарахуванням (сума EUR 80,00), ви можете подати заперечення протягом шести тижнів з дати видачі рішення (21 серпня 2026 року) до college van burgemeester en wethouders Gemeente Groningen. Дізнайтеся, як це зробити, на офіційній сторінці.",
+        "official_route": "https://www.rijksoverheid.nl/onderwerpen/bezwaar-en-beroep"
+      },
+      {
+        "order": 4,
+        "dutch": "Wil de bezoeker hulp bij het indienen van bezwaar of begrijpt hij/zij de brief niet goed? Verwijs naar Het Juridisch Loket - zij helpen gratis met juridische vragen over gemeentelijke besluiten. Vraag om een medewerker die de bezoeker kan helpen.",
+        "visitor": "Якщо вам потрібна допомога з оскарженням або ви не розумієте листа, зверніться до Het Juridisch Loket - вони безкоштовно надають юридичні консультації щодо рішень органів влади. Попросіть про консультацію зі співробітником.",
+        "official_route": "0800 8020"
+      },
+      {
+        "order": 5,
+        "dutch": "Heeft de bezoeker hulp nodig bij het online regelen van gemeentezaken (bijv. betalen of bezwaar indienen via de website van de gemeente)? Verwijs naar het Informatiepunt Digitale Overheid.",
+        "visitor": "Якщо вам потрібна допомога з онлайн-сервісами муніципалітету (наприклад, оплата або подача заперечення через сайт), зверніться до Informatiepunt Digitale Overheid.",
+        "official_route": "https://www.informatiepuntdigitaleoverheid.nl/"
+      }
+    ],
+    "draft": {
+      "kind": "objection",
+      "addressed_to": "het college van burgemeester en wethouders van de Gemeente Groningen",
+      "send_before": null,
+      "dutch": "Aan: het college van burgemeester en wethouders van de Gemeente Groningen\n\nBetreft: bezwaarschrift naheffingsaanslag parkeerbelasting\nKenmerk: 4471 [onleesbaar] 6\n\nGeacht college,\n\nHierbij maak ik bezwaar tegen de naheffingsaanslag parkeerbelasting met kenmerk 4471 [onleesbaar] 6.\n\n[Vul hier uw reden in: bijvoorbeeld dat u een geldig parkeerrecht had, dat de aanslag op onjuiste gegevens is gebaseerd, of een andere reden die op uw situatie van toepassing is.]\n\nIk verzoek u de naheffingsaanslag te herzien en mij van uw beslissing op de hoogte te stellen.\n\nMet vriendelijke groet,\n\n[Uw naam]\n[Uw adres]\n[Uw telefoonnummer / e-mailadres]\n[Datum]",
+      "visitor": "До: колегії бургомістра та членів ради (college van burgemeester en wethouders) Муніципалітету Гронінген\n\nСтосовно: заперечення щодо донарахування податку за паркування\nРеференс: 4471 [нерозбірливо] 6\n\nШановна колегіє,\n\nЦим листом я подаю заперечення (bezwaar) проти донарахування податку за паркування з референсом 4471 [нерозбірливо] 6.\n\n[Вкажіть тут вашу причину: наприклад, що у вас було дійсне право на паркування, що нарахування ґрунтується на неправильних даних, або інша причина, яка стосується вашої ситуації.]\n\nПрошу переглянути це нарахування та повідомити мене про прийняте рішення.\n\nЗ повагою,\n\n[Ваше ім'я]\n[Ваша адреса]\n[Ваш номер телефону / електронна адреса]\n[Дата]"
+    },
+    "handoff": {
+      "required": false,
+      "referral": "Het Juridisch Loket",
+      "reason": "the letter was read, checked and matched to a verified sender"
+    },
+    "sources": [
+      "https://www.rijksoverheid.nl/onderwerpen/bezwaar-en-beroep"
+    ]
+  },
+  "case": null,
+  "desk_card_html": "<!doctype html>\n<html lang=\"nl\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<meta name=\"description\" content=\"De baliekaart bij deze brief: wat het is, voor wanneer, wat er gebeurt als u niets doet, en wat u nu doet, in twee talen op een vel.\">\n<meta name=\"generator\" content=\"Plainletter, an AI system. This text was generated by an AI system\n and checked against the letter it was read from.\">\n<meta name=\"ai-generated\" content=\"true\">\n<title>Gemeente - Aanmaning naheffingsaanslag parkeerbelasting</title>\n<style>\n@page { size: A4; margin: 12mm; }\n* { box-sizing: border-box; }\nbody { font-family: \"Atkinson Hyperlegible Next\", system-ui, sans-serif;\n       font-variant-numeric: tabular-nums; color: #1a1a1a; background: #fff;\n       margin: 0; font-size: 11.5px; line-height: 1.5; }\n.sheet { max-width: 190mm; margin: 0 auto; }\n.band { border: 2.5px solid #1a1a1a; padding: 10px 13px; display: flex;\n        justify-content: space-between; align-items: baseline; gap: 16px; }\n.who { font-weight: 700; font-size: 19px; margin: 0; line-height: 1.25; }\n.what { font-size: 12px; }\n.ref { text-align: right; font-size: 12px; font-weight: 700; }\n.deadline { border: 2.5px solid #1a1a1a; border-top: 0; padding: 10px 13px; display: flex;\n            justify-content: space-between; align-items: center; gap: 16px; }\n.deadline.due_soon { background-image:\n  repeating-linear-gradient(-45deg, #d8d8d8 0 6px, transparent 6px 14px); }\n.deadline.overdue { background-image:\n  repeating-linear-gradient(-45deg, #b4b4b4 0 3px, transparent 3px 9px); }\n.deadline.overdue .lead { text-decoration: line-through; }\n.deadline .lead { font-weight: 700; font-size: 18px; }\n.deadline .sub { font-size: 12px; }\n.deadline .state { border: 2px solid #1a1a1a; background: #fff; padding: 5px 10px;\n                   font-weight: 700; font-size: 11px; letter-spacing: .1em;\n                   text-transform: uppercase; white-space: nowrap; }\n.prow { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 20px; padding: 11px 0;\n        border-bottom: 1px solid #c9c9c9; }\n.prow .q { grid-column: 1 / -1; font-size: 10px; font-weight: 700; text-transform: uppercase;\n           letter-spacing: .1em; color: #4a4a4a; }\n.r { text-align: right; }\n.acts h2 { font-size: 13px; margin: 16px 0 8px; }\n.acts ol { margin: 0; padding: 0; list-style: none; }\n.acts li { display: grid; grid-template-columns: 20px 1fr 1fr; gap: 6px 20px; padding: 8px 0;\n           border-top: 1px solid #c9c9c9; }\n.acts li:first-child { border-top: 1.5px solid #1a1a1a; }\n.no { width: 18px; height: 18px; background: #1a1a1a; color: #fff; font-size: 11px;\n      font-weight: 700; line-height: 18px; text-align: center; }\n.route { font-weight: 700; }\n.keys { margin-top: 14px; border-top: 2.5px solid #1a1a1a; padding-top: 9px; }\n.keys h2 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;\n           color: #4a4a4a; margin: 0 0 6px; }\n.keys .k { display: grid; grid-template-columns: 20px 1fr; gap: 8px; padding: 3px 0;\n           font-size: 10.5px; color: #333; }\n.keys .n { width: 18px; height: 18px; border: 1px solid #1a1a1a; font-size: 10px;\n           font-weight: 700; line-height: 16px; text-align: center; }\n.keys .broken { width: 18px; border-top: 1px dashed #777; margin-top: 8px; }\n.foot { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }\n.handoff { border-left: 4px solid #1a1a1a; padding-left: 10px; font-size: 11px; margin: 0 0 8px; }\n.notes-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: .1em; color: #555;\n               margin: 0 0 4px; }\n.notes { border: 1px dashed #8a8a8a; height: 24mm; }\n.small { font-size: 10px; color: #555; margin: 0; }\n</style>\n</head>\n<body>\n<div class=\"sheet\">\n  <div class=\"band\">\n    <div>\n      <h1 class=\"who\">Gemeente</h1>\n      <div class=\"what\">Aanmaning naheffingsaanslag parkeerbelasting</div>\n    </div>\n    <div class=\"ref\">Kenmerk 4471 [onleesbaar] 6</div>\n  </div>\n  <div class=\"deadline due_soon\">\n    <div><div class=\"lead\">Uiterste dag: 18 september 2026</div>\n    <div class=\"sub\">Nog 4 dagen.</div></div>\n    <div class=\"state\">Bijna te laat</div>\n  </div>\n  <div class=\"rows\"><div class=\"prow\"><span class=\"q\">Wat is dit?</span><span>Dit is een aanmaning van Gemeente Groningen. U heeft een naheffingsaanslag parkeerbelasting niet betaald. Dat betekent dat u te weinig of geen parkeerbelasting heeft betaald. Nu stuurt de gemeente een herinnering met extra kosten. U moet in totaal EUR 89,00 betalen: EUR 80,00 openstaand bedrag en EUR 9,00 aanmaningskosten.</span><span class=\"r\" lang=\"uk\" dir=\"ltr\">Це нагадування-вимога (aanmaning) від Gemeente Groningen - муніципалітету міста Гронінген. Вам раніше нарахували додатковий податок за паркування (naheffingsaanslag parkeerbelasting), але його не було сплачено. Тепер муніципалітет вимагає оплати з додатковими витратами. Загальна сума до сплати - EUR 89,00: EUR 80,00 - основний борг, EUR 9,00 - витрати за нагадування.</span></div>\n<div class=\"prow\"><span class=\"q\">Wat gebeurt er als u niets doet?</span><span>Betaalt u niet op tijd, dan stuurt de gemeente een dwangbevel. Een dwangbevel is een officieel bevel om te betalen. De kosten van dat dwangbevel komen bovenop EUR 89,00. U betaalt dan dus nog meer.</span><span class=\"r\" lang=\"uk\" dir=\"ltr\">Якщо ви не сплатите вчасно, муніципалітет видасть dwangbevel - офіційний примусовий припис до сплати. Витрати на цей припис додадуться до суми EUR 89,00. Тобто ви заплатите ще більше.</span></div>\n<div class=\"prow\"><span class=\"q\">Voor wanneer?</span><span>U moet betalen vóór 18 september 2026.</span><span class=\"r\" lang=\"uk\" dir=\"ltr\">Ви повинні сплатити до 18 september 2026.</span></div></div>\n  <div class=\"acts\"><h2>Wat u nu doet</h2><ol><li><span class=\"no\">1</span><span>Zoek de betaalinstructies op: kijk op de voorkant én achterkant van de brief van Gemeente Groningen voor het IBAN-rekeningnummer en de betalingsreferentie. Er is geen officieel betaalportaal bekend via de opzoektool - gebruik alleen de gegevens die op de brief staan.</span><span class=\"r\" lang=\"uk\" dir=\"ltr\">Знайдіть реквізити для оплати: перевірте лицьову та зворотну сторони листа від Gemeente Groningen, щоб знайти номер рахунку IBAN та платіжний референс. Офіційного платіжного порталу для цього відправника не знайдено - використовуйте лише дані, зазначені у листі.</span></li>\n<li><span class=\"no\">2</span><span>Betaal EUR 89,00 vóór 18 september 2026 via de betaalgegevens op de brief, met kenmerk 4471 [onleesbaar] 6. Dit is zeer urgent: nog maar 4 dagen.</span><span class=\"r\" lang=\"uk\" dir=\"ltr\">Сплатіть EUR 89,00 до 18 вересня 2026 року, використовуючи реквізити з листа, із зазначенням референсу 4471 [нерозбірливо] 6. Це дуже терміново: залишилося лише 4 дні.</span></li>\n<li><span class=\"no\">3</span><span>Bent u het niet eens met de naheffingsaanslag (het bedrag van EUR 80,00)? Maak dan bezwaar binnen zes weken na de dagtekening van de aanslag (21 augustus 2026) bij het college van burgemeester en wethouders van Gemeente Groningen. Lees hoe u bezwaar maakt op de officiële pagina.<br><span class=\"route\">rijksoverheid.nl/onderwerpen/bezwaar-en-beroep</span></span><span class=\"r\" lang=\"uk\" dir=\"ltr\">Якщо ви не згодні з донарахуванням (сума EUR 80,00), ви можете подати заперечення протягом шести тижнів з дати видачі рішення (21 серпня 2026 року) до college van burgemeester en wethouders Gemeente Groningen. Дізнайтеся, як це зробити, на офіційній сторінці.<br><span class=\"route\">rijksoverheid.nl/onderwerpen/bezwaar-en-beroep</span></span></li>\n<li><span class=\"no\">4</span><span>Wil de bezoeker hulp bij het indienen van bezwaar of begrijpt hij/zij de brief niet goed? Verwijs naar Het Juridisch Loket - zij helpen gratis met juridische vragen over gemeentelijke besluiten. Vraag om een medewerker die de bezoeker kan helpen.<br><span class=\"route\">0800 8020</span></span><span class=\"r\" lang=\"uk\" dir=\"ltr\">Якщо вам потрібна допомога з оскарженням або ви не розумієте листа, зверніться до Het Juridisch Loket - вони безкоштовно надають юридичні консультації щодо рішень органів влади. Попросіть про консультацію зі співробітником.<br><span class=\"route\">0800 8020</span></span></li>\n<li><span class=\"no\">5</span><span>Heeft de bezoeker hulp nodig bij het online regelen van gemeentezaken (bijv. betalen of bezwaar indienen via de website van de gemeente)? Verwijs naar het Informatiepunt Digitale Overheid.<br><span class=\"route\">informatiepuntdigitaleoverheid.nl</span></span><span class=\"r\" lang=\"uk\" dir=\"ltr\">Якщо вам потрібна допомога з онлайн-сервісами муніципалітету (наприклад, оплата або подача заперечення через сайт), зверніться до Informatiepunt Digitale Overheid.<br><span class=\"route\">informatiepuntdigitaleoverheid.nl</span></span></li></ol></div>\n  <div class=\"keys\"><h2>De markeringen op de brief</h2><div class=\"k\"><span class=\"n\">1</span><span>Gemeente Groningen Postbus 30026, 9700 RM Groningen</span></div>\n<div class=\"k\"><span class=\"n\">2</span><span>Aanmaning naheffingsaanslag parkeerbelasting</span></div>\n<div class=\"k\"><span class=\"n\">3</span><span>Aanslagnummer: 4471 [onleesbaar] 6</span></div>\n<div class=\"k\"><span class=\"n\">4</span><span>Dagtekening: 21 augustus 2026</span></div>\n<div class=\"k\"><span class=\"n\">5</span><span>Openstaand bedrag: EUR 80,00</span></div>\n<div class=\"k\"><span class=\"n\">6</span><span>Aanmaningskosten: EUR 9,00</span></div>\n<div class=\"k\"><span class=\"n\">7</span><span>Totaal te betalen: EUR 89,00</span></div>\n<div class=\"k\"><span class=\"n\">8</span><span>Betaal voor 18 september 2026.</span></div>\n<div class=\"k\"><span class=\"n\">9</span><span>Betaalt u niet op tijd, dan volgt een dwangbevel. De kosten van het dwangbevel komen bovenop het bedrag hierboven.</span></div>\n<div class=\"k\"><span class=\"n\">10</span><span>Bent u het niet eens met de naheffingsaanslag? U kunt binnen zes weken na de dagtekening van de naheffingsaanslag bezwaar maken bij de gemeente.</span></div><div class=\"k\"><span class=\"broken\"></span><span>Aanslagnummer (volledig): Kunt u het volledige aanslagnummer laten zien? Het staat op de brief bij &#x27;Aanslagnummer&#x27;.</span></div>\n<div class=\"k\"><span class=\"broken\"></span><span>Kenteken: Kunt u het volledige kenteken laten zien? Het staat op de brief bij &#x27;Kenteken&#x27;.</span></div></div>\n  <div class=\"foot\">\n    <div>\n      \n      \n      <p class=\"small\">Plainletter legt brieven uit en geeft geen juridisch advies. Gemaakt op 14 september 2026.</p>\n      <p class=\"small\">Deze tekst is gemaakt door een AI-systeem. Elke datum en elk bedrag is gecontroleerd tegen uw eigen brief. Laat een medewerker meekijken voordat u iets verstuurt.</p>\n    </div>\n    <div>\n      <p class=\"notes-label\">Aantekeningen aan de balie</p>\n      <div class=\"notes\"></div>\n    </div>\n  </div>\n</div>\n</body>\n</html>\n",
+  "reminder_ics": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Plainletter AI system//NL//EN\r\nBEGIN:VEVENT\r\nSUMMARY:Gemeente: Aanmaning naheffingsaanslag parkeerbelasting\r\nDTSTART;VALUE=DATE:20260918\r\nDTEND;VALUE=DATE:20260919\r\nDTSTAMP:20260918T090000Z\r\nUID:4471[onleesbaar]6@plainletter\r\nDESCRIPTION:Uiterste dag: 18 september 2026. Zoek de betaalinstructies op:\r\n  kijk op de voorkant én achterkant van de brief van Gemeente Groningen vo\r\n or het IBAN-rekeningnummer en de betalingsreferentie. Er is geen officieel\r\n  betaalportaal bekend via de opzoektool - gebruik alleen de gegevens die o\r\n p de brief staan. Betaal EUR 89\\,00 vóór 18 september 2026 via de betaal\r\n gegevens op de brief\\, met kenmerk 4471 [onleesbaar] 6. Dit is zeer urgent\r\n : nog maar 4 dagen. Bent u het niet eens met de naheffingsaanslag (het bed\r\n rag van EUR 80\\,00)? Maak dan bezwaar binnen zes weken na de dagtekening v\r\n an de aanslag (21 augustus 2026) bij het college van burgemeester en wetho\r\n uders van Gemeente Groningen. Lees hoe u bezwaar maakt op de officiële pa\r\n gina. Wil de bezoeker hulp bij het indienen van bezwaar of begrijpt hij/zi\r\n j de brief niet goed? Verwijs naar Het Juridisch Loket - zij helpen gratis\r\n  met juridische vragen over gemeentelijke besluiten. Vraag om een medewerk\r\n er die de bezoeker kan helpen. Heeft de bezoeker hulp nodig bij het online\r\n  regelen van gemeentezaken (bijv. betalen of bezwaar indienen via de websi\r\n te van de gemeente)? Verwijs naar het Informatiepunt Digitale Overheid. De\r\n ze tekst is gemaakt door een AI-systeem. Elke datum en elk bedrag is gecon\r\n troleerd tegen uw eigen brief. Laat een medewerker meekijken voordat u iet\r\n s verstuurt.\r\nBEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:Gemeente: nog 3 dagen\r\nTRIGGER:-P3D\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
+}

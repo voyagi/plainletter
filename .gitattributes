@@ -11,3 +11,7 @@
 *.ico binary
 *.woff binary
 *.woff2 binary
+
+# Calendar files end their lines in CRLF by the iCalendar standard (RFC 5545), so the captured
+# reminders under examples/ keep the bytes the agent sent.
+*.ics -text

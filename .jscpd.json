@@ -18,6 +18,7 @@
     "**/*.md",
     "**/docs/**",
     "design/**",
+    "examples/**",
     "tests/fixtures/**"
   ]
 }

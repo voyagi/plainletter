@@ -5,7 +5,8 @@
 ![A folded, shadowed phone photo of a health insurer's letter, read at the desk. Five passages are marked and numbered on the letter. Two blurred lines are typed as [onleesbaar], the right edge runs off the photo, and neither carries a number.](docs/media/refusal.gif)
 
 *A folded photo in poor light: 5 facts checked, 7 kept off the card, and no number beside the two
-folded lines or the cut-off right edge.*
+folded lines or the cut-off right edge.* Two readings captured from the deployed agent, with the
+cards and reminders it printed, are in [examples/](examples/) and open with nothing installed.
 
 **Every country sends its residents letters they cannot read.** A demand for money, a reference
 number, a deadline, and a sentence about what happens if nothing is done, written in formal
