@@ -1,0 +1,35 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Plainletter AI system//NL//EN
+BEGIN:VEVENT
+SUMMARY:Gemeente: Aanmaning naheffingsaanslag parkeerbelasting
+DTSTART;VALUE=DATE:20260918
+DTEND;VALUE=DATE:20260919
+DTSTAMP:20260918T090000Z
+UID:4471[onleesbaar]6@plainletter
+DESCRIPTION:Uiterste dag: 18 september 2026. Zoek de betaalinstructies op:
+  kijk op de voorkant én achterkant van de brief van Gemeente Groningen vo
+ or het IBAN-rekeningnummer en de betalingsreferentie. Er is geen officieel
+  betaalportaal bekend via de opzoektool - gebruik alleen de gegevens die o
+ p de brief staan. Betaal EUR 89\,00 vóór 18 september 2026 via de betaal
+ gegevens op de brief\, met kenmerk 4471 [onleesbaar] 6. Dit is zeer urgent
+ : nog maar 4 dagen. Bent u het niet eens met de naheffingsaanslag (het bed
+ rag van EUR 80\,00)? Maak dan bezwaar binnen zes weken na de dagtekening v
+ an de aanslag (21 augustus 2026) bij het college van burgemeester en wetho
+ uders van Gemeente Groningen. Lees hoe u bezwaar maakt op de officiële pa
+ gina. Wil de bezoeker hulp bij het indienen van bezwaar of begrijpt hij/zi
+ j de brief niet goed? Verwijs naar Het Juridisch Loket - zij helpen gratis
+  met juridische vragen over gemeentelijke besluiten. Vraag om een medewerk
+ er die de bezoeker kan helpen. Heeft de bezoeker hulp nodig bij het online
+  regelen van gemeentezaken (bijv. betalen of bezwaar indienen via de websi
+ te van de gemeente)? Verwijs naar het Informatiepunt Digitale Overheid. De
+ ze tekst is gemaakt door een AI-systeem. Elke datum en elk bedrag is gecon
+ troleerd tegen uw eigen brief. Laat een medewerker meekijken voordat u iet
+ s verstuurt.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Gemeente: nog 3 dagen
+TRIGGER:-P3D
+END:VALARM
+END:VEVENT
+END:VCALENDAR

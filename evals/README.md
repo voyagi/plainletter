@@ -62,10 +62,15 @@ identically, and nought out of twenty-two would read as a model that answered ev
 - **Four of the five prompts.** Every letter here is text, so `transcribe` is never called: the
   pipeline only transcribes pages that arrive as pictures. Reading, explaining, planning and
   drafting are exercised; transcription is not.
-- **The live model.** As of 2026-08-28 nothing here has run against Bedrock. The harness is proven
-  offline instead, by the tests in `tests/test_eval_corpus.py`, `tests/test_eval_scoring.py` and
-  `tests/test_eval_runner.py`, which read every letter with stand-in models that answer badly on
-  purpose and require the scorecard to say so.
+- **More than one day of the live model.** The set has run against Claude Sonnet 4.6 on Bedrock in
+  `eu-central-1` three times, all on 2026-08-28. The first run completed 2 of the 22 letters. The
+  prompts changed before the other two, and both then read all 22: 16 and 15 letters fully correct,
+  245 and 244 of 253 properties, no forbidden string reaching the desk, and the guard sending an
+  answer back 4 and 8 times. Three runs in one afternoon are a sample, not a trend, and the result
+  files are not committed. Between live runs the harness is proven offline, by the tests in
+  `tests/test_eval_corpus.py`, `tests/test_eval_scoring.py` and `tests/test_eval_runner.py`, which
+  read every letter with stand-in models that answer badly on purpose and require the scorecard to
+  say so.
 - **Flakiness.** One run is one sample of a model that does not answer identically twice. Running
   every letter twice doubles the bill, so the honest thing is to say that a single run cannot
   measure it.

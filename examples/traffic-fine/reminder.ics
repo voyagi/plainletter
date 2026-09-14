@@ -1,0 +1,31 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Plainletter AI system//NL//EN
+BEGIN:VEVENT
+SUMMARY:Centraal Justitieel Incassobureau: Beschikking administratieve san
+ ctie (Wet Mulder)
+DTSTART;VALUE=DATE:20260915
+DTEND;VALUE=DATE:20260916
+DTSTAMP:20260915T090000Z
+UID:819455237761@plainletter
+DESCRIPTION:Uiterste dag: 15 september 2026. Betaal EUR 174\,00 vóór 15 
+ september 2026 via de CJIB-website. Gebruik kenmerk 8194 5523 7761. De dea
+ dline is morgen - handel dit vandaag nog af. Kunt u EUR 174\,00 niet in é
+ én keer betalen? Vraag dan een betalingsregeling aan via de CJIB-website.
+  Bent u het niet eens met de beschikking? Dan kunt u binnen zes weken na 4
+  augustus 2026 beroep instellen bij de officier van justitie. Verwijs de b
+ ezoeker voor hulp hierbij naar Het Juridisch Loket (zie stap 4). De beroep
+ sroute loopt via de website van het OM. Als de bezoeker de boete wil betwi
+ sten of hulp nodig heeft bij het beroep: verwijs naar Het Juridisch Loket.
+  Dit is een persoonlijk gesprek nodig\, geen formulier. Heeft de bezoeker 
+ meerdere schulden tegelijk en weet hij/zij niet waar te beginnen? Verwijs 
+ naar de schuldhulpverlening van de gemeente. Deze tekst is gemaakt door ee
+ n AI-systeem. Elke datum en elk bedrag is gecontroleerd tegen uw eigen bri
+ ef. Laat een medewerker meekijken voordat u iets verstuurt.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Centraal Justitieel Incassobureau: nog 3 dagen
+TRIGGER:-P3D
+END:VALARM
+END:VEVENT
+END:VCALENDAR
