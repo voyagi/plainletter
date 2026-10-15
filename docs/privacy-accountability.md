@@ -133,7 +133,10 @@ against an official page. Nine of the twelve senders in the knowledge base are m
 purpose, and those letters always go to a person.
 
 Residual risk is assessed as acceptable for a help desk where a volunteer is present, and the
-product is not designed to be used with no human anywhere in the loop.
+product is not designed to be used with no human anywhere in the loop. Since 2026-10-15 the console
+enforces that rather than stating it: it reads a letter only where the deployment says a trained
+volunteer checks every card, and refuses one everywhere else. "Human review before the card is
+handed over", below, has the detail.
 
 ### 6. Review
 
@@ -190,8 +193,8 @@ Recorded 2026-08-25. The transparency obligations in Article 50 have applied sin
 the four-month marking transition does not reach a product placed on the market after that date, so
 this product is inside them from its first public day.
 
-**50(1), a system that interacts with a natural person: APPLIES.** A visitor can use this at home
-alone, and even at the desk the answers are written to the person rather than to the volunteer. The
+**50(1), a system that interacts with a natural person: APPLIES.** A visitor can open the public
+console at home, and at the desk the answers are written to the person rather than to the volunteer. The
 exemption for what is obvious to a reasonably well-informed person is not one to lean on here: the
 audience is specifically people who are not well informed about the systems in front of them. The
 disclosure is shipped where the interaction starts, on the intake screen before the first letter
@@ -200,7 +203,8 @@ goes in, and it is written in the volunteer's own language rather than in a foot
 **50(2), machine-readable marking of generated text: APPLIES.** The explanation, the action plan
 and the draft letter are all generated text, and the draft in particular leaves the building as a
 document somebody signs. Human oversight does not carry the editorial-responsibility exemption here
-either: the visitor may be alone. Shipped as three things, because a text file has no one obvious
+either: the volunteer checks the card, but the text on it is still generated and leaves the building
+as it was written. Shipped as three things, because a text file has no one obvious
 place to put a mark:
 
 - The printed desk card carries `<meta name="generator">` naming the AI system and
@@ -216,6 +220,32 @@ product writes is published anywhere. It goes to the person whose letter it is.
 
 A change that would reopen this determination: publishing readings, adding a conversational mode,
 or removing the volunteer from the picture entirely.
+
+## Human review before the card is handed over
+
+Recorded 2026-10-15. From 12 November 2026,
+[Anthropic's Usage Policy](https://www.anthropic.com/legal/aup), which governs the Claude models
+this product calls on Amazon Bedrock, names legal, finance, public benefits and services, and legal
+status and adjudication among its high-risk areas. A
+recommendation in one of them needs a qualified person, someone with the training or experience to
+evaluate it, to review it meaningfully with the authority to change it, and the person receiving it
+must be clearly told that AI was used to produce it.
+
+The steps and the draft objection on a desk card are that kind of recommendation: they apply the
+rules to one person's own letter from the tax office, the fine collection agency, a benefits agency
+or the immigration service, and a draft is a document to sign and send. The plain explanation of
+the letter is closer to explaining a decision already made, which the policy leaves out, but it
+travels on the same card.
+
+- **Telling the person: met**, by the three marks in the Article 50 section above.
+- **Review: met at a staffed desk, and enforced by configuration.** A trained volunteer checks the
+  card before it is handed over. The console reads a letter only when `PLAINLETTER_STAFFED_DESK` is
+  `true`, which an operator sets only where that check happens. Unset, the console offers the twelve
+  synthetic samples alone and the read route refuses an upload before reading any of it
+  (`web/src/server/uploads.ts` and `web/src/app/api/read/route.ts`, each with its own tests).
+- **The hosted demo runs with it unset.** Its samples are invented letters with recorded readings,
+  answered by a scripted model, so nothing there is applied to anybody's own circumstances and no
+  reading reaches a live model.
 
 ## Breach procedure
 
@@ -237,6 +267,8 @@ or removing the volunteer from the picture entirely.
   the studio has them; a trading name and a working contact address are what Article 13(1)(a) asks
   for. **Any other operator must set their own before serving anybody**, and an unset deployment
   says so on the page rather than naming somebody else.
+- Uploads stay closed, `PLAINLETTER_STAFFED_DESK` unset, on every deployment where no trained
+  volunteer checks each card before it is handed over.
 - **OPEN.** Accepting the AWS data processing addendum on the account the runtime lives in, and
   confirming the model provider terms in the Bedrock console.
 - A legal read of the privacy page before it serves real letters. Everything in it is a description

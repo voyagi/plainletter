@@ -209,6 +209,21 @@ assessment behind the demo's answer is written out limb by limb in
 `docs/privacy-accountability.md` for the demo alone. Article 37 applies to you or it does not,
 whatever this file is set to.
 
+And one that decides whether the desk reads a letter at all:
+
+```sh
+PLAINLETTER_STAFFED_DESK=true
+```
+
+Set it only where a trained volunteer checks every card before it is handed over. The steps and the
+draft a reading returns are legal and financial help about one person's own letter, and from
+12 November 2026 [Anthropic's Usage Policy](https://www.anthropic.com/legal/aup) requires a
+qualified person to review that kind of output with the authority to change it. Left unset, the
+console offers the twelve samples alone, with no camera or file chooser, and the read route answers
+an upload with a 403 before reading a byte of it, so a public deployment, or one that forgot the
+setting, takes no letter. The hosted demo leaves it unset. Anything other than `true` or `false`
+stops the console at boot.
+
 The upload route meters each caller by the last hop of `X-Forwarded-For`, and that entry is only
 trustworthy when a proxy really wrote it. Left unset, every caller is counted as one, so the desk
 still works and the ceiling is simply shared. The ceilings themselves are in
@@ -217,8 +232,9 @@ still works and the ceiling is simply shared. The ceilings themselves are in
 
 ## Check the three things this deployment promises
 
-**It reads a live letter end to end.** Open the console, choose a language, photograph a synthetic
-letter from `src/plainletter/samples/` printed on paper, and watch the stages arrive. The same
+**It reads a live letter end to end.** On a deployment with `PLAINLETTER_STAFFED_DESK=true`, open
+the console, choose a language, photograph a synthetic letter from `src/plainletter/samples/`
+printed on paper, and watch the stages arrive. The same
 reading through `agentcore invoke` with `"stream": true` shows the raw event stream.
 
 **Consent decides what is kept.** Read a letter with the consent box unticked: the answer carries
