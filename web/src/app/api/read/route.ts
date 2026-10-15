@@ -1,5 +1,6 @@
 import { readLetter, type LetterPayload } from '@/server/agent';
-import { admit, withMarker } from '@/server/caller';
+import { admit, refusal, withMarker } from '@/server/caller';
+import { UPLOADS_CLOSED, uploadsOpen } from '@/server/uploads';
 
 // The one door between the browser and the agent. It runs on Node rather than at the edge because
 // the deployment phase signs these requests, and the signing needs Node's crypto.
@@ -25,12 +26,19 @@ export async function POST(request: Request): Promise<Response> {
   if (admission.refused) return admission.refused;
   const marker = admission.marker;
 
+  // Before the body is read: a letter on a desk with nobody to check its card is turned away
+  // without a byte of it being decoded. The sample branch below reads a sample name and nothing
+  // else, so a form is the only way a letter gets in, and this is where that way closes.
+  if (!namesSample(request) && !uploadsOpen()) {
+    return refusal(UPLOADS_CLOSED, 403, marker);
+  }
+
   let payload: LetterPayload;
   try {
     payload = await intake(request);
-  } catch (refusal) {
+  } catch (unreadable) {
     return problem(
-      refusal instanceof Error ? refusal.message : 'That upload was not readable.',
+      unreadable instanceof Error ? unreadable.message : 'That upload was not readable.',
       400,
       marker,
     );
@@ -53,9 +61,13 @@ export async function POST(request: Request): Promise<Response> {
   });
 }
 
+/** A sample is asked for by name in JSON. Anything else is a letter on its way in. */
+function namesSample(request: Request): boolean {
+  return (request.headers.get('content-type') ?? '').includes('application/json');
+}
+
 async function intake(request: Request): Promise<LetterPayload> {
-  const type = request.headers.get('content-type') ?? '';
-  if (type.includes('application/json')) {
+  if (namesSample(request)) {
     const body: unknown = await request.json();
     const sample = readString(body, 'sample');
     if (!sample) throw new Error('Send a letter or name a sample letter.');

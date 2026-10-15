@@ -17,6 +17,12 @@ export const env = createEnv({
     // X-Forwarded-For. Left off, every caller is metered as one, which is stricter rather than
     // looser, and a forgotten setting should fail in that direction.
     PLAINLETTER_TRUST_PROXY_HEADER: z.enum(['true', 'false']).default('false'),
+    // Whether this desk reads a letter somebody brings, or only the stored samples. The steps and
+    // the draft a reading returns are legal and financial help about one person's own letter, and
+    // they go to that person only after a trained volunteer has checked the card. Set this only
+    // where that is true. Left off, the console offers the samples alone and the read route
+    // refuses an upload, which is the safe direction for a public demo and for a forgotten setting.
+    PLAINLETTER_STAFFED_DESK: z.enum(['true', 'false']).default('false'),
     // Who answers for the data, which is a fact about the deployment and not about the code: a
     // library running its own copy is its own controller. Left unset, the privacy page says the
     // operator of that desk is the controller and tells the visitor to ask at the counter, which
@@ -48,6 +54,7 @@ export const env = createEnv({
     PLAINLETTER_AGENT_ENDPOINT: process.env.PLAINLETTER_AGENT_ENDPOINT,
     PLAINLETTER_AGENT_RUNTIME_ARN: process.env.PLAINLETTER_AGENT_RUNTIME_ARN,
     PLAINLETTER_TRUST_PROXY_HEADER: process.env.PLAINLETTER_TRUST_PROXY_HEADER,
+    PLAINLETTER_STAFFED_DESK: process.env.PLAINLETTER_STAFFED_DESK,
     PLAINLETTER_CONTROLLER_NAME: process.env.PLAINLETTER_CONTROLLER_NAME,
     PLAINLETTER_CONTROLLER_CONTACT: process.env.PLAINLETTER_CONTROLLER_CONTACT,
     PLAINLETTER_DPO_CONTACT: process.env.PLAINLETTER_DPO_CONTACT,
