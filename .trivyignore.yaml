@@ -1,7 +1,7 @@
 # Suppressions for the security job in .github/workflows/ci-gates.yml.
 #
-# Empty on purpose. Nothing is suppressed today, and the file exists so that on the day something
-# has to be, the shape and the rules are already here instead of being invented in a hurry.
+# Kept as short as possible. Each entry below is one advisory with nothing to upgrade to, and the
+# file existed before the first of them so that the shape and the rules were not invented in a hurry.
 #
 # The job fails on any HIGH or CRITICAL finding and does not skip a vulnerability that has no fix
 # published yet. That is the right default and it stays. It also means an advisory filed against a
@@ -32,3 +32,14 @@
 # 3. Never suppress a secret finding. A credential in the source is not a risk to be accepted. It
 #    is a credential to be rotated and taken out of the history, and this product handles letters
 #    carrying citizen service numbers and bank accounts.
+
+vulnerabilities:
+  - id: CVE-2026-93687
+    statement: >-
+      Added 2026-10-15. braces 3.0.3 is its latest release and the advisory lists no fixed version.
+      It reaches this repository only through the lint toolchain: eslint-config-next pulls
+      @next/eslint-plugin-next, which pins fast-glob 3.3.1, and fast-glob pulls micromatch and then
+      braces. It runs during `eslint .` over this repository's own files, with patterns taken from
+      the lint configuration, never from a visitor's input, and it is not part of the built app.
+      Delete this entry once braces publishes a fix or the plugin stops depending on fast-glob.
+    expired_at: 2026-11-15
