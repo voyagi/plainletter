@@ -36,7 +36,7 @@ type Held = {
 const EMPTY: Held = { reading: {}, card: null, ics: null, photo: null, case: null };
 const NO_MEMORY: Memory = { consent: false, caseId: '' };
 
-export function DeskConsole({ samples }: { samples: Sample[] }) {
+export function DeskConsole({ samples, uploads }: { samples: Sample[]; uploads: boolean }) {
   const [held, setHeld] = useState<Held>(EMPTY);
   const [language, setLanguage] = useState('uk');
   const [memory, setMemory] = useState<Memory>(NO_MEMORY);
@@ -192,6 +192,7 @@ export function DeskConsole({ samples }: { samples: Sample[] }) {
       {!started ? (
         <Intake
           samples={samples}
+          uploads={uploads}
           language={language}
           onLanguage={setLanguage}
           memory={memory}

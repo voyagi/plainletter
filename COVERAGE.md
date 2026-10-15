@@ -121,6 +121,14 @@ metered path on the public internet, and the logic it enforces is covered: `limi
 with its own tests. What is unproven is that the route calls that logic in the right order and
 refuses in the right places. The pieces are tested and their assembly is not.
 
+**Since 2026-10-15 the route has its own tests** (`src/app/api/read/route.test.ts`), added when
+uploads closed on every desk where nobody checks the card. Measured that day with the command above:
+the route at 84.61% of statements (44 of 52), and `src/server/uploads.ts`, the setting it asks, at
+100% (the text table leaves out a file that is fully covered). They prove the assembly for the
+refusal that matters most: an upload turned away before its body is read, a sample still passed
+on, and no letter getting through the sample branch. The other figures in this file are still the
+2026-08-28 measurement.
+
 ## What is proven by breaking it on purpose
 
 Line coverage says a line ran. It does not say a test would have noticed if the line were wrong.

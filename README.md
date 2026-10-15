@@ -16,8 +16,8 @@ every country answers this the same way: a free help desk, usually in a library,
 sits down with you and your letter. The first ten minutes at that desk decide everything. What is
 this. How bad is it. What happens if I ignore it. What exactly do I do, and by when.
 
-Plainletter is the agent behind that desk. A volunteer, or the person holding the letter,
-photographs or uploads it. Plainletter reads it, names the sender and the kind of letter, pulls out
+Plainletter is the agent behind that desk. A volunteer photographs or uploads the letter, with the
+person it was sent to sitting beside them. Plainletter reads it, names the sender and the kind of letter, pulls out
 every amount, reference number and deadline, explains it in plain language in the country's
 language and in the reader's own, says what happens if nothing is done, lays out the next steps
 with the official routes, drafts the reply or objection when that is the right move, says clearly
@@ -36,7 +36,8 @@ Amazon Bedrock AgentCore in the EU (Frankfurt).
 
 **Try it without installing anything:** the desk console runs at
 [plainletter-web.vercel.app/desk](https://plainletter-web.vercel.app/desk), against the deployed
-agent. Pick one of the stored sample letters, or upload a synthetic one.
+agent. It reads the twelve stored sample letters. Reading a letter of your own is switched off
+there, for the reason under [Deploy it](#deploy-it).
 
 ## How it works
 
@@ -174,6 +175,19 @@ deployment cannot forget it. And a reading is kept in AgentCore Memory only when
 the visitor consented: what is kept is the checked, derived and masked values under a case id the
 desk card prints, never the letter, and it expires after thirty days
 (`src/plainletter/memory.py`).
+
+**A trained volunteer checks every card before it is handed over, and that is a condition of
+deploying Plainletter, not a recommendation.** The steps and the draft objection a reading returns
+are legal and financial help about one person's own letter, from the tax office, the fine
+collection agency, a benefits agency or the immigration service. From 12 November 2026,
+[Anthropic's Usage Policy](https://www.anthropic.com/legal/aup) requires a qualified person to
+meaningfully review that kind of output, with the authority to change it, and to tell the person
+that AI produced it. The console says the second on its intake screen. The first is the volunteer,
+so the console takes a letter only when `PLAINLETTER_STAFFED_DESK=true`, which an operator sets
+only at a desk where that check happens. Left unset, the console offers the samples alone and the
+read route refuses an upload (`web/src/server/uploads.ts`). The hosted demo leaves it unset. Its
+samples are recorded readings answered by a scripted model, so no reading there reaches a live
+model at all.
 
 ## Privacy
 

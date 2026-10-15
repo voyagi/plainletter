@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { DeskConsole } from '@/components/console/DeskConsole';
 import samples from '@/data/samples.json';
+import { uploadsOpen } from '@/server/uploads';
 
 export const metadata: Metadata = {
   title: 'Desk console',
@@ -12,5 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default function DeskPage() {
-  return <DeskConsole samples={samples} />;
+  // Decided here on the server and handed down as a plain yes or no: the console is a client
+  // component and may not import the module that reads the deployment's settings.
+  return <DeskConsole samples={samples} uploads={uploadsOpen()} />;
 }
