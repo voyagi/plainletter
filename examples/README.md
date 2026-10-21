@@ -49,11 +49,13 @@ One wording slip is visible in the answer: the reason for each unreadable field 
 unreadable "in de foto", in the photo, although this letter arrived as text with the gaps typed in.
 The fields and the refusal to guess are right. The sentence around them assumed the usual case.
 
-The capture also shows something the desk should not do yet. The payment step, the objection
-draft, the card and the reminder still quote the assessment number with its gap,
-`4471 [onleesbaar] 6`, so a volunteer has to read the full number off the letter before anything is
-paid or sent. Holding those steps until the number is confirmed is
-[issue #34](https://github.com/voyagi/plainletter/issues/34).
+The capture also shows something the desk no longer does. Recorded before
+[issue #34](https://github.com/voyagi/plainletter/issues/34) was fixed, its payment step, objection
+draft, card and reminder quote the assessment number with its gap, `4471 [onleesbaar] 6`. A step or
+a draft that would quote a partly read number now asks for the whole number from the letter instead,
+and the card and the reminder say it has to be read from the letter before anything is paid. The
+card's key still prints the letter's own line, gap and all, since that is where the gap is meant to
+be seen. The capture is kept as it was recorded.
 
 ## `demo-transcript.md`
 
