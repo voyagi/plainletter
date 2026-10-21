@@ -12,14 +12,16 @@ the same numbering the screen used, so a volunteer can say "number four" and bot
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, date, datetime, time, timedelta
 from html import escape
 
 from icalendar import Alarm, Calendar, Event
 
+from .gaps import has_gap, steps_without_gaps
 from .locales import DeskWords, active, counted
 from .redact import redact
-from .schemas import DeskReading, Explanation, Urgency
+from .schemas import ActionStep, DeskReading, Explanation, Urgency
 
 RTL_LANGUAGES = frozenset({"ar", "fa", "he", "ur", "ps"})
 
@@ -93,7 +95,7 @@ def desk_card_html(reading: DeskReading, today: date, *, case_id: str | None = N
         f"<span>{escape(redact(step.dutch))}{_route(step.official_route)}</span>"
         f'<span class="r" lang="{escape(visitor)}" dir="{direction}">'
         f"{escape(redact(step.visitor))}{_route(step.official_route)}</span></li>"
-        for step in reading.steps
+        for step in _steps(reading)
     )
     handoff = (
         f'<p class="handoff"><strong>{escape(words.handoff_heading)}</strong> '
@@ -169,7 +171,8 @@ def reminder_ics(reading: DeskReading, *, uid: str) -> str:
         redact(
             words.reminder_deadline.format(date=locale.format_date(deadline))
             + " "
-            + " ".join(step.dutch for step in reading.steps)
+            + (words.reference_unreadable + " " if _reference_has_gap(reading) else "")
+            + " ".join(step.dutch for step in _steps(reading))
             + " "
             + words.ai_disclosure
         ),
@@ -194,6 +197,38 @@ def reminder_ics(reading: DeskReading, *, uid: str) -> str:
     return ical.decode("utf-8")
 
 
+def reminder_uid(reading: DeskReading) -> str:
+    """The reminder's UID: the reference without its spaces, as long as the whole of it was read.
+
+    A partly read reference is not an identifier, and the reading of the same letter may write its
+    gap differently next time. So the UID is then taken from the rest of what the check grounded
+    about the letter, which stays the same for the same letter and holds no character a calendar
+    refuses.
+    """
+    reference = reading.facts.reference
+    if reference is None:
+        return "plainletter@plainletter"
+    if not has_gap(reference.value):
+        return f"{reference.value.replace(' ', '')}@plainletter"
+    grounded = "|".join(
+        f"{fact.name}={fact.display}"
+        for fact in sorted(reading.verification.grounded, key=lambda fact: fact.name)
+        if fact.name != "reference"
+    )
+    seed = f"{reading.facts.sender_id}|{grounded}"
+    return f"{hashlib.sha256(seed.encode('utf-8')).hexdigest()[:20]}@plainletter"
+
+
+def _reference_has_gap(reading: DeskReading) -> bool:
+    return reading.facts.reference is not None and has_gap(reading.facts.reference.value)
+
+
+def _steps(reading: DeskReading) -> tuple[ActionStep, ...]:
+    """The steps as printed. The pipeline took any gap out already; a stored reading may not."""
+    partial = reading.facts.reference.value if reading.facts.reference else None
+    return steps_without_gaps(reading.steps, partial)
+
+
 def _explanations(reading: DeskReading, language: str) -> tuple[Explanation, Explanation]:
     by_language = {item.language: item for item in reading.explanations}
     official = by_language.get(language)
@@ -216,6 +251,8 @@ def _reference(reading: DeskReading, words: DeskWords) -> str:
     reference = reading.facts.reference
     if reference is None:
         return words.reference_missing
+    if has_gap(reference.value):
+        return words.reference_unreadable
     return words.reference.format(reference=redact(reference.value))
 
 

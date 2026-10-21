@@ -20,7 +20,7 @@ from .intake import IntakeError, LetterInput
 from .kb import known_sender_ids
 from .pipeline import Pipeline, RefusedReadingError
 from .reading_model import ReadingModel
-from .render import desk_card_html, reminder_ics
+from .render import desk_card_html, reminder_ics, reminder_uid
 from .schemas import DeskReading
 
 DEFAULT_SAMPLE = "cjib-verkeersboete"
@@ -87,11 +87,7 @@ def _write_outputs(reading: DeskReading, out: Path, today: date) -> None:
 
     if reading.deadline is not None:
         reminder = out / "reminder.ics"
-        reference = reading.facts.reference.value if reading.facts.reference else "plainletter"
-        reminder.write_text(
-            reminder_ics(reading, uid=f"{reference.replace(' ', '')}@plainletter"),
-            encoding="utf-8",
-        )
+        reminder.write_text(reminder_ics(reading, uid=reminder_uid(reading)), encoding="utf-8")
         print(f"reminder {reminder}")
 
 

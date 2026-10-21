@@ -100,6 +100,16 @@ WORDS = DeskWords(
     handoff_heading="Als het ingewikkeld wordt.",
     reference="Kenmerk {reference}",
     reference_missing="Geen kenmerk in de brief",
+    reference_unreadable=(
+        "Het kenmerk is niet helemaal leesbaar. "
+        "Lees het hele nummer van de brief voordat u betaalt."
+    ),
+    unreadable_marker="[onleesbaar]",
+    unreadable_step_lead=(
+        "Zoek eerst het hele nummer op de brief zelf: een deel ervan is niet leesbaar."
+    ),
+    unreadable_in_step="[het hele nummer van de brief]",
+    unreadable_in_draft="[schrijf hier het hele nummer van de brief]",
     deadline_lead="Uiterste dag: {date}",
     deadline_missing="Deze brief noemt geen uiterste datum.",
     days_left=CountedWords(one="Nog {days} dag.", other="Nog {days} dagen."),

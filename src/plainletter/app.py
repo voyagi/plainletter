@@ -53,7 +53,7 @@ from .memory import (
 from .pipeline import Pipeline, RefusedReadingError
 from .reading_model import ReadingModel
 from .redact import redact
-from .render import desk_card_html, reminder_ics
+from .render import desk_card_html, reminder_ics, reminder_uid
 from .schemas import DeskReading, ReadingProgress
 from .settings import settings
 from .spend import DailyReadings
@@ -409,7 +409,6 @@ def _completed(
     case: dict[str, Any] | None,
     earlier: Recalled,
 ) -> dict[str, Any]:
-    reference = reading.facts.reference.value if reading.facts.reference else "plainletter"
     # The card carries the case id only when that number leads somewhere, because the sentence
     # printed beside it says to bring the card back and the desk will continue where you left off.
     # It leads somewhere when the reading was kept today, or when there are earlier ones under it.
@@ -433,7 +432,7 @@ def _completed(
         "case": case,
         "desk_card_html": desk_card_html(reading, today, case_id=case_id),
         "reminder_ics": (
-            reminder_ics(reading, uid=f"{reference.replace(' ', '')}@plainletter")
+            reminder_ics(reading, uid=reminder_uid(reading))
             if reading.deadline is not None
             else None
         ),

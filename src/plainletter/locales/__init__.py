@@ -85,6 +85,17 @@ class DeskWords:
     reference: str
     """Template with `reference`."""
     reference_missing: str
+    reference_unreadable: str
+    """Printed instead of the reference, and added to the reminder, when part of it is not read."""
+
+    unreadable_marker: str
+    """What the reading writes in place of the part of a value it could not read."""
+    unreadable_step_lead: str
+    """Put in front of a step that quoted a partly read number, before it pays or sends anything."""
+    unreadable_in_step: str
+    """Stands in a step where the partly read number stood."""
+    unreadable_in_draft: str
+    """Stands in the draft where the partly read number stood: the place to write the whole one."""
 
     deadline_lead: str
     """Template with `date`."""

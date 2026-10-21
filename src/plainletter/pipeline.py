@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from . import urgency
+from .gaps import draft_without_gaps, steps_without_gaps
 from .intake import LetterInput
 from .kb import Sender, get_sender, known_sender_ids
 from .locales import active
@@ -149,8 +150,14 @@ class Pipeline:
         _refuse_stray(_explanation_text(explanations), allowed)
         yield ReadingProgress(stage="explanations", explanations=explanations)
 
-        steps = official_steps(
-            self.model.plan(facts, grounded, sender, deadline, visitor_language), sender
+        # A number with a gap in it is not one anybody can pay or object with, so a step or a draft
+        # quoting one asks for the whole number instead, whatever the model wrote.
+        partial = facts.reference.value if facts.reference else None
+        steps = steps_without_gaps(
+            official_steps(
+                self.model.plan(facts, grounded, sender, deadline, visitor_language), sender
+            ),
+            partial,
         )
         _refuse_stray(_step_text(steps), allowed)
         yield ReadingProgress(stage="steps", steps=steps)
@@ -159,10 +166,11 @@ class Pipeline:
         # letter carrying an objection paragraph: an insurer's arrears notice has no appeal route
         # printed on it and a request for a payment plan is exactly the right reply. What is not
         # the drafter's call is writing one for a reading that did not check out.
-        draft = (
+        draft = draft_without_gaps(
             self.model.draft(facts, grounded, sender, visitor_language)
             if result.is_grounded
-            else None
+            else None,
+            partial,
         )
         _refuse_stray(_draft_text(draft), allowed)
         yield ReadingProgress(stage="draft", draft=draft)
