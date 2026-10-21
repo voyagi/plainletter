@@ -25,6 +25,14 @@ from .schemas import ActionStep, DraftLetter
 _PIECE_CHARS = frozenset("_/-")
 _SPACES = frozenset(" \t\u00a0")
 
+# A visitor-language text can translate the marker: beside "4471 [onleesbaar] 6" the deployed
+# planner wrote the Ukrainian word in the same brackets (examples/unreadable-reference).
+# So the recorded partial value is also matched with any short bracketed phrase where its marker
+# stands, but only when what was read of it holds this many digits: a shorter pattern would match
+# ordinary text, such as a count of days beside a bracket.
+_ANY_MARKER = r"(?:\[[^\[\]\n]{1,40}\]|\([^()\n]{1,40}\))"
+_MIN_DIGITS_READ = 3
+
 
 def has_gap(text: str) -> bool:
     """Whether this text carries a value the reading could only partly read."""
@@ -35,13 +43,16 @@ def fill_gaps(text: str, placeholder: str, partial: str | None = None) -> str:
     """The text with every partly read value replaced by the placeholder.
 
     The partial value as the reading recorded it goes first, with any spacing, so a prefix with no
-    digit in it ("NP 4471 <marker> 8") goes with the rest of the number. Whatever is left around
-    a marker after that is taken out by shape.
+    digit in it ("NP 4471 <marker> 8") goes with the rest of the number, and then the same value
+    with its marker translated. Whatever is left around a marker after that is taken out by shape.
     """
     marker = active().words.unreadable_marker
     if partial and has_gap(partial):
         written = r"\s*".join(re.escape(piece) for piece in partial.split())
         text = re.sub(written, lambda _: placeholder, text)
+        translated = _translated(partial)
+        if translated is not None:
+            text = translated.sub(lambda _: placeholder, text)
     # Walked outward from each marker rather than matched with one pattern: a pattern for "pieces
     # with a digit, any number of them" backtracks badly over a long run of digits and spaces.
     found = text.find(marker)
@@ -51,6 +62,25 @@ def fill_gaps(text: str, placeholder: str, partial: str | None = None) -> str:
         text = text[:start] + placeholder + text[end:]
         found = text.find(marker, start + len(placeholder))
     return text
+
+
+def read_part(value: str) -> str:
+    """What was read of a partly read value, its spacing dropped and each gap written as "?".
+
+    Two readings of the same letter can space a gap differently, and the part they read stays the
+    same, so this is what identifies the value.
+    """
+    marker = active().words.unreadable_marker
+    return "?".join("".join(part.split()) for part in value.split(marker))
+
+
+def _translated(partial: str) -> re.Pattern[str] | None:
+    """The partial value with any short bracketed phrase where its marker stands, or None."""
+    parts = partial.split(active().words.unreadable_marker)
+    if sum(char.isdigit() for char in "".join(parts)) < _MIN_DIGITS_READ:
+        return None
+    pieces = (r"\s*".join(re.escape(token) for token in part.split()) for part in parts)
+    return re.compile(r"(?<!\w)" + (r"\s*" + _ANY_MARKER + r"\s*").join(pieces) + r"(?!\w)")
 
 
 def _is_piece(char: str) -> bool:
@@ -86,20 +116,16 @@ def _widen_right(text: str, end: int) -> int:
 def steps_without_gaps(
     steps: tuple[ActionStep, ...], partial: str | None = None
 ) -> tuple[ActionStep, ...]:
-    """Each step that quotes a gap asks for the whole number first instead of quoting the part."""
+    """Each step that quotes a gap, in either language, asks for the whole number first instead."""
     words = active().words
 
     def complete(step: ActionStep) -> ActionStep:
-        if not (has_gap(step.dutch) or has_gap(step.visitor)):
+        dutch = fill_gaps(step.dutch, words.unreadable_in_step, partial)
+        visitor = fill_gaps(step.visitor, words.unreadable_in_step, partial)
+        if dutch == step.dutch and visitor == step.visitor:
             return step
         return step.model_copy(
-            update={
-                "dutch": (
-                    f"{words.unreadable_step_lead} "
-                    f"{fill_gaps(step.dutch, words.unreadable_in_step, partial)}"
-                ),
-                "visitor": fill_gaps(step.visitor, words.unreadable_in_step, partial),
-            }
+            update={"dutch": f"{words.unreadable_step_lead} {dutch}", "visitor": visitor}
         )
 
     return tuple(complete(step) for step in steps)
@@ -107,12 +133,11 @@ def steps_without_gaps(
 
 def draft_without_gaps(draft: DraftLetter | None, partial: str | None = None) -> DraftLetter | None:
     """The draft with a marked place to write the whole number where it quoted a part of one."""
-    if draft is None or not (has_gap(draft.dutch) or has_gap(draft.visitor)):
-        return draft
+    if draft is None:
+        return None
     placeholder = active().words.unreadable_in_draft
-    return draft.model_copy(
-        update={
-            "dutch": fill_gaps(draft.dutch, placeholder, partial),
-            "visitor": fill_gaps(draft.visitor, placeholder, partial),
-        }
-    )
+    dutch = fill_gaps(draft.dutch, placeholder, partial)
+    visitor = fill_gaps(draft.visitor, placeholder, partial)
+    if dutch == draft.dutch and visitor == draft.visitor:
+        return draft
+    return draft.model_copy(update={"dutch": dutch, "visitor": visitor})

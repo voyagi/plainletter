@@ -18,7 +18,7 @@ from html import escape
 
 from icalendar import Alarm, Calendar, Event
 
-from .gaps import has_gap, steps_without_gaps
+from .gaps import has_gap, read_part, steps_without_gaps
 from .locales import DeskWords, active, counted
 from .redact import redact
 from .schemas import ActionStep, DeskReading, Explanation, Urgency
@@ -201,9 +201,10 @@ def reminder_uid(reading: DeskReading) -> str:
     """The reminder's UID: the reference without its spaces, as long as the whole of it was read.
 
     A partly read reference is not an identifier, and the reading of the same letter may write its
-    gap differently next time. So the UID is then taken from the rest of what the check grounded
-    about the letter, which stays the same for the same letter and holds no character a calendar
-    refuses.
+    gap differently next time. So the UID is then a hash of the part that was read, with its
+    spacing dropped, and the rest of what the check grounded about the letter: the same for the
+    same letter, different for two letters from one sender that differ only in that number, and
+    free of any character a calendar refuses.
     """
     reference = reading.facts.reference
     if reference is None:
@@ -215,7 +216,7 @@ def reminder_uid(reading: DeskReading) -> str:
         for fact in sorted(reading.verification.grounded, key=lambda fact: fact.name)
         if fact.name != "reference"
     )
-    seed = f"{reading.facts.sender_id}|{grounded}"
+    seed = f"{reading.facts.sender_id}|{read_part(reference.value)}|{grounded}"
     return f"{hashlib.sha256(seed.encode('utf-8')).hexdigest()[:20]}@plainletter"
 
 

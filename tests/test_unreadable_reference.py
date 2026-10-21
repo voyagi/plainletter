@@ -13,6 +13,7 @@ from datetime import date
 from icalendar import Calendar
 
 from plainletter.demo import ScriptedReadingModel, sample_text, scripted_reading
+from plainletter.gaps import fill_gaps
 from plainletter.intake import from_text
 from plainletter.locales import active
 from plainletter.pipeline import Pipeline
@@ -24,13 +25,16 @@ SAMPLE = "gemeente-parkeerboete"
 TODAY = date(2026, 8, 21)
 READABLE = "NP 4471 2208"
 PARTIAL = "NP 4471 [onleesbaar] 8"
+# The word the deployed planner wrote for the gap in the Ukrainian steps and draft of the capture
+# under examples/unreadable-reference, in place of [onleesbaar].
+UKRAINIAN_MARKER = "[\u043d\u0435\u0440\u043e\u0437\u0431\u0456\u0440\u043b\u0438\u0432\u043e]"
 
 
-def _gapped(text: str) -> str:
-    return text.replace(READABLE, PARTIAL)
+def _gapped(text: str, marker: str = "[onleesbaar]") -> str:
+    return text.replace(READABLE, PARTIAL.replace("[onleesbaar]", marker))
 
 
-def _run(*, gapped: bool) -> DeskReading:
+def _run(*, gapped: bool, visitor_marker: str = "[onleesbaar]") -> DeskReading:
     reading = scripted_reading(SAMPLE)
     facts, steps, draft = reading.facts, reading.steps, reading.draft
     text = sample_text(SAMPLE)
@@ -58,11 +62,19 @@ def _run(*, gapped: bool) -> DeskReading:
             }
         )
         steps = tuple(
-            step.model_copy(update={"dutch": _gapped(step.dutch), "visitor": _gapped(step.visitor)})
+            step.model_copy(
+                update={
+                    "dutch": _gapped(step.dutch),
+                    "visitor": _gapped(step.visitor, visitor_marker),
+                }
+            )
             for step in steps
         )
         draft = draft.model_copy(
-            update={"dutch": _gapped(draft.dutch), "visitor": _gapped(draft.visitor)}
+            update={
+                "dutch": _gapped(draft.dutch),
+                "visitor": _gapped(draft.visitor, visitor_marker),
+            }
         )
     model = ScriptedReadingModel(
         facts=facts,
@@ -156,6 +168,48 @@ def test_the_card_and_reminder_hold_a_stored_reading_that_still_quotes_the_gap()
     )
     assert "4471" not in _quoted(desk_card_html(stored, TODAY))
     assert "4471" not in reminder_ics(stored, uid=reminder_uid(stored))
+
+
+def test_a_translated_marker_in_the_visitor_text_is_caught_too() -> None:
+    # The visitor-language text of the capture carries the gap in Ukrainian, not as [onleesbaar].
+    reading = _run(gapped=True, visitor_marker=UKRAINIAN_MARKER)
+    words = active().words
+    pay = reading.steps[0]
+    assert "4471" not in pay.visitor
+    assert UKRAINIAN_MARKER not in pay.visitor
+    assert words.unreadable_in_step in pay.visitor
+    assert reading.draft is not None
+    assert "4471" not in reading.draft.visitor
+    assert words.unreadable_in_draft in reading.draft.visitor
+    assert "4471" not in _quoted(desk_card_html(reading, TODAY))
+
+
+def test_a_partial_value_with_too_little_read_never_matches_ordinary_text() -> None:
+    # One digit read is too little to find a translated gap by: the count of days beside a
+    # bracket has to stay as it is.
+    text = "Nog (zeer urgent) 6 dagen."
+    assert fill_gaps(text, "[nummer]", "[onleesbaar] 6") == text
+
+
+def test_two_letters_that_differ_only_in_the_part_read_get_two_reminders() -> None:
+    # Two fines from one sender on one day for one amount differ only in their numbers, and a
+    # calendar treats two events with one UID as one.
+    reading = _run(gapped=True)
+    assert reading.facts.reference is not None
+    other = "NP 4472 [onleesbaar] 8"
+    grounded = tuple(
+        fact.model_copy(update={"display": other}) if fact.name == "reference" else fact
+        for fact in reading.verification.grounded
+    )
+    second = reading.model_copy(
+        update={
+            "facts": reading.facts.model_copy(
+                update={"reference": reading.facts.reference.model_copy(update={"value": other})}
+            ),
+            "verification": reading.verification.model_copy(update={"grounded": grounded}),
+        }
+    )
+    assert reminder_uid(second) != reminder_uid(reading)
 
 
 def test_the_marker_looked_for_is_the_one_the_transcription_writes() -> None:
