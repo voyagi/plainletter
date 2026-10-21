@@ -6,9 +6,10 @@ and that marker is the one signal that holds whatever else the model writes: the
 in it is not a number anybody can pay or object with. A payment quoting it may never be matched to
 the assessment, and an objection quoting it may never reach the right file.
 
-So wherever a step or a draft quotes a gap, the partial number is taken out and a marked place to
-fill in the whole one is put in. The planner and the drafter are asked for neither; a prompt is a
-preference, and this is the check.
+So wherever a step or a draft quotes the partly read reference, the partial number is taken out
+and a marked place to fill in the whole one is put in. Other words the reading could not make out
+keep their marker: the wording here is about the number. The planner and the drafter are asked for
+neither; a prompt is a preference, and this is the check.
 """
 
 from __future__ import annotations
@@ -40,27 +41,36 @@ def has_gap(text: str) -> bool:
 
 
 def fill_gaps(text: str, placeholder: str, partial: str | None = None) -> str:
-    """The text with every partly read value replaced by the placeholder.
+    """The text with every quote of the partly read value replaced by the placeholder.
 
     The partial value as the reading recorded it goes first, with any spacing, so a prefix with no
     digit in it ("NP 4471 <marker> 8") goes with the rest of the number, and then the same value
-    with its marker translated. Whatever is left around a marker after that is taken out by shape.
+    with its marker translated. Whatever is left around a marker after that is taken out by shape,
+    but only where it is a part of the partial value: the transcription writes the same marker for
+    any word it could not read, and an unreadable street name or number plate is not the value.
+    Nothing changes when the value was read whole or is missing.
     """
+    if not (partial and has_gap(partial)):
+        return text
     marker = active().words.unreadable_marker
-    if partial and has_gap(partial):
-        written = r"\s*".join(re.escape(piece) for piece in partial.split())
-        text = re.sub(written, lambda _: placeholder, text)
-        translated = _translated(partial)
-        if translated is not None:
-            text = translated.sub(lambda _: placeholder, text)
+    written = r"\s*".join(re.escape(piece) for piece in partial.split())
+    text = re.sub(written, lambda _: placeholder, text)
+    translated = _translated(partial)
+    if translated is not None:
+        text = translated.sub(lambda _: placeholder, text)
+    read = read_part(partial)
     # Walked outward from each marker rather than matched with one pattern: a pattern for "pieces
     # with a digit, any number of them" backtracks badly over a long run of digits and spaces.
     found = text.find(marker)
     while found >= 0:
         start = _widen_left(text, found)
         end = _widen_right(text, found + len(marker))
-        text = text[:start] + placeholder + text[end:]
-        found = text.find(marker, start + len(placeholder))
+        run = text[start:end]
+        if any(char.isdigit() for char in run) and read_part(run) in read:
+            text = text[:start] + placeholder + text[end:]
+            found = text.find(marker, start + len(placeholder))
+        else:
+            found = text.find(marker, end)
     return text
 
 

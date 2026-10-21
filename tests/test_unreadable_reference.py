@@ -13,7 +13,7 @@ from datetime import date
 from icalendar import Calendar
 
 from plainletter.demo import ScriptedReadingModel, sample_text, scripted_reading
-from plainletter.gaps import fill_gaps
+from plainletter.gaps import fill_gaps, steps_without_gaps
 from plainletter.intake import from_text
 from plainletter.locales import active
 from plainletter.pipeline import Pipeline
@@ -210,6 +210,28 @@ def test_two_letters_that_differ_only_in_the_part_read_get_two_reminders() -> No
         }
     )
     assert reminder_uid(second) != reminder_uid(reading)
+
+
+def test_other_unreadable_words_are_not_taken_for_the_reference() -> None:
+    # The transcription writes the same marker for any word it could not read. A number plate or a
+    # street name with a gap is not the reference, whether the reference was read whole or not.
+    step = (
+        scripted_reading(SAMPLE)
+        .steps[0]
+        .model_copy(
+            update={
+                "dutch": "Controleer kenteken 30-[onleesbaar]-7 en het adres [onleesbaar].",
+                "visitor": "Check plate 30-[onleesbaar]-7 and the address [onleesbaar].",
+            }
+        )
+    )
+    for partial in (READABLE, None, PARTIAL):
+        assert steps_without_gaps((step,), partial) == (step,)
+    # A part of the partly read reference is still taken out where a step quotes only that part.
+    placeholder = active().words.unreadable_in_step
+    assert fill_gaps("met kenmerk 4471 [onleesbaar] 8.", placeholder, PARTIAL) == (
+        f"met kenmerk {placeholder}."
+    )
 
 
 def test_the_marker_looked_for_is_the_one_the_transcription_writes() -> None:
